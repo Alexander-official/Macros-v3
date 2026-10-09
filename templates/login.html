@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-i18n="title">Giriş</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#080b0f;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.box{background:#0b0f15;border:1px solid #0e1e2e;border-radius:12px;padding:32px;width:320px}
+.title{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.title span{color:#f87171}
+.sub{font-size:12px;color:#334155;margin-bottom:24px}
+label{font-size:11px;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}
+input{width:100%;padding:9px 12px;background:#080b0f;border:1px solid #0e1e2e;border-radius:7px;color:#d4d8e0;font-size:13px;outline:none;margin-bottom:14px;transition:border .2s}
+input:focus{border-color:#f87171}
+button{width:100%;padding:10px;background:#dc2626;border:none;border-radius:7px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+button:hover{background:#b91c1c}
+.err{background:#2d0707;border:1px solid #5a1212;color:#f87171;border-radius:6px;padding:8px 12px;font-size:12px;margin-bottom:14px}
+.lang-bar{display:flex;gap:10px;justify-content:center;margin-bottom:20px;font-size:11px;color:#64748b;}
+.lang-bar span{cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .2s;font-weight:bold;}
+.lang-bar span:hover, .lang-bar span.active{background:#2d0707;color:#f87171;}
+</style></head><body>
+<div class="box">
+  <div class="lang-bar">
+    <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
+    <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+  </div>
+  <div class="title">⚡ <span>Macros</span> <small style="font-size:11px;color:#64748b">v3</small></div>
+  <div class="sub" data-i18n="panel_login">Panel Girişi</div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post">
+    <label data-i18n="username">Kullanıcı Adı</label>
+    <input type="text" name="username" autofocus>
+    <label data-i18n="password">Şifre</label>
+    <input type="password" name="password">
+    <button type="submit" data-i18n="login_btn">Giriş</button>
+  </form>
+  <div style="text-align:center;margin-top:18px;font-size:11px"><a href="https://t.me/{{ author_tg }}" target="_blank" rel="noopener" style="color:#64748b;text-decoration:none">by @{{ author_tg }}</a></div>
+</div>
+<script>
+const dict = {
+  tr: { title: "Giriş", panel_login: "Panel Girişi", username: "Kullanıcı Adı", password: "Şifre", login_btn: "Giriş" },
+  en: { title: "Login", panel_login: "Panel Login", username: "Username", password: "Password", login_btn: "Login" },
+  ru: { title: "Вход", panel_login: "Вход в панель", username: "Имя пользователя", password: "Пароль", login_btn: "Войти" },
+  tm: { title: "Giriş", panel_login: "Panel Girişi", username: "Ulanyjy ady", password: "Açar sözi", login_btn: "Gir" }
+};
+function setLang(lang) {
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('.lang-bar span').forEach(el => el.classList.remove('active'));
+  let act = document.getElementById('l-'+lang); if(act) act.classList.add('active');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    if (dict[lang][el.dataset.i18n]) {
+      if (el.tagName === 'INPUT') el.placeholder = dict[lang][el.dataset.i18n];
+      else el.textContent = dict[lang][el.dataset.i18n];
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', () => setLang(localStorage.getItem('lang') || 'tr'));
+</script>
+</body></html>

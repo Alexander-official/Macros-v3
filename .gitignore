@@ -1,0 +1,46 @@
+# --- Gizli / Hassas ---
+.env
+.env.*
+!.env.example
+
+# --- Veritabanı (MÜŞTERİ VERİSİ — asla yükleme) ---
+macros.db
+macros.db*
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# --- Yedekler / büyük dosyalar ---
+backups/
+*.bak
+*.backup
+*.zip
+*.tar.gz
+
+# --- Python ---
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# --- Binary araçlar / submodule ---
+xray/
+masscan/
+
+# --- Log & runtime durumu ---
+*.log
+live_interval.txt
+live_msg_id.txt
+
+# --- Eski/yedek kaynaklar ---
+mainn.py
+*.py.bak
+
+# --- Tek seferlik geliştirme betikleri ---
+patch_format.py
+sync_once.py
+*.pre-lg
+*.pre-panelslot
+.env.bak.*

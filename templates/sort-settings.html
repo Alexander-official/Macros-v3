@@ -1,0 +1,1199 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ayarlar · Macros v3</title>
+<style>
+/* --- TEMA MOTORU (dashboard ile ayni) --- */
+:root{
+  --bg:#080b0f;--card-bg:#0b0f15;--border:#0e1e2e;--border-hover:#1a3a52;
+  --text:#d4d8e0;--text-muted:#334155;--accent:#f87171;--accent-hover:#ef4444;
+  --nav-bg:#0b0f15;--badge-bg:#0c2a3d;--badge-text:#38bdf8;
+}
+[data-theme="matrix"]{--bg:#020604;--card-bg:#040d07;--border:#0a2613;--border-hover:#134e26;--text:#a3e635;--text-muted:#166534;--accent:#22c55e;--accent-hover:#16a34a;--nav-bg:#040d07;--badge-bg:#052e16;--badge-text:#4ade80;}
+[data-theme="amethyst"]{--bg:#0b0811;--card-bg:#130e1d;--border:#261b3d;--border-hover:#4c357a;--text:#e9d5ff;--text-muted:#6b21a8;--accent:#c084fc;--accent-hover:#a855f7;--nav-bg:#130e1d;--badge-bg:#2e1065;--badge-text:#d8b4fe;}
+[data-theme="obsidian"]{--bg:#090a0f;--card-bg:#111318;--border:#1f242d;--border-hover:#374151;--text:#f3f4f6;--text-muted:#4b5563;--accent:#60a5fa;--accent-hover:#3b82f6;--nav-bg:#111318;--badge-bg:#1e3a8a;--badge-text:#93c5fd;}
+
+[data-theme="ocean"]{--bg:#061016;--card-bg:#0a1a24;--border:#0e2f3f;--border-hover:#155e75;--text:#cffafe;--text-muted:#155e75;--accent:#22d3ee;--accent-hover:#06b6d4;--nav-bg:#0a1a24;--badge-bg:#083344;--badge-text:#67e8f9;}
+[data-theme="sunset"]{--bg:#140a07;--card-bg:#1f0f0a;--border:#3a1c10;--border-hover:#7c3a1d;--text:#ffedd5;--text-muted:#9a3412;--accent:#fb923c;--accent-hover:#f97316;--nav-bg:#1f0f0a;--badge-bg:#431407;--badge-text:#fdba74;}
+[data-theme="rose"]{--bg:#140811;--card-bg:#1d0e18;--border:#3d1b31;--border-hover:#831843;--text:#fce7f3;--text-muted:#9d174d;--accent:#f472b6;--accent-hover:#ec4899;--nav-bg:#1d0e18;--badge-bg:#500724;--badge-text:#f9a8d4;}
+[data-theme="slate"]{--bg:#0b0e12;--card-bg:#14181f;--border:#232b36;--border-hover:#3b4654;--text:#e2e8f0;--text-muted:#64748b;--accent:#94a3b8;--accent-hover:#cbd5e1;--nav-bg:#14181f;--badge-bg:#1e293b;--badge-text:#cbd5e1;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--card-bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.nav{background:var(--nav-bg);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-weight:700;font-size:16px;color:#fff;letter-spacing:.05em;display:flex;align-items:baseline;gap:6px}.brand span{color:var(--accent)}.brand .ver{font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px;background:var(--badge-bg);color:var(--badge-text)}.brand a.by{font-size:10px;font-weight:600;color:var(--text-muted);text-decoration:none;letter-spacing:0;padding:0;border:none;background:none}.brand a.by:hover{color:var(--accent)}
+.nav-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nav a{color:var(--text);text-decoration:none;font-size:12px;padding:6px 12px;border-radius:6px;transition:all .15s;font-weight:600;background:var(--card-bg);border:1px solid var(--border)}
+.nav a:hover{border-color:var(--border-hover);color:var(--accent)}
+.nav a.active{border-color:var(--border-hover);color:var(--accent)}
+.theme-selector{display:flex;gap:6px;background:var(--bg);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.theme-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s}
+.theme-dot:hover{transform:scale(1.15)}.theme-dot.active{border-color:#fff}
+.lang-bar{display:flex;gap:6px;font-size:11px;font-weight:700}
+.lang-bar span{cursor:pointer;padding:2px 6px;border-radius:4px;color:var(--text-muted)}
+.main{max-width:1000px;margin:0 auto;padding:24px}
+.box{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1)}
+.box-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.box-sub{font-size:11px;color:var(--text-muted);margin-bottom:14px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+label.lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:block;margin-bottom:6px}
+input[type=number],input[type=text],select,textarea.txt{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .2s;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea.txt{resize:vertical;min-height:64px;font-family:'SF Mono',ui-monospace,monospace;font-size:12px;line-height:1.5}
+select{height:38px;cursor:pointer}
+.btn{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;color:#fff}
+.bp{background:var(--accent)}.bp:hover{background:var(--accent-hover)}
+.bsky{background:#0ea5e9}.bsky:hover{background:#0284c7}
+.bviolet{background:#8b5cf6}.bviolet:hover{background:#7c3aed}
+.bgreen{background:#16a34a}.bgreen:hover{background:#15803d}
+.bd{background:rgba(248,113,113,.12);color:var(--accent);border:1px solid rgba(248,113,113,.25)}.bd:hover{background:rgba(248,113,113,.22)}
+.bghost{background:var(--bg);color:var(--text-muted);border:1px solid var(--border)}.bghost:hover{color:var(--text);border-color:var(--border-hover)}
+/* Toggle */
+.tog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;user-select:none;font-weight:600}
+.tog input{width:38px;height:20px;appearance:none;background:var(--border);border-radius:10px;cursor:pointer;position:relative;transition:background .2s;outline:none;flex-shrink:0}
+.tog input:checked{background:var(--accent)}
+.tog input::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s}
+.tog input:checked::after{left:21px}
+.tog-wrap{display:flex;gap:26px;flex-wrap:wrap;align-items:center}
+.tog-desc{font-size:11px;color:var(--text-muted);margin-top:3px;font-weight:600}
+/* Chip reorder */
+.chip-group{margin-bottom:16px}
+.chip-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.chip-head .lbl{margin:0}
+.chip-reset{background:none;border:none;color:var(--text-muted);font-size:10px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.chip-reset:hover{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:var(--bg);border:1px dashed var(--border);border-radius:10px;min-height:52px}
+.chip{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:grab;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--border-hover)}
+.chip.dragging{opacity:.4}
+.chip.off{opacity:.42;border-style:dashed}
+.chip.off .chip-name{text-decoration:line-through}
+.chip .drag-dot{color:var(--text-muted);font-size:11px;letter-spacing:-2px;cursor:grab}
+.chip .idx{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;background:var(--badge-bg);color:var(--badge-text);border-radius:5px;font-size:10px}
+.chip.off .idx{background:var(--border);color:var(--text-muted)}
+.chip .chip-name{cursor:pointer}
+.chip .mv{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1}
+.chip .mv:hover{color:var(--accent)}
+.hint{font-size:10.5px;color:var(--text-muted);margin-top:6px;font-weight:600}
+/* External slot cards */
+.slot{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;transition:border .15s}
+.slot:hover{border-color:var(--border-hover)}
+.slot.dragging{opacity:.4;border-color:var(--accent);border-style:dashed}
+.slot.local{border-left:3px solid var(--badge-text)}
+.slot.source{border-left:3px solid var(--accent)}
+.slot.pslot{border-left-color:#a78bfa}
+.ms-lim{gap:4px}.ms-lim input{width:64px!important;height:24px;padding:2px 6px!important;font-size:11px!important}
+.rep-card{margin-top:8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px}
+.rep-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:8px 0 6px}
+.rep-stats span{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--text-muted);padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.04)}
+.rep-stats span b{font-size:18px;color:var(--text)}
+.rep-stats span.hl b{color:#4ade80}
+.rep-sub{font-size:11px;color:var(--text-muted)}
+.pbadge{background:linear-gradient(135deg,#7c3aed,#2563eb)!important;color:#fff!important}
+.badge-local{background:var(--badge-bg);color:var(--badge-text);font-size:10px;font-weight:800;padding:5px 8px;border-radius:6px;letter-spacing:.05em}
+.ext_local{width:100%;margin-top:10px;min-height:88px;resize:vertical;font-family:'SF Mono',ui-monospace,monospace;font-size:12px;line-height:1.5;padding:10px 12px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none}
+.ext_local:focus{border-color:var(--accent)}
+.prev-list{max-height:230px;overflow:auto;margin-top:8px;font-family:'SF Mono',ui-monospace,monospace;font-size:11px}
+.prev-list div{padding:3px 2px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot-sort{margin-top:10px;padding:12px;background:var(--card-bg);border:1px dashed var(--border-hover);border-radius:8px}
+.slot-sort.custom{border-color:var(--accent)}
+.ss-grp{margin-bottom:9px}
+.ss-lbl{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px}
+.slot-sort .chips{padding:8px;min-height:40px}
+.slot-sort .chip{padding:5px 8px;font-size:11px}
+.slot-badge-custom{display:none;background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:3px 6px;border-radius:5px;letter-spacing:.04em}
+.slot[data-customsort="1"] .slot-badge-custom{display:inline-block}
+.lbl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px;color:var(--text-muted)}
+.lbl-inp{width:104px;padding:5px 8px;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)}
+.lbl-inp:focus{border-color:var(--accent);outline:none}
+.cprof{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+.cprof .slot-top{gap:8px}
+.cprof textarea{width:100%;margin-top:10px;min-height:92px;resize:vertical;font-family:'SF Mono',ui-monospace,monospace;font-size:12px;line-height:1.5;padding:10px 12px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none}
+.cprof textarea:focus{border-color:var(--accent)}
+.ph-help{font-size:10.5px;color:var(--text-muted);margin-top:6px;font-weight:600;line-height:1.6}
+.ph-help code{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--badge-text)}
+.cprof.dragging{opacity:.4;border-color:var(--accent);border-style:dashed}
+.cprof select{height:34px}
+.cp-row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.cp-mini{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase}
+.cp-sep{width:1px;height:18px;background:var(--border)}
+.cp-protos{display:flex;gap:10px;flex-wrap:wrap}
+.cp-bal{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.cprof .cp_name,.cprof .cp_ua{height:34px}
+.sec-mini{font-size:11px;font-weight:800;color:var(--badge-text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.box-title{cursor:pointer;user-select:none}
+.box-chevron{display:inline-block;transition:transform .2s;font-size:10px;color:var(--text-muted)}
+.box.collapsed .box-chevron{transform:rotate(-90deg)}
+.box.collapsed .box-body{display:none}
+.box.collapsed .box-title{margin-bottom:0}
+.pcard{background:linear-gradient(180deg,var(--card-bg),var(--bg));border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px;transition:border-color .2s,box-shadow .2s}
+.pcard:hover{border-color:var(--border-hover);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.pcard.auto{border-left:3px solid #fbbf24}
+.pc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pc-head input.pc-name{width:auto;flex:0 1 210px;font-weight:700;background:transparent;border:1px solid transparent}
+.pc-head input.pc-name:hover,.pc-head input.pc-name:focus{border-color:var(--border);background:var(--bg)}
+.pc-type{font-size:10px;font-weight:800;letter-spacing:.06em;padding:5px 9px;border-radius:7px;color:#fff}
+.pc-type.mz{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.pc-type.xui{background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.pc-name-ro{font-weight:700;font-size:14px}
+.pc-main{font-size:10px;font-weight:800;padding:4px 9px;border-radius:999px;background:rgba(251,191,36,.14);color:#fbbf24;border:1px solid rgba(251,191,36,.35)}
+.pc-auto{font-size:10px;color:var(--text-muted);font-weight:700}
+.pc-dot{width:10px;height:10px;border-radius:50%;background:var(--border);display:inline-block}
+.pc-dot.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.pc-dot.bad{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2)}
+.pc-dot.wait{background:#fbbf24;animation:pcpulse 1s infinite}
+@keyframes pcpulse{50%{opacity:.35}}
+.pc-count{font-size:11px;color:var(--text-muted);font-weight:700}
+.pc-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:12px}
+.pc-grid .pc-tok{grid-column:span 2}
+@media(max-width:700px){.pc-grid{grid-template-columns:1fr}.pc-grid .pc-tok{grid-column:auto}}
+.pc-ro{margin-top:8px;font-size:12px;color:var(--text-muted);font-family:'SF Mono',ui-monospace,monospace;word-break:break-all}
+
+.box-pin{float:right;cursor:pointer;opacity:.35;font-size:13px;transition:opacity .15s}
+.box-pin:hover{opacity:.8}
+.box.pinned{border-color:var(--accent)}
+.box.pinned .box-pin{opacity:1}
+.box.pinned .box-chevron{opacity:.3}
+.subbox{border-top:1px solid var(--border);padding-top:14px;margin-top:14px}
+.slot-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.slot-grip{color:var(--text-muted);cursor:grab;font-size:14px;letter-spacing:-2px}
+.slot-top .ext_url{flex:1;min-width:200px}
+.slot-top .ext_note{width:130px}
+.slot-top .ext_pos{width:92px}
+.slot-count{display:none;color:#fff;padding:7px 11px;border-radius:7px;font-size:12px;font-weight:800;min-width:34px;text-align:center}
+.slot-bot{display:flex;gap:14px;font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.pchk{display:flex;align-items:center;gap:6px;cursor:pointer;margin:0;text-transform:none;font-weight:600;color:var(--text)}
+.pchk input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.sep{width:1px;height:16px;background:var(--border);margin:0 2px}
+.slot-res{display:none;margin-top:12px;font-size:12px;font-weight:700;padding:9px 12px;border-radius:8px;line-height:1.5}
+.icon-btn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:14px;padding:0}
+.save-bar{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 60%,transparent);padding:16px 0 4px;margin-top:4px}
+.save-bar .btn{width:100%;padding:13px;font-size:14px}
+a.plain{color:var(--badge-text);text-decoration:none;font-size:12px;font-weight:600}
+a.plain:hover{color:var(--accent)}
+</style><link rel="stylesheet" href="/static/liquid-glass.css?v=4">
+<script src="/static/liquid-glass.js?v=2" defer></script>
+</head>
+<body data-theme="cyberpunk">
+<nav class="nav">
+  <div class="brand">⚡ <span>Macros</span> <small class="ver">v3</small> <a class="by" href="https://t.me/{{ author_tg }}" target="_blank" rel="noopener">by @{{ author_tg }}</a></div>
+  <div class="nav-links">
+    <div class="theme-selector" title="Tema">
+      <div class="theme-dot" style="background:#f87171" onclick="setTheme('cyberpunk')"></div>
+      <div class="theme-dot" style="background:#22c55e" onclick="setTheme('matrix')"></div>
+      <div class="theme-dot" style="background:#c084fc" onclick="setTheme('amethyst')"></div>
+      <div class="theme-dot" style="background:#60a5fa" onclick="setTheme('obsidian')"></div>
+      <div class="theme-dot" style="background:#22d3ee" onclick="setTheme('ocean')" title="Ocean"></div>
+      <div class="theme-dot" style="background:#fb923c" onclick="setTheme('sunset')" title="Sunset"></div>
+      <div class="theme-dot" style="background:#f472b6" onclick="setTheme('rose')" title="Rose"></div>
+      <div class="theme-dot" style="background:#94a3b8" onclick="setTheme('slate')" title="Slate"></div>
+      <div class="theme-dot lg-dot" onclick="setTheme('liquid')" title="Liquid Glass"></div>
+    </div>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+    <div class="lang-bar">
+      <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
+      <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+    </div>
+    <a href="/panel/dashboard" data-i18n="nav_dash">← Panel</a>
+    <a href="/panel/stats" data-i18n="nav_stats">📊 İstatistik</a>
+    <a href="/panel/logs" data-i18n="nav_logs">🔥 Loglar</a>
+    <a href="/panel/sort-settings" class="active" data-i18n="sort_set">⚙️ Ayarlar</a>
+  </div>
+</nav>
+
+<form method="post" id="sortForm" onsubmit="prepareForm(event)">
+<input type="hidden" name="form_version" value="2">
+<div class="main">
+  <h2 style="margin-bottom:4px;font-size:20px" data-i18n="page_title">İçerik & Sıralama Ayarları</h2>
+  <p style="color:var(--text-muted);font-size:12px;margin-bottom:20px;font-weight:600" data-i18n="page_sub">Harici kaynaklar, protokol sıralaması ve çıktı davranışını buradan yönetin.</p>
+
+  <!-- SIRALAMA MOTORU -->
+  <div class="box">
+    <div class="box-title">🧲 <span data-i18n="engine">Sıralama Motoru</span></div>
+    <div class="box-sub" data-i18n="engine_sub">Node'ların müşteriye hangi sırayla sunulacağını belirler.</div>
+    <div class="tog-wrap" style="margin-bottom:18px">
+      <div>
+        <label class="tog"><input type="checkbox" name="enable_sort" id="enable_sort" {% if enable_sort == '1' %}checked{% endif %}><span data-i18n="t_sort">Sıralamayı Aktif Et</span></label>
+        <div class="tog-desc" data-i18n="t_sort_d">Kapalıyken node'lar kaynaktaki sırayla sunulur.</div>
+      </div>
+      <div>
+        <label class="tog"><input type="checkbox" name="auto_rename_enabled" id="auto_rename_enabled" {% if auto_rename_enabled == '1' %}checked{% endif %}><span data-i18n="t_ren">Otomatik Adlandır</span></label>
+        <div class="tog-desc" data-i18n="t_ren_d">Bayrak + ülke adıyla node'ları yeniden adlandırır.</div>
+      </div>
+      <div>
+        <label class="tog"><input type="checkbox" name="cdn_label_enabled" id="cdn_label_enabled" {% if cdn_label_enabled == '1' %}checked{% endif %}><span data-i18n="t_cdn">CDN Etiketi (WS)</span></label>
+        <div class="tog-desc" data-i18n="t_cdn_d">VLESS WS IP'si Google/CloudFront/Fastly ise "4G/WiFi" arkasına yazar.</div>
+        <div class="lbl-row">
+          <span data-i18n="lbl_as">Yazılacak metin:</span>
+          <span>Google</span><input type="text" class="lbl-inp" name="cdn_lbl_google" value="{{ cdn_labels.google }}">
+          <span>CloudFront</span><input type="text" class="lbl-inp" name="cdn_lbl_cloudfront" value="{{ cdn_labels.cloudfront }}">
+          <span>Fastly</span><input type="text" class="lbl-inp" name="cdn_lbl_fastly" value="{{ cdn_labels.fastly }}">
+        </div>
+      </div>
+      <div>
+        <label class="tog"><input type="checkbox" name="vps_label_enabled" id="vps_label_enabled" {% if vps_label_enabled == '1' %}checked{% endif %}><span data-i18n="t_vps">VPS Cloud Etiketi</span></label>
+        <div class="tog-desc" data-i18n="t_vps_d">WS/xHTTP dışı node'un IP'si bu cloud'lara aitse ismine yazar.</div>
+        {% set vp = vps_providers.split(',') %}
+        <div class="lbl-row">
+          <label class="pchk"><input type="checkbox" name="vps_provider" value="azure" {% if 'azure' in vp %}checked{% endif %}> Azure</label><input type="text" class="lbl-inp" name="vps_lbl_azure" value="{{ vps_labels.azure }}">
+          <label class="pchk"><input type="checkbox" name="vps_provider" value="amazon" {% if 'amazon' in vp %}checked{% endif %}> AWS</label><input type="text" class="lbl-inp" name="vps_lbl_amazon" value="{{ vps_labels.amazon }}">
+          <label class="pchk"><input type="checkbox" name="vps_provider" value="google" {% if 'google' in vp %}checked{% endif %}> Google</label><input type="text" class="lbl-inp" name="vps_lbl_google" value="{{ vps_labels.google }}">
+          <label class="pchk"><input type="checkbox" name="vps_provider" value="oracle" {% if 'oracle' in vp %}checked{% endif %}> Oracle</label><input type="text" class="lbl-inp" name="vps_lbl_oracle" value="{{ vps_labels.oracle }}">
+        </div>
+      </div>
+    </div>
+
+    <div id="sortBlock">
+      <div class="chip-group">
+        <div class="chip-head"><label class="lbl" data-i18n="prot_order">Protokol Sırası</label><button type="button" class="chip-reset" onclick="resetChips('sort_order')" data-i18n="reset">Sıfırla</button></div>
+        <div class="chips" data-target="sort_order"></div>
+        <input type="hidden" name="sort_order" id="in_sort_order" value="{{ sort_order }}">
+      </div>
+      <div class="grid2">
+        <div class="chip-group" style="margin-bottom:0">
+          <div class="chip-head"><label class="lbl" data-i18n="vless_order">VLESS Alt Sırası</label><button type="button" class="chip-reset" onclick="resetChips('vless_sort')" data-i18n="reset">Sıfırla</button></div>
+          <div class="chips" data-target="vless_sort"></div>
+          <input type="hidden" name="vless_sort" id="in_vless_sort" value="{{ vless_sort }}">
+        </div>
+        <div class="chip-group" style="margin-bottom:0">
+          <div class="chip-head"><label class="lbl" data-i18n="vmess_order">VMess Alt Sırası</label><button type="button" class="chip-reset" onclick="resetChips('vmess_sort')" data-i18n="reset">Sıfırla</button></div>
+          <div class="chips" data-target="vmess_sort"></div>
+          <input type="hidden" name="vmess_sort" id="in_vmess_sort" value="{{ vmess_sort }}">
+        </div>
+      </div>
+      <div class="hint" data-i18n="chip_hint">💡 Sürükleyerek ya da ◀ ▶ ile sırala. Üstüne tıklayıp bir protokolü sıralama dışı (en sona) bırakabilirsin.</div>
+    </div>
+  </div>
+
+  <!-- HARICI SUB SLOTLARI -->
+  <div class="box">
+    <div class="box-title">🛰️ <span data-i18n="ext_sub_title">Harici Sub Kaynakları</span></div>
+    <div class="box-sub" data-i18n="ext_sub_sub">Dış abonelik linklerini otomatik çekip filtreler ve ana çıktıya ekler.</div>
+
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="fld"><label data-i18n="ext_int">Otomatik Çekme Aralığı (Dakika)</label><input type="number" name="external_sub_interval" value="{{ external_sub_interval }}" min="0"></div>
+      <div class="fld"><label data-i18n="g_ping_to">Ping Zaman Aşımı (Sn)</label><input type="number" name="ping_timeout" step="0.1" value="{{ ping_timeout }}"></div>
+      <div class="fld"><label data-i18n="g_ping_ms">Maks. Gecikme (ms, 0 = limitsiz)</label><input type="number" name="ping_max_ms" min="0" step="10" value="{{ ping_max_ms }}"><span class="hint" data-i18n="g_ping_ms_h" style="font-size:10px;color:var(--text-muted)">Ping testi açık slotlarda bu değerin üstündeki kodlar alınmaz.</span></div>
+    </div>
+
+    <div id="slots-container">
+    {% for sub in ext_subs %}
+    {% set p = sub.protocols if sub.protocols is defined else ['ss','vless_tcp','vless_ws','vmess','trojan','hysteria2'] %}
+    {% if sub.source or sub.panel %}
+    <div class="slot source{% if sub.panel %} pslot{% endif %}" data-sid="{{ sub.sid or '' }}"{% if sub.panel %} data-panel="{{ sub.panel }}" data-pname="{{ sub.pname or sub.panel }}"{% else %} data-source="1"{% endif %}{% if sub.sort_order or sub.vless_sort or sub.vmess_sort %} data-customsort="1" data-so="{{ sub.sort_order or '' }}" data-vl="{{ sub.vless_sort or '' }}" data-vm="{{ sub.vmess_sort or '' }}"{% endif %}>
+      <div class="slot-top">
+        <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+        {% if sub.panel %}<span class="badge-local pbadge">🔗 {{ sub.pname or sub.panel }}</span>
+        <span style="flex:1;color:var(--text-muted);font-size:12px" data-i18n="panel_slot_desc">Abonenin bu entegre paneldeki kodları (otomatik)</span>
+        {% else %}<span class="badge-local" style="background:var(--accent)">📍 KAYNAK SUB</span>
+        <span style="flex:1;color:var(--text-muted);font-size:12px" data-i18n="source_desc">Bu abonenin kaynak paneldeki kendi kodları (otomatik)</span>{% endif %}
+        <select class="ext_pos">
+          <option value="top" {% if sub.pos == 'top' %}selected{% endif %} data-i18n="pos_top">Üst</option>
+          <option value="bottom" {% if sub.pos == 'bottom' %}selected{% endif %} data-i18n="pos_bot">Alt</option>
+        </select>
+        <button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="Sıralama" data-i18n-title="slot_sort">⚙️</button>
+        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil">✕</button>
+      </div>
+      <div class="slot-bot proto-checks">
+        <label class="pchk"><input type="checkbox" value="ss" {% if 'ss' in p %}checked{% endif %}> SS</label>
+        <label class="pchk"><input type="checkbox" value="vless_tcp" {% if 'vless_tcp' in p %}checked{% endif %}> VLESS TCP</label>
+        <label class="pchk"><input type="checkbox" value="vless_ws" {% if 'vless_ws' in p %}checked{% endif %}> VLESS WS</label>
+        <label class="pchk"><input type="checkbox" value="vmess" {% if 'vmess' in p %}checked{% endif %}> VMess</label>
+        <label class="pchk"><input type="checkbox" value="trojan" {% if 'trojan' in p %}checked{% endif %}> Trojan</label>
+        <label class="pchk"><input type="checkbox" value="hysteria2" {% if 'hysteria2' in p %}checked{% endif %}> Hysteria2</label>
+        <span class="sep"></span>
+        <label class="pchk"><input type="checkbox" class="slot-rename" {% if sub.rename is not defined or sub.rename %}checked{% endif %}> 🏷️ <span data-i18n="rename_opt">İsmi değiştir</span></label>
+      </div>
+      <div class="slot-sort" hidden>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="prot_order">Protokol</span><div class="chips schips" data-kind="sort_order"></div></div>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="vless_order">VLESS</span><div class="chips schips" data-kind="vless_sort"></div></div>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="vmess_order">VMess</span><div class="chips schips" data-kind="vmess_sort"></div></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap">
+          <button type="button" class="btn bghost" style="padding:5px 10px;font-size:11px" onclick="clearSlotSort(this)" data-i18n="slot_sort_clear">↩ Global sıraya dön</button>
+        </div>
+      </div>
+      <div class="slot-res"></div>
+    </div>
+    {% else %}
+    <div class="slot {% if sub.local %}local{% endif %}" data-sid="{{ sub.sid or '' }}"{% if sub.sort_order or sub.vless_sort or sub.vmess_sort %} data-customsort="1" data-so="{{ sub.sort_order or '' }}" data-vl="{{ sub.vless_sort or '' }}" data-vm="{{ sub.vmess_sort or '' }}"{% endif %}>
+      <div class="slot-top">
+        <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+        {% if sub.local %}<span class="badge-local">LOCAL</span>{% endif %}
+        <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
+        {% if not sub.local %}<input type="text" class="ext_url" value="{{ sub.url }}" placeholder="https://...">{% endif %}
+        <input type="text" class="ext_note" value="{{ sub.note }}" placeholder="Not"{% if sub.local %} style="flex:1"{% endif %}>
+        <select class="ext_pos">
+          <option value="top" {% if sub.pos == 'top' %}selected{% endif %} data-i18n="pos_top">Üst</option>
+          <option value="bottom" {% if sub.pos == 'bottom' %}selected{% endif %} data-i18n="pos_bot">Alt</option>
+        </select>
+        <button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="Sıralama" data-i18n-title="slot_sort">⚙️</button>
+        <button type="button" class="btn bsky icon-btn" onclick="testSlot(this)" title="Test" data-i18n-title="test">⚡</button>
+        <button type="button" class="btn bviolet icon-btn" onclick="fetchSingleSlot(this)" title="Çek" data-i18n-title="fetch">📥</button>
+        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil">✕</button>
+      </div>
+      {% if sub.local %}<textarea class="ext_local" placeholder="Node kodları (her satıra bir tane)..." data-i18n="local_ph">{{ sub.local }}</textarea>{% endif %}
+      <div class="slot-bot proto-checks">
+        <label class="pchk"><input type="checkbox" value="ss" {% if 'ss' in p %}checked{% endif %}> SS</label>
+        <label class="pchk"><input type="checkbox" value="vless_tcp" {% if 'vless_tcp' in p %}checked{% endif %}> VLESS TCP</label>
+        <label class="pchk"><input type="checkbox" value="vless_ws" {% if 'vless_ws' in p %}checked{% endif %}> VLESS WS</label>
+        <label class="pchk"><input type="checkbox" value="vmess" {% if 'vmess' in p %}checked{% endif %}> VMess</label>
+        <label class="pchk"><input type="checkbox" value="trojan" {% if 'trojan' in p %}checked{% endif %}> Trojan</label>
+        <label class="pchk"><input type="checkbox" value="hysteria2" {% if 'hysteria2' in p %}checked{% endif %}> Hysteria2</label>
+        <span class="sep"></span>
+        <label class="pchk" style="color:var(--accent)"><input type="checkbox" class="slot-ping" value="1" {% if sub.ping %}checked{% endif %}> ⚡ <span data-i18n="ping">Ping Testi</span></label>
+        <label class="pchk ms-lim" title="Bu slot için ms limiti (boş = global)"><span>⏱ ≤</span><input type="number" class="slot-maxms" min="0" step="10" value="{{ sub.max_ms or '' }}" placeholder="{{ ping_max_ms if ping_max_ms and ping_max_ms != '0' else '∞' }}"> ms</label>
+        <label class="pchk"><input type="checkbox" class="slot-rename" {% if sub.rename is not defined or sub.rename %}checked{% endif %}> 🏷️ <span data-i18n="rename_opt">İsmi değiştir</span></label>
+      </div>
+      <div class="slot-sort" hidden>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="prot_order">Protokol</span><div class="chips schips" data-kind="sort_order"></div></div>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="vless_order">VLESS</span><div class="chips schips" data-kind="vless_sort"></div></div>
+        <div class="ss-grp"><span class="ss-lbl" data-i18n="vmess_order">VMess</span><div class="chips schips" data-kind="vmess_sort"></div></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap">
+          <button type="button" class="btn bghost" style="padding:5px 10px;font-size:11px" onclick="clearSlotSort(this)" data-i18n="slot_sort_clear">↩ Global sıraya dön</button>
+          <span class="hint" style="margin:0" data-i18n="slot_sort_hint">Boş = global sıra kullanılır</span>
+        </div>
+      </div>
+      <div class="slot-res"></div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button type="button" class="btn bgreen" onclick="addSlot()" data-i18n="add_slot">+ Yeni Kaynak</button>
+      <button type="button" class="btn bghost" onclick="addLocalSlot()" data-i18n="add_local">+ Local Kaynak</button>
+      <button type="button" class="btn bp" onclick="addSourceSlot()" data-i18n="add_source">📍 Kaynak Sub Bloğu</button>
+      <button type="button" class="btn bp" onclick="addPanelSlots()" data-i18n="add_pslot">🔗 Panel Blokları</button>
+      <button type="button" class="btn bsky" id="forceBtn" onclick="forceFetch()" style="flex:1;min-width:180px" data-i18n="force_upd">⟳ Şimdi Çek (Tüm Kaynakları Aktar)</button>
+    </div>
+    <button type="button" class="btn bghost" id="finalPrevBtn" onclick="previewFinal()" style="width:100%;margin-top:10px" data-i18n="final_prev">👁 Final Önizleme (Tüm kaynaklar birleşik + sıralı)</button>
+    <div id="finalPrevBox" class="slot-res" style="margin-top:10px"></div>
+  </div>
+
+  <!-- MANUEL EK LINKLER -->
+  <div class="box">
+    <div class="box-title">✍️ <span data-i18n="manual_title">Manuel Ek Linkler</span></div>
+    <div class="box-sub" data-i18n="manual_sub">Her istekte çıktıya elle eklenen sabit node'lar.</div>
+    <div class="grid2">
+      <div class="fld">
+        <label data-i18n="g_pos">Konum</label>
+        <select name="extra_position">
+          <option value="top" {% if extra_position == 'top' %}selected{% endif %} data-i18n="pos_top_f">Üstte</option>
+          <option value="bottom" {% if extra_position == 'bottom' %}selected{% endif %} data-i18n="pos_bot_f">Altta</option>
+        </select>
+      </div>
+      <div class="fld" style="justify-content:flex-end">
+        <button type="button" class="btn bviolet" onclick="formatManualLinks()" data-i18n="format_btn">🪄 Otomatik Adlandır</button>
+      </div>
+    </div>
+    <div class="fld"><label data-i18n="g_ext">Linkler (her satıra bir tane)</label><textarea class="txt" name="extra_content" id="extra_content_area" rows="4">{{ extra_content }}</textarea></div>
+  </div>
+
+  <!-- GUVENLIK & MESAJLAR -->
+  <div class="box">
+    <div class="box-title">🛡️ <span data-i18n="sec_title">Güvenlik & Mesajlar</span></div>
+    <div class="fld" style="margin-bottom:14px">
+      <label data-i18n="allowed_p">İzinli Paneller (virgülle ayır — boşsa tüm panellere izin)</label>
+      <input type="text" name="allowed_panels" value="{{ allowed_panels }}" placeholder="panel1.com, panel2.net">
+      <span class="hint" data-i18n="allowed_p_h">Sadece bu adresleri içeren sub URL'lerine proxy yapılır.</span>
+    </div>
+    <div class="grid2">
+      <div class="fld"><label data-i18n="err_msg">Genel Hata Mesajı</label><textarea class="txt" name="proxy_error_message" rows="2">{{ proxy_error_message }}</textarea></div>
+      <div class="fld"><label data-i18n="err_404">Kaynak 404 Mesajı</label><textarea class="txt" name="source_404_message" rows="2">{{ source_404_message }}</textarea></div>
+    </div>
+  </div>
+
+  <!-- ENTEGRE PANELLER -->
+  <div class="box">
+    <div class="box-title">🛰️ <span data-i18n="pn_title">Entegre Paneller (Marzban + 3x-ui)</span></div>
+    <div class="box-sub" data-i18n="pn_sub">Birden fazla Marzban/3x-ui paneli ekle. Ana panel OTOMATİK: müşteri sub linklerinin geldiği panel (⭐). Diğerleri trafik toplamaya katılır.</div>
+    <div id="panels-container"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button type="button" class="btn bgreen" onclick="addPanel('marzban')" data-i18n="pn_add_mz">+ Marzban</button>
+      <button type="button" class="btn bgreen" onclick="addPanel('3xui')" data-i18n="pn_add_x">+ 3x-ui</button>
+      <button type="button" class="btn bsky" onclick="refreshPanels()" data-i18n="pn_status">🔄 Durumları Yenile</button>
+      <button type="button" class="btn bviolet" onclick="syncNow(this)" style="flex:1;min-width:150px" data-i18n="pn_sync">🔁 Senkronize Et (trafik topla)</button>
+    </div>
+    <div id="panels-status" class="ph-help" style="margin-top:10px"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="fld"><label data-i18n="pn_interval">Otomatik senkron (saniye, 0 = kapalı)</label>
+        <input type="number" name="panel_sync_seconds" min="0" step="5" value="{{ panel_sync_seconds }}"></div>
+      <div class="fld" style="justify-content:flex-end"><span class="hint" data-i18n="pn_interval_h">Ana paneldeki kullanıcılar ikincil panellerde açılır; limit/süre ana panelden gelir; trafik tüm panellerin toplamıdır. Hiçbir kullanıcı silinmez.</span></div>
+    </div>
+    <div id="panels-report" style="max-height:420px;overflow:auto;font-size:12px"></div>
+  </div>
+
+  <!-- JSON ABONELIGI -->
+  <div class="box">
+    <div class="box-title">🧩 <span data-i18n="js_title">JSON Aboneliği (Xray / v2rayN / Happ)</span></div>
+    <div class="box-sub" data-i18n="js_sub">Xray JSON aboneliği: yönlendirilecek tam client config'leri. Destekleyen uygulamalar düz linkler yerine JSON alır. (v2rayNG ≥1.8.18, v2rayN ≥6.40, Happ ≥1.63.1)</div>
+
+    <div class="fld" style="margin-bottom:8px">
+      <label data-i18n="js_apps">JSON alan uygulamalar (User-Agent, virgülle)</label>
+      <input type="text" name="json_apps" value="{{ json_apps }}" placeholder="happ, v2rayng, v2rayn">
+      <span class="hint" data-i18n="js_apps_h">Boş = hiçbiri. Eşleşmeyen uygulamalar düz link almaya devam eder.</span>
+    </div>
+
+    <div class="subbox">
+      <div class="sec-mini" data-i18n="js_direct">Direct siteler (VPN'siz, kullanıcının kendi interneti)</div>
+      <div class="grid2">
+        <div class="fld"><label data-i18n="js_dom">Domenler (her satıra bir)</label><textarea class="txt" name="json_direct_domains" rows="4" placeholder="domain:ru&#10;geosite:category-ads">{{ json_direct_domains }}</textarea></div>
+        <div class="fld"><label data-i18n="js_ip">IP-ler (her satıra bir)</label><textarea class="txt" name="json_direct_ips" rows="4" placeholder="geoip:ru&#10;10.0.0.0/8">{{ json_direct_ips }}</textarea></div>
+      </div>
+      <label class="tog"><input type="checkbox" name="json_block_ads" {% if json_block_ads=='1' %}checked{% endif %}> <span data-i18n="js_ads">Reklamları engelle</span></label>
+    </div>
+
+    <div class="subbox">
+      <div class="sec-mini" data-i18n="js_bal">Otomatik config (balancer)</div>
+      <label class="tog" style="margin-bottom:10px"><input type="checkbox" name="json_balancer" {% if json_balancer=='1' %}checked{% endif %}> <span data-i18n="js_bal_on">Otomatik config ekle — tüm serverleri içerir, uygulama en hızlıya geçer</span></label>
+      <label class="tog" style="margin-bottom:12px"><input type="checkbox" name="json_balancer_ext" {% if json_balancer_ext=='1' %}checked{% endif %}> <span data-i18n="js_bal_ext">Harici configler de balancer'a girsin</span></label>
+      <div class="grid2">
+        <div class="fld"><label data-i18n="js_bal_name">Ad</label><input type="text" name="json_balancer_name" value="{{ json_balancer_name }}"></div>
+        <div class="fld"><label data-i18n="js_bal_strat">Nasıl seçer</label>
+          <select name="json_balancer_strategy">
+            <option value="leastPing" {% if json_balancer_strategy=='leastPing' %}selected{% endif %} data-i18n="js_least">En düşük ping</option>
+            <option value="random" {% if json_balancer_strategy=='random' %}selected{% endif %} data-i18n="js_rand">Rastgele</option>
+          </select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label data-i18n="js_bal_pos">Yeri</label>
+          <select name="json_balancer_pos">
+            <option value="first" {% if json_balancer_pos=='first' %}selected{% endif %} data-i18n="js_first">Birinci</option>
+            <option value="last" {% if json_balancer_pos=='last' %}selected{% endif %} data-i18n="js_last">Sonuncu</option>
+          </select></div>
+        <div class="fld"><label data-i18n="js_bal_int">Kontrol aralığı</label><input type="text" name="json_balancer_interval" value="{{ json_balancer_interval }}"></div>
+      </div>
+      <div class="fld"><label data-i18n="js_bal_url">Kontrol URL</label><input type="text" name="json_balancer_url" value="{{ json_balancer_url }}"></div>
+    </div>
+  </div>
+
+  <!-- YAPILANDIRMA (JSON) -->
+  <div class="box">
+    <div class="box-title">🗂️ <span data-i18n="cfg_title">Yapılandırma (JSON)</span></div>
+    <div class="box-sub" data-i18n="cfg_sub">Tüm panel ayarlarını tek JSON olarak dışa/içe aktar.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="button" class="btn bsky" onclick="exportConfig()" data-i18n="cfg_export">⬇ Dışa Aktar (indir)</button>
+      <button type="button" class="btn bghost" onclick="var e=document.getElementById('cfgImport');e.hidden=!e.hidden" data-i18n="cfg_import_t">⬆ İçe Aktar</button>
+    </div>
+    <div id="cfgImport" hidden style="margin-top:12px">
+      <textarea class="txt" id="cfgJson" rows="5" placeholder="Dışa aktarılan JSON'u buraya yapıştır..."></textarea>
+      <button type="button" class="btn bgreen" onclick="importConfig()" data-i18n="cfg_do_import" style="margin-top:8px">İçe Aktar ve Uygula</button>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button type="submit" class="btn bp" data-i18n="save_btn">💾 Tüm Ayarları Kaydet</button>
+  </div>
+</div>
+</form>
+
+<script>
+/* ---------- i18n ---------- */
+const dict={
+ tr:{g_ping_ms:"Maks. Gecikme (ms, 0 = limitsiz)",g_ping_ms_h:"Ping testi açık slotlarda bu değerin üstündeki kodlar alınmaz.",ms_slot_t:"Bu slot için ms limiti (boş = global)",pn_own:"kendi",pn_own_long:"Panelin kendi",pn_macros_long:"Macros ekledi",pn_rm_q:"«{name}» paneli kaldırılsın mı?\n\n• Macros’un bu panelde açtığı {n} kullanıcı SİLİNECEK.\n• Panelin kendi {o} kullanıcısına dokunulmayacak.",pn_rm_keep_q:"Panele bağlanılamadı. Kullanıcıları silmeden sadece panel kaldırılsın mı?",pn_rm_doing:"Kullanıcılar siliniyor...",pn_rm_done:"Panel kaldırıldı · {n} macros kullanıcısı silindi",add_pslot:"🔗 Panel Blokları",panel_slot_desc:"Abonenin bu entegre paneldeki kodları (otomatik)",panel_slot_none:"Ana olmayan aktif 3x-ui paneli yok",panel_slot_exists:"Tüm paneller zaten slotta",nav_dash:"← Panel",nav_stats:"📊 İstatistik",nav_logs:"🔥 Loglar",sort_set:"⚙️ Ayarlar",page_title:"İçerik & Sıralama Ayarları",page_sub:"Harici kaynaklar, protokol sıralaması ve çıktı davranışını buradan yönetin.",engine:"Sıralama Motoru",engine_sub:"Node'ların müşteriye hangi sırayla sunulacağını belirler.",t_sort:"Sıralamayı Aktif Et",t_sort_d:"Kapalıyken node'lar kaynaktaki sırayla sunulur.",t_ren:"Otomatik Adlandır",t_ren_d:"Bayrak + ülke adıyla node'ları yeniden adlandırır.",t_cdn:"CDN Etiketi",t_cdn_d:"VLESS WS IP'si Google/CloudFront/Fastly ise '4G/WiFi' arkasına yazar.",prot_order:"Protokol Sırası",vless_order:"VLESS Alt Sırası",vmess_order:"VMess Alt Sırası",reset:"Sıfırla",chip_hint:"💡 Sürükleyerek ya da ◀ ▶ ile sırala. Üstüne tıklayıp bir protokolü sıralama dışı (en sona) bırakabilirsin.",ext_sub_title:"Harici Sub Kaynakları",ext_sub_sub:"Dış abonelik linklerini otomatik çekip filtreler ve ana çıktıya ekler.",ext_int:"Otomatik Çekme Aralığı (Dakika)",g_ping_to:"Ping Zaman Aşımı (Sn)",pos_top:"Üst",pos_bot:"Alt",ping:"Ping Testi",add_slot:"+ Yeni Kaynak",force_upd:"⟳ Şimdi Çek (Tüm Kaynakları Aktar)",manual_title:"Manuel Ek Linkler",manual_sub:"Her istekte çıktıya elle eklenen sabit node'lar.",g_pos:"Konum",pos_top_f:"Üstte",pos_bot_f:"Altta",format_btn:"🪄 Otomatik Adlandır",g_ext:"Linkler (her satıra bir tane)",sec_title:"Güvenlik & Mesajlar",allowed_p:"İzinli Paneller (virgülle ayır — boşsa tüm panellere izin)",allowed_p_h:"Sadece bu adresleri içeren sub URL'lerine proxy yapılır.",err_msg:"Genel Hata Mesajı",err_404:"Kaynak 404 Mesajı",save_btn:"💾 Tüm Ayarları Kaydet",note:"Not",test:"Test",fetch:"Çek",fetched:"Tamamlandı!",fetch_err:"Bulunamadı.",need_url:"Önce URL girin!",testing:"Test ediliyor, lütfen bekleyin...",filtering:"Filtreleniyor (Ping kapalı)...",fetching:"Veriler çekiliyor ve aktarılıyor...",added:"Sisteme eklendi ve kaydedildi!",valid:"Sağlam",conn_err:"Bağlantı koptu veya zaman aşımı.",formatted:"Formatlandı! ✓",updating:"Güncelleniyor...",prev:"Önizle",add_local:"+ Local Kaynak",local_ph:"Node kodları (her satıra bir tane)...",loading_prev:"Önizleme yükleniyor...",prev_empty:"Uygun node bulunamadı.",prev_head:"Görünecek node",rename_off:"rename kapalı",final_prev:"👁 Final Önizleme (Tüm kaynaklar birleşik + sıralı)",slot_sort:"Bu kaynağın sıralaması",slot_sort_clear:"↩ Global sıraya dön",slot_sort_hint:"Boş = global sıra kullanılır",slot_sort_cleared:"Global sıraya dönüldü",custom:"ÖZEL SIRA",t_vps:"VPS Cloud Etiketi",t_vps_d:"WS/xHTTP dışı node IP'si bu cloud'lara aitse ismine yazar.",cfg_title:"Yapılandırma (JSON)",cfg_sub:"Tüm panel ayarlarını tek JSON olarak dışa/içe aktar.",cfg_export:"⬇ Dışa Aktar (indir)",cfg_import_t:"⬆ İçe Aktar",cfg_do_import:"İçe Aktar ve Uygula",cfg_exported:"Dışa aktarıldı ✓",cfg_imported:"İçe aktarıldı",cfg_bad_json:"Geçersiz JSON!",lbl_as:"Yazılacak metin:",cp_title:"İstemci Profilleri (App Formatları)",cp_sub:"Seçtiğin uygulama sub'ı çekerken senin yazdığın formatta (ör. JSON) alsın.",cp_on:"Aktif",cp_add:"+ Yeni Profil",cp_fmt:"Format",cp_proto:"Protokol filtresi",cp_balancer:"Balancer (otomatik en iyi)",cp_balname:"Balancer ismi",add_source:"📍 Kaynak Sub Bloğu",source_desc:"Bu abonenin kaynak paneldeki kendi kodları (otomatik)",source_exists:"Zaten bir Kaynak Sub bloğu var",rename_opt:"İsmi değiştir",pn_title:"Entegre Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Durumları Yenile",pn_main:"Ana",pn_sync:"🔁 Senkronize Et (trafik topla)",pn_main_badge:"ANA PANEL",pn_auto:"otomatik · .env",pn_name_ph:"Panel adı",pn_url:"Panel URL",pn_user:"Kullanıcı",pn_pass:"Şifre",pn_token:"API Token",pn_token_ph:"3x-ui → Ayarlar → Güvenlik → API Token",pn_users:"kullanıcı",pn_online:"panel çevrimiçi",pn_sub:"Birden fazla Marzban/3x-ui paneli ekle. Ana panel OTOMATİK: müşteri sub linklerinin geldiği panel (⭐). Diğerleri trafik toplamaya katılır."},
+ en:{g_ping_ms:"Max Latency (ms, 0 = no limit)",g_ping_ms_h:"In slots with ping test on, nodes above this are dropped.",ms_slot_t:"ms limit for this slot (empty = global)",pn_own:"own",pn_own_long:"Panel own",pn_macros_long:"Added by Macros",pn_rm_q:"Remove panel «{name}»?\n\n• {n} users created by Macros on this panel will be DELETED.\n• The panel’s own {o} users stay untouched.",pn_rm_keep_q:"Panel unreachable. Remove only the panel without deleting users?",pn_rm_doing:"Deleting users...",pn_rm_done:"Panel removed · {n} macros users deleted",add_pslot:"🔗 Panel Blocks",panel_slot_desc:"This subscriber's codes on this integrated panel (automatic)",panel_slot_none:"No active secondary 3x-ui panel",panel_slot_exists:"All panels already have a slot",nav_dash:"← Dashboard",nav_stats:"📊 Statistics",nav_logs:"🔥 Logs",sort_set:"⚙️ Settings",page_title:"Content & Sorting Settings",page_sub:"Manage external sources, protocol order and output behavior here.",engine:"Sorting Engine",engine_sub:"Controls the order nodes are served to the client.",t_sort:"Enable Sorting",t_sort_d:"When off, nodes are served in source order.",t_ren:"Auto Rename",t_ren_d:"Renames nodes with flag + country name.",t_cdn:"CDN Label",t_cdn_d:"If VLESS WS IP is Google/CloudFront/Fastly, appends it after '4G/WiFi'.",prot_order:"Protocol Order",vless_order:"VLESS Sub-order",vmess_order:"VMess Sub-order",reset:"Reset",chip_hint:"💡 Drag or use ◀ ▶ to reorder. Click a chip to drop a protocol out of sorting (to the end).",ext_sub_title:"External Sub Sources",ext_sub_sub:"Auto-fetches, filters external subs and appends to main output.",ext_int:"Auto Fetch Interval (Mins)",g_ping_to:"Ping Timeout (Sec)",pos_top:"Top",pos_bot:"Bottom",ping:"Ping Test",add_slot:"+ Add Source",force_upd:"⟳ Fetch Now (Push All Sources)",manual_title:"Manual Links",manual_sub:"Static nodes appended to every request's output.",g_pos:"Position",pos_top_f:"Top",pos_bot_f:"Bottom",format_btn:"🪄 Auto Rename",g_ext:"Links (one per line)",sec_title:"Security & Messages",allowed_p:"Allowed Panels (comma separated — empty = allow all)",allowed_p_h:"Only sub URLs containing these hosts will be proxied.",err_msg:"Generic Error Message",err_404:"Source 404 Message",save_btn:"💾 Save All Settings",note:"Note",test:"Test",fetch:"Fetch",fetched:"Done!",fetch_err:"Not found.",need_url:"Enter a URL first!",testing:"Testing, please wait...",filtering:"Filtering (ping off)...",fetching:"Fetching and importing...",added:"Imported and saved!",valid:"Valid",conn_err:"Connection lost or timed out.",formatted:"Formatted! ✓",updating:"Updating...",prev:"Preview",add_local:"+ Local Source",local_ph:"Node codes (one per line)...",loading_prev:"Loading preview...",prev_empty:"No matching nodes.",prev_head:"Nodes shown",rename_off:"rename off",final_prev:"👁 Final Preview (all sources merged + sorted)",slot_sort:"This source's sorting",slot_sort_clear:"↩ Use global order",slot_sort_hint:"Empty = global order used",slot_sort_cleared:"Reverted to global order",custom:"CUSTOM",t_vps:"VPS Cloud Label",t_vps_d:"If a non-WS/xHTTP node IP belongs to these clouds, appends it to the name.",cfg_title:"Configuration (JSON)",cfg_sub:"Export/import all panel settings as a single JSON.",cfg_export:"⬇ Export (download)",cfg_import_t:"⬆ Import",cfg_do_import:"Import & Apply",cfg_exported:"Exported ✓",cfg_imported:"Imported",cfg_bad_json:"Invalid JSON!",lbl_as:"Label text:",cp_title:"Client Profiles (App Formats)",cp_sub:"Selected apps receive the sub in the format you define when they fetch it.",cp_on:"On",cp_add:"+ New Profile",cp_fmt:"Format",cp_proto:"Protocol filter",cp_balancer:"Balancer (auto best)",cp_balname:"Balancer name",add_source:"📍 Source Sub Block",source_desc:"This sub's own codes from the source panel (automatic)",source_exists:"A Source Sub block already exists",rename_opt:"Rename",pn_title:"Integrated Panels (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Refresh status",pn_main:"Main",pn_sync:"🔁 Sync now (collect traffic)",pn_main_badge:"MAIN PANEL",pn_auto:"automatic · .env",pn_name_ph:"Panel name",pn_url:"Panel URL",pn_user:"Username",pn_pass:"Password",pn_token:"API Token",pn_token_ph:"3x-ui → Settings → Security → API Token",pn_users:"users",pn_online:"panels online",pn_sub:"Add multiple Marzban/3x-ui panels. Main panel is AUTOMATIC: the panel your customers' sub links come from (⭐). Others add to traffic totals."},
+ ru:{g_ping_ms:"Макс. задержка (мс, 0 = без лимита)",g_ping_ms_h:"В слотах с пинг-тестом узлы выше лимита не берутся.",ms_slot_t:"Лимит мс для слота (пусто = глобальный)",pn_own:"свои",pn_own_long:"Свои",pn_macros_long:"Добавил Macros",pn_rm_q:"Удалить панель «{name}»?\n\n• {n} пользователей, созданных Macros, будут УДАЛЕНЫ.\n• Собственные {o} пользователей панели не трогаются.",pn_rm_keep_q:"Панель недоступна. Удалить только панель, не удаляя пользователей?",pn_rm_doing:"Удаление пользователей...",pn_rm_done:"Панель удалена · удалено {n}",add_pslot:"🔗 Блоки панелей",panel_slot_desc:"Коды абонента на этой панели (авто)",panel_slot_none:"Нет активных доп. панелей 3x-ui",panel_slot_exists:"Все панели уже добавлены",nav_dash:"← Панель",nav_stats:"📊 Статистика",nav_logs:"🔥 Логи",sort_set:"⚙️ Настройки",page_title:"Контент и сортировка",page_sub:"Управляйте внешними источниками, порядком протоколов и выводом.",engine:"Движок сортировки",engine_sub:"Определяет порядок выдачи узлов клиенту.",t_sort:"Включить сортировку",t_sort_d:"Если выкл — узлы в исходном порядке.",t_ren:"Авто-переименование",t_ren_d:"Переименовывает узлы: флаг + страна.",t_cdn:"CDN метка",t_cdn_d:"Если IP VLESS WS — Google/CloudFront/Fastly, добавит после '4G/WiFi'.",prot_order:"Порядок протоколов",vless_order:"Под-порядок VLESS",vmess_order:"Под-порядок VMess",reset:"Сброс",chip_hint:"💡 Перетащите или ◀ ▶ для порядка. Клик — исключить протокол (в конец).",ext_sub_title:"Внешние источники",ext_sub_sub:"Авто-загрузка, фильтр внешних сабов и добавление в вывод.",ext_int:"Интервал загрузки (мин)",g_ping_to:"Тайм-аут пинга (сек)",pos_top:"Верх",pos_bot:"Низ",ping:"Пинг-тест",add_slot:"+ Источник",force_upd:"⟳ Загрузить сейчас",manual_title:"Ручные ссылки",manual_sub:"Статичные узлы в каждом выводе.",g_pos:"Позиция",pos_top_f:"Сверху",pos_bot_f:"Снизу",format_btn:"🪄 Авто-имя",g_ext:"Ссылки (по одной в строке)",sec_title:"Безопасность и сообщения",allowed_p:"Разрешённые панели (через запятую — пусто = все)",allowed_p_h:"Проксируются только URL с этими хостами.",err_msg:"Сообщение об ошибке",err_404:"Сообщение 404",save_btn:"💾 Сохранить всё",note:"Заметка",test:"Тест",fetch:"Загрузить",fetched:"Готово!",fetch_err:"Не найдено.",need_url:"Сначала URL!",testing:"Тест, подождите...",filtering:"Фильтрация (пинг выкл)...",fetching:"Загрузка и импорт...",added:"Импортировано и сохранено!",valid:"Рабочих",conn_err:"Соединение потеряно.",formatted:"Готово! ✓",updating:"Обновление...",prev:"Превью",add_local:"+ Локальный",local_ph:"Коды узлов (по одному в строке)...",loading_prev:"Загрузка превью...",prev_empty:"Нет подходящих узлов.",prev_head:"Узлов",rename_off:"переим. выкл",final_prev:"👁 Финал превью (все источники + сортировка)",slot_sort:"Сортировка источника",slot_sort_clear:"↩ Глобальный порядок",slot_sort_hint:"Пусто = глобальный порядок",slot_sort_cleared:"Возврат к глобальному",custom:"СВОЙ",t_vps:"VPS Cloud метка",t_vps_d:"Если IP узла (не WS/xHTTP) принадлежит этим облакам — добавит к имени.",cfg_title:"Конфигурация (JSON)",cfg_sub:"Экспорт/импорт всех настроек одним JSON.",cfg_export:"⬇ Экспорт (скачать)",cfg_import_t:"⬆ Импорт",cfg_do_import:"Импорт и применить",cfg_exported:"Экспортировано ✓",cfg_imported:"Импортировано",cfg_bad_json:"Неверный JSON!",lbl_as:"Текст метки:",cp_title:"Профили клиентов (форматы)",cp_sub:"Выбранные приложения получают саб в заданном вами формате.",cp_on:"Вкл",cp_add:"+ Профиль",cp_fmt:"Формат",cp_proto:"Фильтр протоколов",cp_balancer:"Balancer (авто лучший)",cp_balname:"Имя balancer",add_source:"📍 Блок исходного саба",source_desc:"Собственные коды этого саба из панели (авто)",source_exists:"Блок исходного саба уже есть",rename_opt:"Переименовать",pn_title:"Интегрированные панели (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Обновить статус",pn_main:"Главная",pn_sync:"🔁 Синхронизировать",pn_main_badge:"ГЛАВНАЯ",pn_auto:"авто · .env",pn_name_ph:"Имя панели",pn_url:"URL панели",pn_user:"Логин",pn_pass:"Пароль",pn_token:"API токен",pn_token_ph:"3x-ui → Настройки → Безопасность → API токен",pn_users:"польз.",pn_online:"панелей онлайн",pn_sub:"Добавьте панели Marzban/3x-ui. Главная определяется АВТОМАТИЧЕСКИ (⭐)."},
+ tm:{g_ping_ms:"Iň köp gijikme (ms, 0 = çäksiz)",g_ping_ms_h:"Ping barlagy açyk slotlarda bu bahadan ýokary kodlar alynmaýar.",ms_slot_t:"Bu slot üçin ms çägi (boş = global)",pn_own:"öz",pn_own_long:"Paneliň öz",pn_macros_long:"Macros goşdy",pn_rm_q:"«{name}» panel aýrylsynmy?\n\n• Macros-yň bu panelde açan {n} ulanyjysy POZULAR.\n• Paneliň öz {o} ulanyjysyna degilmez.",pn_rm_keep_q:"Panel elýeterli däl. Ulanyjylary pozman diňe panel aýrylsynmy?",pn_rm_doing:"Ulanyjylar pozulýar...",pn_rm_done:"Panel aýryldy · {n} ulanyjy pozuldy",add_pslot:"🔗 Panel Bloklary",panel_slot_desc:"Abonäniň bu paneldäki kodlary (awto)",panel_slot_none:"Işjeň goşmaça 3x-ui panel ýok",panel_slot_exists:"Ähli paneller eýýäm bar",nav_dash:"← Panel",nav_stats:"📊 Statistika",nav_logs:"🔥 Loglar",sort_set:"⚙️ Sazlamalar",page_title:"Mazmun & Tertip",page_sub:"Daşarky çeşmeler, protokol tertibi we çykyşy dolandyryň.",engine:"Tertip Hereketlendirijisi",engine_sub:"Node'laryň müşderä haýsy tertipde beriljegini kesgitleýär.",t_sort:"Tertibi Işjeňleşdir",t_sort_d:"Ýapykka node'lar çeşmedäki tertipde berilýär.",t_ren:"Awto Atlandyr",t_ren_d:"Baýdak + ýurt ady bilen täzeden atlandyrýar.",t_cdn:"CDN Belligi",t_cdn_d:"VLESS WS IP Google/CloudFront/Fastly bolsa '4G/WiFi' yzyna ýazýar.",prot_order:"Protokol Tertibi",vless_order:"VLESS Kiçi Tertip",vmess_order:"VMess Kiçi Tertip",reset:"Dikelt",chip_hint:"💡 Süýräp ýa-da ◀ ▶ bilen tertiple. Üstüne basyp tertipden aýryp bolýar.",ext_sub_title:"Daşarky Sub Çeşmeleri",ext_sub_sub:"Daşarky sublary awto çekip süzýär we esasy çykyşa goşýar.",ext_int:"Awto Çekiş Aralygy (Min)",g_ping_to:"Ping Wagty (Sek)",pos_top:"Üst",pos_bot:"Aşak",ping:"Ping Barlag",add_slot:"+ Täze Çeşme",force_upd:"⟳ Häzir Çek",manual_title:"Manual Linkler",manual_sub:"Her çykyşa goşulýan hemişelik node'lar.",g_pos:"Ýeri",pos_top_f:"Üstde",pos_bot_f:"Aşakda",format_btn:"🪄 Awto Atlandyr",g_ext:"Linkler (her setire bir)",sec_title:"Howpsuzlyk & Hatlar",allowed_p:"Rugsatly Paneller (otur bilen — boş = hemmesi)",allowed_p_h:"Diňe şu hostlary öz içine alýan URL'lere proxy edilýär.",err_msg:"Umumy Ýalňyşlyk Haty",err_404:"Çeşme 404 Haty",save_btn:"💾 Hemmesini Ýatda Sakla",note:"Bellik",test:"Test",fetch:"Çek",fetched:"Tamam!",fetch_err:"Tapylmady.",need_url:"Ilki URL giriziň!",testing:"Test edilýär...",filtering:"Süzülýär (ping ýapyk)...",fetching:"Çekilýär we geçirilýär...",added:"Goşuldy we ýatda saklandy!",valid:"Sagdyn",conn_err:"Baglanyşyk kesildi.",formatted:"Formatlandy! ✓",updating:"Täzelenýär...",prev:"Öňünden gör",add_local:"+ Local Çeşme",local_ph:"Node kodlary (her setire bir)...",loading_prev:"Öňizleme ýüklenýär...",prev_empty:"Laýyk node tapylmady.",prev_head:"Görünjek node",rename_off:"rename ýapyk",final_prev:"👁 Final Öňizleme (ähli çeşmeler + tertip)",slot_sort:"Bu çeşmäniň tertibi",slot_sort_clear:"↩ Global tertibe dön",slot_sort_hint:"Boş = global tertip",slot_sort_cleared:"Global tertibe dönüldi",custom:"ÖZEL",t_vps:"VPS Cloud Belligi",t_vps_d:"WS/xHTTP däl node IP şu cloud'lara degişli bolsa adyna ýazýar.",cfg_title:"Konfigurasiýa (JSON)",cfg_sub:"Ähli sazlamalary bir JSON bilen eksport/import et.",cfg_export:"⬇ Eksport (ýükle)",cfg_import_t:"⬆ Import",cfg_do_import:"Import et we ulan",cfg_exported:"Eksport edildi ✓",cfg_imported:"Import edildi",cfg_bad_json:"Nädogry JSON!",lbl_as:"Ýazyljak tekst:",cp_title:"Müşderi Profilleri (App Formatlary)",cp_sub:"Saýlanan programma sub-y seniň formatyňda alýar.",cp_on:"Açyk",cp_add:"+ Täze Profil",cp_fmt:"Format",cp_proto:"Protokol filtri",cp_balancer:"Balancer (awto iň gowy)",cp_balname:"Balancer ady",add_source:"📍 Çeşme Sub Bloky",source_desc:"Bu abonäniň çeşme paneldäki öz kodlary (awto)",source_exists:"Eýýäm Çeşme Sub bloky bar",rename_opt:"Ady üýtget",pn_title:"Birleşen Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Ýagdaýy täzele",pn_main:"Esasy",pn_sync:"🔁 Sinhronla",pn_main_badge:"ESASY PANEL",pn_auto:"awto · .env",pn_name_ph:"Panel ady",pn_url:"Panel URL",pn_user:"Ulanyjy",pn_pass:"Açar sözi",pn_token:"API Token",pn_token_ph:"3x-ui → Sazlamalar → Howpsuzlyk → API Token",pn_users:"ulanyjy",pn_online:"panel onlaýn",pn_sub:"Marzban/3x-ui panellerini goş. Esasy panel AWTOMATIK kesgitlenýär (⭐)."}
+};
+function L(){return dict[localStorage.getItem('lang')||'tr']||dict.tr;}
+function T(k){return L()[k]||k;}
+function applyLang(){
+  const d=L();
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(d[el.dataset.i18n]!==undefined){
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=d[el.dataset.i18n];
+      else if(el.tagName==='OPTION')el.text=d[el.dataset.i18n];
+      else el.innerHTML=d[el.dataset.i18n];
+    }
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{if(d[el.dataset.i18nTitle])el.title=d[el.dataset.i18nTitle];});
+}
+function setLang(l){
+  localStorage.setItem('lang',l);
+  document.querySelectorAll('.lang-bar span').forEach(e=>e.style.color='var(--text-muted)');
+  const a=document.getElementById('l-'+l); if(a)a.style.color='var(--accent)';
+  applyLang();
+}
+function setTheme(t){
+  document.body.setAttribute('data-theme',t);localStorage.setItem('theme',t);
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  if(window.event&&window.event.target)window.event.target.classList.add('active');
+}
+
+/* ---------- Protokol çip sıralama ---------- */
+const ALL={
+  sort_order:["ss","vless","vmess","trojan","hysteria2","hy2","tuic"],
+  vless_sort:["reality","grpc","xhttp","ws","tcp","other"],
+  vmess_sort:["ws","grpc","tcp","other"]
+};
+const GLOBAL_ORDERS={sort_order:"{{ sort_order }}",vless_sort:"{{ vless_sort }}",vmess_sort:"{{ vmess_sort }}"};
+const ATTR={sort_order:"so",vless_sort:"vl",vmess_sort:"vm"};
+const CP_SAVED={{ client_profiles|tojson }};
+const CP_PANELS={{ integrated_panels|tojson }};
+const PING_MAX_MS={{ (ping_max_ms or '0')|int }};
+const MAIN_HOST={{ (main_host or '')|tojson }};
+const LABELS={ss:"Shadowsocks",vless:"VLESS",vmess:"VMess",trojan:"Trojan",hysteria2:"Hysteria2",hy2:"HY2",tuic:"TUIC",reality:"Reality",grpc:"gRPC",xhttp:"xHTTP",ws:"WS",tcp:"TCP",other:"Diğer"};
+function parseOrder(target){
+  const raw=(document.getElementById('in_'+target).value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const valid=raw.filter(v=>ALL[target].includes(v));
+  const active=[...new Set(valid)];
+  const inactive=ALL[target].filter(v=>!active.includes(v));
+  return {active,inactive};
+}
+function buildChips(target){
+  const box=document.querySelector(`.chips[data-target="${target}"]`);
+  const {active,inactive}=parseOrder(target);
+  box.innerHTML='';
+  active.forEach(v=>box.appendChild(chipEl(target,v,true)));
+  inactive.forEach(v=>box.appendChild(chipEl(target,v,false)));
+  reindex(target);
+}
+function chipEl(target,val,on){
+  const c=document.createElement('div');
+  c.className='chip'+(on?'':' off');c.draggable=true;c.dataset.val=val;c.dataset.on=on?'1':'0';
+  c.innerHTML=`<span class="idx"></span><span class="drag-dot">⠿</span><span class="chip-name">${LABELS[val]||val}</span>
+    <button type="button" class="mv" title="←">◀</button><button type="button" class="mv" title="→">▶</button>`;
+  c.querySelector('.chip-name').onclick=()=>{c.dataset.on=c.dataset.on==='1'?'0':'1';c.classList.toggle('off');reindex(target);};
+  const [l,r]=c.querySelectorAll('.mv');
+  l.onclick=()=>{const p=c.previousElementSibling;if(p)box(target).insertBefore(c,p);reindex(target);};
+  r.onclick=()=>{const n=c.nextElementSibling;if(n)box(target).insertBefore(n,c);reindex(target);};
+  c.addEventListener('dragstart',()=>{c.classList.add('dragging');});
+  c.addEventListener('dragend',()=>{c.classList.remove('dragging');reindex(target);});
+  return c;
+}
+function box(target){return document.querySelector(`.chips[data-target="${target}"]`);}
+function reindex(target){
+  const b=box(target);let i=1;
+  [...b.children].forEach(c=>{
+    const idx=c.querySelector('.idx');
+    if(c.dataset.on==='1'){idx.textContent=i++;idx.style.visibility='visible';}
+    else{idx.textContent='–';}
+  });
+  syncHidden(target);
+}
+function syncHidden(target){
+  const vals=[...box(target).children].filter(c=>c.dataset.on==='1').map(c=>c.dataset.val);
+  document.getElementById('in_'+target).value=vals.join(',');
+}
+function resetChips(target){
+  document.getElementById('in_'+target).value=ALL[target].join(',');
+  buildChips(target);
+}
+['sort_order','vless_sort','vmess_sort'].forEach(t=>{
+  document.addEventListener('DOMContentLoaded',()=>{
+    buildChips(t);
+    box(t).addEventListener('dragover',e=>{
+      e.preventDefault();
+      const dragging=box(t).querySelector('.dragging');if(!dragging)return;
+      const after=getAfter(box(t),e.clientX,e.clientY);
+      if(after==null)box(t).appendChild(dragging);else box(t).insertBefore(dragging,after);
+    });
+  });
+});
+function getAfter(container,x,y){
+  const els=[...container.querySelectorAll('.chip:not(.dragging)')];
+  let closest={dist:-Infinity,el:null};
+  els.forEach(el=>{
+    const b=el.getBoundingClientRect();
+    const off=y<b.bottom&&y>b.top? x-b.left-b.width/2 : (y<b.top? -Infinity: x-b.left-b.width/2);
+    if(off<0&&off>closest.dist)closest={dist:off,el};
+  });
+  return closest.el;
+}
+
+/* ---------- Slot-bazli protokol sirasi (cip editoru) ---------- */
+function reidxS(container){let i=1;[...container.children].forEach(c=>{const idx=c.querySelector('.idx');if(c.dataset.on==='1'){idx.textContent=i++;}else idx.textContent='–';});}
+function schipEl(container,val,on){
+  const c=document.createElement('div');
+  c.className='chip'+(on?'':' off');c.draggable=true;c.dataset.val=val;c.dataset.on=on?'1':'0';
+  c.innerHTML=`<span class="idx"></span><span class="drag-dot">⠿</span><span class="chip-name">${LABELS[val]||val}</span><button type="button" class="mv">◀</button><button type="button" class="mv">▶</button>`;
+  c.querySelector('.chip-name').onclick=()=>{c.dataset.on=c.dataset.on==='1'?'0':'1';c.classList.toggle('off');reidxS(container);syncSchips(container);};
+  const [l,r]=c.querySelectorAll('.mv');
+  l.onclick=()=>{const p=c.previousElementSibling;if(p)container.insertBefore(c,p);reidxS(container);syncSchips(container);};
+  r.onclick=()=>{const n=c.nextElementSibling;if(n)container.insertBefore(n,c);reidxS(container);syncSchips(container);};
+  c.addEventListener('dragstart',()=>c.classList.add('dragging'));
+  c.addEventListener('dragend',()=>{c.classList.remove('dragging');reidxS(container);syncSchips(container);});
+  return c;
+}
+function buildSchips(container){
+  const kind=container.dataset.kind, slot=container.closest('.slot');
+  const saved=(slot.dataset[ATTR[kind]]||'').trim();
+  const base=(saved||GLOBAL_ORDERS[kind]||ALL[kind].join(',')).split(',').map(s=>s.trim()).filter(v=>ALL[kind].includes(v));
+  const active=[...new Set(base)], inactive=ALL[kind].filter(v=>!active.includes(v));
+  container.innerHTML='';
+  active.forEach(v=>container.appendChild(schipEl(container,v,true)));
+  inactive.forEach(v=>container.appendChild(schipEl(container,v,false)));
+  reidxS(container);
+  if(!container._dnd){container._dnd=1;container.addEventListener('dragover',e=>{e.preventDefault();const dr=container.querySelector('.dragging');if(!dr)return;const after=getAfter(container,e.clientX,e.clientY);if(after==null)container.appendChild(dr);else container.insertBefore(dr,after);});}
+}
+function syncSchips(container){
+  const slot=container.closest('.slot');
+  const vals=[...container.children].filter(c=>c.dataset.on==='1').map(c=>c.dataset.val);
+  slot.dataset[ATTR[container.dataset.kind]]=vals.join(',');
+  slot.dataset.customsort='1';
+  const panel=slot.querySelector('.slot-sort');if(panel)panel.classList.add('custom');
+}
+function toggleSlotSort(btn){
+  const slot=btn.closest('.slot'), panel=slot.querySelector('.slot-sort');
+  panel.hidden=!panel.hidden;
+  if(!panel.hidden){
+    panel.classList.toggle('custom', slot.dataset.customsort==='1');
+    if(!panel._built){panel._built=1;panel.querySelectorAll('.schips').forEach(buildSchips);applyLang();}
+  }
+}
+function clearSlotSort(btn){
+  const slot=btn.closest('.slot');
+  ['so','vl','vm'].forEach(a=>slot.removeAttribute('data-'+a));
+  slot.removeAttribute('data-customsort');
+  const panel=slot.querySelector('.slot-sort');panel.classList.remove('custom');
+  panel.querySelectorAll('.schips').forEach(buildSchips);
+  toast(T('slot_sort_cleared'),'#2dd4bf');
+}
+
+/* ---------- Harici slotlar ---------- */
+function newSid(){return 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function protoChecksHTML(){
+  return `<div class="slot-bot proto-checks">
+      <label class="pchk"><input type="checkbox" value="ss" checked> SS</label>
+      <label class="pchk"><input type="checkbox" value="vless_tcp" checked> VLESS TCP</label>
+      <label class="pchk"><input type="checkbox" value="vless_ws" checked> VLESS WS</label>
+      <label class="pchk"><input type="checkbox" value="vmess" checked> VMess</label>
+      <label class="pchk"><input type="checkbox" value="trojan" checked> Trojan</label>
+      <label class="pchk"><input type="checkbox" value="hysteria2" checked> Hysteria2</label>
+      <span class="sep"></span>
+      <label class="pchk" style="color:var(--accent)"><input type="checkbox" class="slot-ping" value="1"> ⚡ ${T('ping')}</label>
+      <label class="pchk ms-lim" title="${T('ms_slot_t')}"><span>⏱ ≤</span><input type="number" class="slot-maxms" min="0" step="10" placeholder="${PING_MAX_MS>0?PING_MAX_MS:'∞'}"> ms</label>
+      <label class="pchk"><input type="checkbox" class="slot-rename" checked> 🏷️ ${T('rename_opt')}</label>
+    </div>`;
+}
+function actionBtns(){
+  return `<button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="${T('slot_sort')}">⚙️</button>
+      <button type="button" class="btn bsky icon-btn" onclick="testSlot(this)" title="${T('test')}">⚡</button>
+      <button type="button" class="btn bviolet icon-btn" onclick="fetchSingleSlot(this)" title="${T('fetch')}">📥</button>
+      <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="✕">✕</button>`;
+}
+function sortPanelHTML(){
+  return `<div class="slot-sort" hidden>
+      <div class="ss-grp"><span class="ss-lbl" data-i18n="prot_order">Protokol</span><div class="chips schips" data-kind="sort_order"></div></div>
+      <div class="ss-grp"><span class="ss-lbl" data-i18n="vless_order">VLESS</span><div class="chips schips" data-kind="vless_sort"></div></div>
+      <div class="ss-grp"><span class="ss-lbl" data-i18n="vmess_order">VMess</span><div class="chips schips" data-kind="vmess_sort"></div></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap">
+        <button type="button" class="btn bghost" style="padding:5px 10px;font-size:11px" onclick="clearSlotSort(this)" data-i18n="slot_sort_clear">↩ Global sıraya dön</button>
+        <span class="hint" style="margin:0" data-i18n="slot_sort_hint">Boş = global sıra kullanılır</span>
+      </div>
+    </div>`;
+}
+function slotHTML(){
+  return `<div class="slot-top">
+      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
+      <input type="text" class="ext_url" placeholder="https://...">
+      <input type="text" class="ext_note" placeholder="${T('note')}">
+      <select class="ext_pos"><option value="top">${T('pos_top')}</option><option value="bottom" selected>${T('pos_bot')}</option></select>
+      ${actionBtns()}
+    </div>${protoChecksHTML()}${sortPanelHTML()}<div class="slot-res"></div>`;
+}
+function localSlotHTML(){
+  return `<div class="slot-top">
+      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      <span class="badge-local">LOCAL</span>
+      <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
+      <input type="text" class="ext_note" placeholder="${T('note')}" style="flex:1">
+      <select class="ext_pos"><option value="top">${T('pos_top')}</option><option value="bottom" selected>${T('pos_bot')}</option></select>
+      ${actionBtns()}
+    </div>
+    <textarea class="ext_local" placeholder="${T('local_ph')}"></textarea>${protoChecksHTML()}${sortPanelHTML()}<div class="slot-res"></div>`;
+}
+function addSlot(){
+  const d=document.createElement('div');d.className='slot';d.dataset.sid=newSid();d.innerHTML=slotHTML();
+  document.getElementById('slots-container').appendChild(d);
+}
+function addLocalSlot(){
+  const d=document.createElement('div');d.className='slot local';d.dataset.sid=newSid();d.innerHTML=localSlotHTML();
+  document.getElementById('slots-container').appendChild(d);
+  d.querySelector('.ext_local').focus();
+}
+function sourceSlotHTML(pname){
+  const badge=pname?`<span class="badge-local pbadge">🔗 ${escapeHtml(pname)}</span>`:`<span class="badge-local" style="background:var(--accent)">📍 KAYNAK SUB</span>`;
+  return `<div class="slot-top">
+      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      ${badge}
+      <span style="flex:1;color:var(--text-muted);font-size:12px">${T(pname?'panel_slot_desc':'source_desc')}</span>
+      <select class="ext_pos"><option value="top">${T('pos_top')}</option><option value="bottom" selected>${T('pos_bot')}</option></select>
+      <button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="${T('slot_sort')}">⚙️</button>
+      <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="✕">✕</button>
+    </div>
+    <div class="slot-bot proto-checks">
+      <label class="pchk"><input type="checkbox" value="ss" checked> SS</label>
+      <label class="pchk"><input type="checkbox" value="vless_tcp" checked> VLESS TCP</label>
+      <label class="pchk"><input type="checkbox" value="vless_ws" checked> VLESS WS</label>
+      <label class="pchk"><input type="checkbox" value="vmess" checked> VMess</label>
+      <label class="pchk"><input type="checkbox" value="trojan" checked> Trojan</label>
+      <label class="pchk"><input type="checkbox" value="hysteria2" checked> Hysteria2</label>
+      <span class="sep"></span>
+      <label class="pchk"><input type="checkbox" class="slot-rename" checked> 🏷️ ${T('rename_opt')}</label>
+    </div>${sortPanelHTML()}<div class="slot-res"></div>`;
+}
+function addSourceSlot(){
+  if(document.querySelector('#slots-container .slot[data-source="1"]')){toast(T('source_exists'),'#f87171');return;}
+  const d=document.createElement('div');d.className='slot source';d.dataset.sid=newSid();d.dataset.source='1';d.innerHTML=sourceSlotHTML();
+  document.getElementById('slots-container').insertBefore(d, document.getElementById('slots-container').firstChild);
+}
+/* 🔗 Panel blokları: ana olmayan her 3x-ui paneli için abonenin o paneldeki kodları ayrı, konumlandırılabilir blok */
+function addPanelSlots(){
+  const cont=document.getElementById('slots-container');
+  const have=new Set([...cont.querySelectorAll('.slot[data-panel]')].map(e=>e.dataset.panel));
+  const list=(Array.isArray(CP_PANELS)?CP_PANELS:[]).filter(p=>!p.is_main&&!p.auto&&p.type==='3xui'&&p.pkey&&p.enabled!==false);
+  if(!list.length){toast(T('panel_slot_none'),'#f87171');return;}
+  let n=0;
+  list.forEach(p=>{
+    if(have.has(p.pkey))return;
+    const d=document.createElement('div');d.className='slot source pslot';d.dataset.sid=newSid();
+    d.dataset.panel=p.pkey;d.dataset.pname=p.name||p.pkey;d.innerHTML=sourceSlotHTML(d.dataset.pname);
+    const src=cont.querySelector('.slot[data-source="1"]');
+    if(src&&src.nextSibling)cont.insertBefore(d,src.nextSibling);else cont.appendChild(d);
+    n++;
+  });
+  toast(n?('🔗 +'+n):T('panel_slot_exists'),n?'#4ade80':'#f87171');
+}
+/* Slot sürükle-bırak: yalnızca ⠿ tutamacından başlar (inputlar normal çalışsın) */
+function gripDown(el){const s=el.closest('.slot');if(s)s.draggable=true;}
+function slotGetAfter(container,y){
+  const els=[...container.querySelectorAll('.slot:not(.dragging)')];
+  let closest={dist:-Infinity,el:null};
+  els.forEach(el=>{const b=el.getBoundingClientRect();const off=y-b.top-b.height/2;
+    if(off<0&&off>closest.dist)closest={dist:off,el};});
+  return closest.el;
+}
+function initSlotDnD(){
+  const cont=document.getElementById('slots-container');
+  cont.addEventListener('dragstart',e=>{const s=e.target.closest('.slot');if(s&&s.draggable)s.classList.add('dragging');});
+  cont.addEventListener('dragend',e=>{const s=e.target.closest('.slot');if(s){s.classList.remove('dragging');s.draggable=false;}});
+  cont.addEventListener('dragover',e=>{
+    const dragging=cont.querySelector('.slot.dragging');if(!dragging)return;
+    e.preventDefault();
+    const after=slotGetAfter(cont,e.clientY);
+    if(after==null)cont.appendChild(dragging);else cont.insertBefore(dragging,after);
+  });
+  // Tutamaca basıp sürüklemeden bırakınca draggable'ı geri kapat (inputlar etkilenmesin)
+  document.addEventListener('mouseup',()=>{setTimeout(()=>{cont.querySelectorAll('.slot[draggable="true"]').forEach(s=>{if(!s.classList.contains('dragging'))s.draggable=false;});},0);});
+}
+function slotData(row){
+  if(!row.dataset.sid)row.dataset.sid=newSid();
+  const urlEl=row.querySelector('.ext_url'), localEl=row.querySelector('.ext_local');
+  const noteEl=row.querySelector('.ext_note'), posEl=row.querySelector('.ext_pos'), pingEl=row.querySelector('.slot-ping');
+  const d={
+    sid:row.dataset.sid,
+    url:urlEl?urlEl.value.trim():"",
+    local:localEl?localEl.value:"",
+    note:noteEl?noteEl.value.trim():"",
+    pos:posEl?posEl.value:"bottom",
+    protocols:[...row.querySelectorAll('.proto-checks input[type=checkbox]:not(.slot-ping):not(.slot-rename):checked')].map(c=>c.value),
+    ping:pingEl?pingEl.checked:false,
+    max_ms:(row.querySelector('.slot-maxms')&&row.querySelector('.slot-maxms').value)?Math.max(0,parseInt(row.querySelector('.slot-maxms').value)||0):0,
+    rename: row.querySelector('.slot-rename')? row.querySelector('.slot-rename').checked : true
+  };
+  if(row.dataset.source==='1') d.source=true;  // 📍 Kaynak Sub bloğu
+  if(row.dataset.panel){d.panel=row.dataset.panel;d.pname=row.dataset.pname||'';}  // 🔗 Panel bloğu
+  if(row.dataset.customsort==='1'){  // slot kendi protokol sirasina sahip
+    d.sort_order=row.dataset.so||'';
+    d.vless_sort=row.dataset.vl||'';
+    d.vmess_sort=row.dataset.vm||'';
+  }
+  return d;
+}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function resEl(el,msg,kind){
+  el.style.display='block';el.innerHTML=msg;
+  const c={info:['#0d1a20','#0e3d5a','#38bdf8'],ok:['#0a1a0e','#0a3a1a','#4ade80'],err:['#2d0707','#5a1212','#f87171']}[kind];
+  el.style.background=c[0];el.style.border='1px solid '+c[1];el.style.color=c[2];
+}
+async function previewFinal(){
+  const btn=document.getElementById('finalPrevBtn'), box=document.getElementById('finalPrevBox');
+  ['sort_order','vless_sort','vmess_sort'].forEach(syncHidden);
+  const slots=[];
+  document.querySelectorAll('#slots-container .slot').forEach(row=>{const d=slotData(row);if(d.url||d.local.trim()||d.source||d.panel)slots.push(d);});
+  const payload={
+    slots,
+    extra_position:document.querySelector('select[name=extra_position]').value,
+    extra_content:document.getElementById('extra_content_area').value,
+    enable_sort:document.getElementById('enable_sort').checked,
+    auto_rename:document.getElementById('auto_rename_enabled').checked,
+    sort_order:document.getElementById('in_sort_order').value,
+    vless_sort:document.getElementById('in_vless_sort').value,
+    vmess_sort:document.getElementById('in_vmess_sort').value
+  };
+  const o=btn.innerHTML;btn.disabled=true;btn.innerHTML=T('loading_prev');
+  resEl(box,T('loading_prev'),'info');
+  try{
+    const r=await fetch('/panel/api/external/preview-final',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(j.ok){
+      if(!j.total){resEl(box,T('prev_empty'),'err');}
+      else{
+        const extra=j.total>j.names.length?` (ilk ${j.names.length})`:'';
+        const errTxt=j.errors?` · ⚠ ${j.errors} kaynak hata`:'';
+        const list=j.names.map((n,i)=>`<div><span style="color:var(--text-muted)">${i+1}.</span> ${escapeHtml(n)}</div>`).join('');
+        resEl(box,`<div style="margin-bottom:6px">👁 ${T('prev_head')}: <b>${j.total}</b>${extra}${errTxt}</div><div class="prev-list">${list}</div>`,'ok');
+      }
+    }else resEl(box,'⚠ '+j.msg,'err');
+  }catch(e){resEl(box,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
+function res(row,msg,kind){
+  const r=row.querySelector('.slot-res');r.style.display='block';r.innerHTML=msg;
+  const c={info:['#0d1a20','#0e3d5a','#38bdf8'],ok:['#0a1a0e','#0a3a1a','#4ade80'],err:['#2d0707','#5a1212','#f87171']}[kind];
+  r.style.background=c[0];r.style.borderColor=c[1];r.style.border='1px solid '+c[1];r.style.color=c[2];
+}
+async function testSlot(btn){
+  const row=btn.closest('.slot');const d=slotData(row);
+  if(!d.url){toast(T('need_url'),'#f87171');return;}
+  btn.disabled=true;const o=btn.innerHTML;btn.innerHTML='⏳';
+  res(row,d.ping?T('testing'):T('filtering'),'info');
+  try{
+    const r=await fetch('/panel/api/external/test-slot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const j=await r.json();
+    res(row,j.ok?j.msg:('⚠ '+j.msg),j.ok?'ok':'err');
+  }catch(e){res(row,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
+async function fetchSingleSlot(btn){
+  const row=btn.closest('.slot');const d=slotData(row);
+  if(!d.url){toast(T('need_url'),'#f87171');return;}
+  btn.disabled=true;const o=btn.innerHTML;btn.innerHTML='⏳';
+  res(row,T('fetching'),'info');
+  try{
+    const r=await fetch('/panel/api/external/force-fetch-single',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const j=await r.json();
+    if(j.ok){res(row,`✅ ${T('added')} (${T('valid')}: ${j.count})`,'ok');toast(T('fetched'),'#4ade80');
+      const cs=row.querySelector('.slot-count');cs.textContent=j.count;cs.style.display='inline-block';cs.style.background=j.count>0?'#16a34a':'#dc2626';
+    }else res(row,'⚠ '+j.msg,'err');
+  }catch(e){res(row,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
+async function forceFetch(){
+  const btn=document.getElementById('forceBtn');const o=btn.innerHTML;btn.innerHTML=T('updating');btn.disabled=true;
+  document.querySelectorAll('.slot-count').forEach(el=>{el.style.display='none';el.textContent='';});
+  try{
+    const r=await fetch('/panel/api/external/force-fetch',{method:'POST'});const d=await r.json();
+    if(d.ok){
+      if(d.details)document.querySelectorAll('.slot').forEach(row=>{
+        const u=row.querySelector('.ext_url').value.trim();const cs=row.querySelector('.slot-count');
+        if(u&&d.details[u]!==undefined){cs.textContent=d.details[u];cs.style.display='inline-block';cs.style.background=d.details[u]>0?'#16a34a':'#dc2626';}
+      });
+      toast(d.count>0?T('fetched'):T('fetch_err'),d.count>0?'#2dd4bf':'#f87171');
+    }else toast('⚠ '+d.msg,'#f87171');
+  }catch(e){toast(T('conn_err'),'#f87171');}
+  btn.innerHTML=o;btn.disabled=false;
+}
+async function formatManualLinks(){
+  const ta=document.getElementById('extra_content_area');if(!ta.value.trim())return;
+  try{
+    const r=await fetch('/panel/api/format-links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lines:ta.value})});
+    const d=await r.json();if(d.ok){ta.value=d.formatted;toast(T('formatted'),'#4ade80');}
+  }catch(e){toast(T('conn_err'),'#f87171');}
+}
+function prepareForm(e){
+  ['sort_order','vless_sort','vmess_sort'].forEach(syncHidden);
+  const ext=[];
+  document.querySelectorAll('#slots-container .slot').forEach(row=>{const d=slotData(row);if(d.url||d.local.trim()||d.source||d.panel)ext.push(d);});
+  const h=document.createElement('input');h.type='hidden';h.name='ext_json';h.value=JSON.stringify(ext);
+  e.target.appendChild(h);
+  const hp=document.createElement('input');hp.type='hidden';hp.name='client_profiles_json';hp.value=JSON.stringify(collectProfiles());
+  e.target.appendChild(hp);
+  const pp=document.createElement('input');pp.type='hidden';pp.name='panels_json';pp.value=JSON.stringify(collectPanels());
+  e.target.appendChild(pp);
+}
+const CP_APPS={
+  happ:{label:"Happ",ua:"happ",format:"json",bal:false},
+  outline:{label:"Outline",ua:"outline",format:"ss_only",bal:false},
+  v2box:{label:"v2box / NekoBox",ua:"v2box,v2raytun,v2rayng,nekobox,nekoray",format:"raw_b64",bal:false},
+  streisand:{label:"Streisand",ua:"streisand",format:"raw_b64",bal:false},
+  diger:{label:"Diğer / Genel",ua:"",format:"json",bal:false}
+};
+const CP_FMTS={json:"JSON (Xray / v2rayN / Happ)",json_links:"JSON (link dizisi)",raw_b64:"Düz liste (base64)",raw_plain:"Düz liste (metin)",ss_only:"Sadece Shadowsocks (Outline)"};
+const CP_PROTOS=["ss","vless","vmess","trojan","hysteria2"];
+function cprofHTML(d){
+  d=d||{};
+  const app=(d.app && CP_APPS[d.app])?d.app:"diger";
+  const fmt=d.format||(CP_APPS[app]?CP_APPS[app].format:"json");
+  const protos=d.protocols||[];
+  const appOpts=Object.entries(CP_APPS).map(([k,v])=>`<option value="${k}" ${k===app?'selected':''}>${v.label}</option>`).join('');
+  const fmtOpts=Object.entries(CP_FMTS).map(([k,v])=>`<option value="${k}" ${k===fmt?'selected':''}>${v}</option>`).join('');
+  const pchk=CP_PROTOS.map(p=>`<label class="pchk"><input type="checkbox" class="cp_pr" value="${p}" ${protos.includes(p)?'checked':''}> ${p.toUpperCase()}</label>`).join('');
+  return `<div class="slot-top">
+      <span class="slot-grip" title="Sürükle" onmousedown="gripDown2(this)">⠿</span>
+      <select class="cp_app" onchange="applyPreset(this)" title="Uygulama">${appOpts}</select>
+      <input type="text" class="cp_name" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="İsim" style="width:130px">
+      <input type="text" class="cp_ua" value="${(d.ua||'').replace(/"/g,'&quot;')}" placeholder="UA: happ,outline" style="flex:1;min-width:140px">
+      <label class="pchk"><input type="checkbox" class="cp_en" ${d.enabled!==false?'checked':''}> ${T('cp_on')}</label>
+      <button type="button" class="btn bd icon-btn" onclick="this.closest('.cprof').remove()" title="Sil">✕</button>
+    </div>
+    <div class="cp-row2">
+      <label class="cp-mini">${T('cp_fmt')}</label>
+      <select class="cp_fmt" onchange="cpFmtChange(this)">${fmtOpts}</select>
+      <span class="cp-sep"></span>
+      <label class="cp-mini">${T('cp_proto')}</label>
+      <div class="cp-protos">${pchk}</div>
+    </div>
+    <div class="cp-bal" ${(fmt==='clash'||fmt==='singbox')?'':'hidden'}>
+      <label class="tog" style="font-size:12px"><input type="checkbox" class="cp_bal" ${d.balancer?'checked':''}> ${T('cp_balancer')}</label>
+      <input type="text" class="cp_balname" value="${(d.balancer_name||'').replace(/"/g,'&quot;')}" placeholder="${T('cp_balname')}" style="width:160px">
+    </div>
+    <textarea class="cp_tpl" placeholder='{"servers": {links_json}}' ${fmt==='custom'?'':'hidden'}>${(d.tpl||'').replace(/</g,'&lt;')}</textarea>`;
+}
+function addProfile(data){
+  const d=document.createElement('div');d.className='cprof';d.innerHTML=cprofHTML(data);
+  document.getElementById('cprof-container').appendChild(d);applyLang();
+}
+function applyPreset(sel){
+  const card=sel.closest('.cprof'), pre=CP_APPS[sel.value];
+  if(!pre)return;
+  card.querySelector('.cp_ua').value=pre.ua;
+  const f=card.querySelector('.cp_fmt');f.value=pre.format;cpFmtChange(f);
+  if(!card.querySelector('.cp_name').value.trim())card.querySelector('.cp_name').value=pre.label;
+}
+function cpFmtChange(sel){
+  const card=sel.closest('.cprof'), fmt=sel.value;
+  card.querySelector('.cp-bal').hidden=!(fmt==='clash'||fmt==='singbox');
+  card.querySelector('.cp_tpl').hidden=(fmt!=='custom');
+}
+function gripDown2(el){const s=el.closest('.cprof');if(s)s.draggable=true;}
+function initCprofDnD(){
+  const cont=document.getElementById('cprof-container');if(!cont)return;
+  cont.addEventListener('dragstart',e=>{const s=e.target.closest('.cprof');if(s&&s.draggable)s.classList.add('dragging');});
+  cont.addEventListener('dragend',e=>{const s=e.target.closest('.cprof');if(s){s.classList.remove('dragging');s.draggable=false;}});
+  cont.addEventListener('dragover',e=>{const dr=cont.querySelector('.cprof.dragging');if(!dr)return;e.preventDefault();
+    const els=[...cont.querySelectorAll('.cprof:not(.dragging)')];let after=null,cl=-Infinity;
+    els.forEach(el=>{const b=el.getBoundingClientRect();const off=e.clientY-b.top-b.height/2;if(off<0&&off>cl){cl=off;after=el;}});
+    if(after==null)cont.appendChild(dr);else cont.insertBefore(dr,after);});
+  document.addEventListener('mouseup',()=>{setTimeout(()=>{cont.querySelectorAll('.cprof[draggable="true"]').forEach(s=>{if(!s.classList.contains('dragging'))s.draggable=false;});},0);});
+}
+function collectProfiles(){
+  const profs=[];
+  document.querySelectorAll('#cprof-container .cprof').forEach(row=>{
+    const name=row.querySelector('.cp_name').value.trim();
+    const ua=row.querySelector('.cp_ua').value.trim();
+    const app=row.querySelector('.cp_app').value;
+    const format=row.querySelector('.cp_fmt').value;
+    const enabled=row.querySelector('.cp_en').checked;
+    const protocols=[...row.querySelectorAll('.cp_pr:checked')].map(c=>c.value);
+    const balancer=row.querySelector('.cp_bal').checked;
+    const balancer_name=row.querySelector('.cp_balname').value.trim();
+    const tpl=row.querySelector('.cp_tpl').value;
+    if(name||ua||tpl.trim()) profs.push({name,app,ua,format,enabled,protocols,balancer,balancer_name,tpl});
+  });
+  return profs;
+}
+/* ---------- Entegre Paneller (modern kartlar, ana panel OTOMATIK) ---------- */
+function _esc(v){return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function _hostOf(u){try{return new URL(u).hostname.toLowerCase();}catch(e){return '';}}
+function panelHTML(d){
+  d=d||{}; const t=d.type||"marzban"; const isMz=t==='marzban';
+  const isMain=!!d.is_main || (MAIN_HOST && _hostOf(d.url)===MAIN_HOST);
+  if(d.auto){
+    return `<div class="pc-head">
+        <span class="pc-type mz">MARZBAN</span>
+        <span class="pc-name-ro">${_esc(d.name||'Ana Panel')}</span>
+        <span class="pc-main">⭐ ${T('pn_main_badge')}</span>
+        <span class="pc-auto">${T('pn_auto')}</span>
+        <span class="pc-dot" title="durum"></span><span class="pc-count"></span>
+        <span style="flex:1"></span>
+        <button type="button" class="btn bsky icon-btn" onclick="testPanel(this)" title="${T('test')}">⚡</button>
+      </div>
+      <div class="pc-ro">${_esc(d.url)} · ${_esc(d.user||'')} · <i>.env</i></div>
+      <div class="slot-res"></div>`;
+  }
+  return `<div class="pc-head">
+      <span class="pc-type ${isMz?'mz':'xui'}">${isMz?'MARZBAN':'3X-UI'}</span>
+      <input type="hidden" class="pn_type" value="${t}">
+      <input type="text" class="pn_name pc-name" value="${_esc(d.name)}" placeholder="${T('pn_name_ph')}">
+      ${isMain?`<span class="pc-main">⭐ ${T('pn_main_badge')}</span>`:''}
+      <span class="pc-dot" title="durum"></span><span class="pc-count"></span>
+      <span style="flex:1"></span>
+      <label class="tog" title="${T('cp_on')}"><input type="checkbox" class="pn_en" ${d.enabled!==false?'checked':''}></label>
+      <button type="button" class="btn bsky icon-btn" onclick="testPanel(this)" title="${T('test')}">⚡</button>
+      <button type="button" class="btn bd icon-btn" onclick="removePanel(this)" title="✕">✕</button>
+    </div>
+    <div class="pc-grid">
+      <div class="fld pc-url"><label>${T('pn_url')}</label><input type="text" class="pn_url" value="${_esc(d.url)}" placeholder="https://panel.domain:8000"></div>
+      ${isMz?`
+      <div class="fld"><label>${T('pn_user')}</label><input type="text" class="pn_user" value="${_esc(d.user)}" placeholder="admin"></div>
+      <div class="fld"><label>${T('pn_pass')}</label><input type="password" class="pn_pass" value="${_esc(d.pass)}" placeholder="••••••"></div>
+      <input type="hidden" class="pn_token" value="">`:`
+      <div class="fld pc-tok"><label>${T('pn_token')}</label><input type="text" class="pn_token" value="${_esc(d.token)}" placeholder="${T('pn_token_ph')}"></div>
+      <input type="hidden" class="pn_user" value="${_esc(d.user)}"><input type="hidden" class="pn_pass" value="${_esc(d.pass)}">`}
+    </div>
+    <div class="slot-res"></div>`;
+}
+function addPanel(type,data){
+  const d=document.createElement('div');d.className='pcard'+(data&&data.auto?' auto':'');
+  if(data&&data.auto)d.dataset.auto='1';
+  if(data&&data.pkey)d.dataset.pkey=data.pkey;  // kayitli panel (silerken macros kullanicilari temizlenir)
+  d.innerHTML=panelHTML(data||{type});
+  document.getElementById('panels-container').appendChild(d);applyLang();
+  return d;
+}
+/* Panel silme: kayitli panelse once macros'un o panelde actigi kullanicilari siler, sonra paneli kaldirir.
+   Panelin kendi (onceden var olan) kullanicilarina dokunulmaz. */
+async function removePanel(btn){
+  const card=btn.closest('.pcard'), pk=card.dataset.pkey;
+  if(!pk){card.remove();return;}  // henuz kaydedilmemis kart
+  btn.disabled=true;
+  try{
+    const post=b=>fetch('/panel/api/panels/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+    let info=await post({pkey:pk,dry:true}), keep=false;
+    if(!info.ok){
+      if(!confirm(info.msg+'\n\n'+T('pn_rm_keep_q'))){btn.disabled=false;return;}
+      keep=true;
+    }else if(!confirm(T('pn_rm_q').replace('{name}',info.name).replace('{n}',info.owned).replace('{o}',info.others))){btn.disabled=false;return;}
+    toast(T('pn_rm_doing'),'#38bdf8');
+    const r=await post({pkey:pk,keep_users:keep});
+    if(r.ok){
+      card.remove();
+      document.querySelectorAll('#slots-container .slot[data-panel]').forEach(sl=>{if(sl.dataset.panel===pk)sl.remove();});
+      const i=CP_PANELS.findIndex(x=>x.pkey===pk);if(i>=0)CP_PANELS.splice(i,1);
+      toast(T('pn_rm_done').replace('{n}',r.deleted),'#4ade80');
+    }else{
+      alert(r.msg+(r.errors&&r.errors.length?'\n\n'+r.errors.join('\n'):''));
+      btn.disabled=false;
+    }
+  }catch(e){toast(T('conn_err'),'#f87171');btn.disabled=false;}
+}
+function panelData(row){
+  if(row.dataset.auto==='1')return {auto:true};
+  const q=c=>row.querySelector(c);
+  return {type:q('.pn_type').value, name:q('.pn_name').value.trim(), url:q('.pn_url').value.trim(),
+    user:(q('.pn_user')||{value:''}).value.trim(), pass:(q('.pn_pass')||{value:''}).value,
+    token:(q('.pn_token')||{value:''}).value.trim(), enabled:q('.pn_en').checked};
+}
+function collectPanels(){
+  return [...document.querySelectorAll('#panels-container .pcard:not(.auto)')].map(r=>panelData(r)).filter(p=>p.url);
+}
+function setPanelStatus(card,ok,users,msg,j){
+  const dot=card.querySelector('.pc-dot'), cnt=card.querySelector('.pc-count');
+  if(dot){dot.className='pc-dot '+(ok===null?'':(ok?'ok':'bad'));dot.title=msg||'';}
+  if(cnt)cnt.textContent=ok?(j&&j.macros!=null?`${users} ${T('pn_users')} · 🏠 ${j.own} ${T('pn_own')} · ➕ ${j.macros} macros`:`${users} ${T('pn_users')}`):'';
+}
+async function testPanel(btn,silent){
+  const card=btn.closest('.pcard'); const d=panelData(card);
+  if(!d.auto&&!d.url){if(!silent)toast(T('need_url'),'#f87171');return;}
+  btn.disabled=true;const o=btn.innerHTML;btn.innerHTML='⏳';
+  const dot=card.querySelector('.pc-dot'); if(dot)dot.className='pc-dot wait';
+  try{
+    const r=await fetch('/panel/api/panels/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const j=await r.json();
+    setPanelStatus(card,j.ok,j.users,j.msg,j);
+    if(!silent)res(card,(j.ok?'✅ ':'⚠ ')+j.msg+(j.ok?` · ${j.users} ${T('pn_users')}`+(j.macros!=null?` (🏠 ${T('pn_own_long')}: ${j.own} · ➕ ${T('pn_macros_long')}: ${j.macros})`:''):''),j.ok?'ok':'err');
+  }catch(e){setPanelStatus(card,false,0,'');if(!silent)res(card,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
+async function refreshPanels(){
+  const cards=[...document.querySelectorAll('#panels-container .pcard')];
+  await Promise.all(cards.map(c=>{const b=c.querySelector('button[onclick^="testPanel"]');return b?testPanel(b,true):null;}));
+  const box=document.getElementById('panels-status');
+  const ok=cards.filter(c=>c.querySelector('.pc-dot.ok')).length;
+  box.innerHTML=`${ok}/${cards.length} ${T('pn_online')}`;
+}
+async function syncNow(btn){
+  const box=document.getElementById('panels-status'); const o=btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳ ...';
+  box.innerHTML='⏳ senkronize ediliyor...';
+  try{
+    const r=await fetch('/panel/api/panels/sync',{method:'POST'}); const j=await r.json();
+    if(j.ok){
+      box.innerHTML=`✅ ${j.users} kullanıcı senkronize edildi (${j.panels} panel)`+(j.failures&&j.failures.length?` · ⚠ başarısız: ${j.failures.join(', ')}`:'');
+      const rep=document.getElementById('panels-report'); let h='';
+      for(const [nm,r] of Object.entries(j.mirror||{})){
+        const mb=r.macros_before||0, cr=r.created||0;
+        h+=`<div class="rep-card"><b>${escapeHtml(nm)}</b>
+          <div class="rep-stats">
+            <span>🏠 Panelin kendi kullanıcıları<b>${r.own!=null?r.own:'-'}</b></span>
+            <span>🔗 Zaten vardı (eşleşti)<b>${r.shared||0}</b></span>
+            <span>➕ Macros'un eklediği (toplam)<b>${mb+cr}</b></span>
+            <span class="${cr?'hl':''}">✨ Bu senkronda eklenen<b>${cr}</b></span>
+            <span>📦 Panelde toplam<b>${(r.own||0)+mb+cr}</b></span>
+          </div>
+          <div class="rep-sub">bu senkronda: inbound bağlanan ${r.attached||0} · limit/süre güncellenen ${r.updated||0} · açılan ${r.enabled||0} · kapatılan ${r.disabled||0} · trafik sıfırlanan ${r.reset||0}</div></div>`;
+        (r.skipped||[]).forEach(x=>h+=`<div style="color:#f87171">↳ ${escapeHtml(x.email)}: ${escapeHtml(x.reason||'')}${x.retry_in_s?` (tekrar ${x.retry_in_s}s sonra)`:''}</div>`);
+        (r.errors||[]).forEach(e=>h+=`<div style="color:#fbbf24">⚠ ${escapeHtml(e)}</div>`);
+      }
+      rep.innerHTML=h;
+      refreshPanels();
+      toast('Senkron tamam ✓','#4ade80');
+    }else{ box.innerHTML='⚠ '+(j.msg||'hata'); toast('⚠ '+(j.msg||'hata'),'#f87171'); }
+  }catch(e){ box.innerHTML=T('conn_err'); }
+  btn.disabled=false; btn.innerHTML=o;
+}
+async function exportConfig(){
+  try{
+    const r=await fetch('/panel/api/config/export');const j=await r.json();
+    if(!j.ok){toast('Hata','#f87171');return;}
+    const blob=new Blob([JSON.stringify(j,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='macros-config-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+    toast(T('cfg_exported'),'#4ade80');
+  }catch(e){toast(T('conn_err'),'#f87171');}
+}
+async function importConfig(){
+  let data;try{data=JSON.parse(document.getElementById('cfgJson').value);}catch(e){toast(T('cfg_bad_json'),'#f87171');return;}
+  const payload=data.settings?data:{settings:data};
+  try{
+    const r=await fetch('/panel/api/config/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(j.ok){toast(T('cfg_imported')+' ('+j.count+')','#4ade80');setTimeout(()=>location.reload(),1000);}
+    else toast('⚠ '+j.msg,'#f87171');
+  }catch(e){toast(T('conn_err'),'#f87171');}
+}
+function toast(msg,color='#38bdf8'){
+  const t=document.createElement('div');t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;right:20px;background:${color};color:#000;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .3s;box-shadow:0 8px 24px rgba(0,0,0,.3)`;
+  document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2200);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  setLang(localStorage.getItem('lang')||'tr');
+  const th=localStorage.getItem('theme')||'cyberpunk';
+  document.body.setAttribute('data-theme',th);
+  document.querySelectorAll('.theme-dot').forEach(d=>{if(d.getAttribute('onclick').includes(th))d.classList.add('active');});
+  initSlotDnD();
+  initCprofDnD();
+  try{(Array.isArray(CP_SAVED)?CP_SAVED:[]).forEach(cp=>addProfile(cp));}catch(e){}
+  try{(Array.isArray(CP_PANELS)?CP_PANELS:[]).forEach(p=>addPanel(p.type,p));}catch(e){}
+  try{if(document.querySelector('#panels-container .pcard'))refreshPanels();}catch(e){}
+  initCollapsibles();
+});
+function initCollapsibles(){
+  document.querySelectorAll('.main > .box').forEach(box=>{
+    const title=box.querySelector('.box-title'); if(!title || box.querySelector('.box-body'))return;
+    const body=document.createElement('div'); body.className='box-body';
+    let n=title.nextSibling;
+    while(n){const nx=n.nextSibling; body.appendChild(n); n=nx;}
+    box.appendChild(body);
+    title.insertAdjacentHTML('afterbegin','<span class="box-chevron">▾</span> ');
+    title.insertAdjacentHTML('beforeend','<span class="box-pin" title="Sabitle (hep açık)">📌</span>');
+    const key='boxc_'+(title.textContent.trim().slice(0,24));
+    const pkey='boxp_'+(title.textContent.trim().slice(0,24));
+    let collapsed=true, pinned=false;
+    try{pinned=localStorage.getItem(pkey)==='1';}catch(e){}
+    try{const v=localStorage.getItem(key); if(v!==null)collapsed=(v==='1');}catch(e){}
+    if(pinned){box.classList.add('pinned');collapsed=false;}  // sabitli = hep açık
+    if(collapsed)box.classList.add('collapsed');
+    const pin=title.querySelector('.box-pin');
+    pin.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const now=!box.classList.contains('pinned');
+      box.classList.toggle('pinned',now);
+      try{localStorage.setItem(pkey, now?'1':'0');}catch(e){}
+      if(now){box.classList.remove('collapsed');try{localStorage.setItem(key,'0');}catch(e){}}
+    });
+    title.addEventListener('click',()=>{
+      if(box.classList.contains('pinned'))return;   // sabitliyken kapanmaz
+      box.classList.toggle('collapsed');
+      try{localStorage.setItem(key, box.classList.contains('collapsed')?'1':'0');}catch(e){}
+    });
+  });
+}
+</script></body></html>

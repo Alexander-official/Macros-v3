@@ -1,0 +1,428 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Macros v3</title>
+<style>
+/* --- TEMA MOTORU (CSS Değişkenleri) --- */
+:root {
+  --bg: #080b0f; --card-bg: #0b0f15; --border: #0e1e2e; --border-hover: #1a3a52;
+  --text: #d4d8e0; --text-muted: #334155; --accent: #f87171; --accent-hover: #ef4444;
+  --nav-bg: #0b0f15; --badge-bg: #0c2a3d; --badge-text: #38bdf8;
+}
+[data-theme="matrix"] {
+  --bg: #020604; --card-bg: #040d07; --border: #0a2613; --border-hover: #134e26;
+  --text: #a3e635; --text-muted: #166534; --accent: #22c55e; --accent-hover: #16a34a;
+  --nav-bg: #040d07; --badge-bg: #052e16; --badge-text: #4ade80;
+}
+[data-theme="amethyst"] {
+  --bg: #0b0811; --card-bg: #130e1d; --border: #261b3d; --border-hover: #4c357a;
+  --text: #e9d5ff; --text-muted: #6b21a8; --accent: #c084fc; --accent-hover: #a855f7;
+  --nav-bg: #130e1d; --badge-bg: #2e1065; --badge-text: #d8b4fe;
+}
+[data-theme="obsidian"] {
+  --bg: #090a0f; --card-bg: #111318; --border: #1f242d; --border-hover: #374151;
+  --text: #f3f4f6; --text-muted: #4b5563; --accent: #60a5fa; --accent-hover: #3b82f6;
+  --nav-bg: #111318; --badge-bg: #1e3a8a; --badge-text: #93c5fd;
+}
+
+[data-theme="ocean"]{--bg:#061016;--card-bg:#0a1a24;--border:#0e2f3f;--border-hover:#155e75;--text:#cffafe;--text-muted:#155e75;--accent:#22d3ee;--accent-hover:#06b6d4;--nav-bg:#0a1a24;--badge-bg:#083344;--badge-text:#67e8f9;}
+[data-theme="sunset"]{--bg:#140a07;--card-bg:#1f0f0a;--border:#3a1c10;--border-hover:#7c3a1d;--text:#ffedd5;--text-muted:#9a3412;--accent:#fb923c;--accent-hover:#f97316;--nav-bg:#1f0f0a;--badge-bg:#431407;--badge-text:#fdba74;}
+[data-theme="rose"]{--bg:#140811;--card-bg:#1d0e18;--border:#3d1b31;--border-hover:#831843;--text:#fce7f3;--text-muted:#9d174d;--accent:#f472b6;--accent-hover:#ec4899;--nav-bg:#1d0e18;--badge-bg:#500724;--badge-text:#f9a8d4;}
+[data-theme="slate"]{--bg:#0b0e12;--card-bg:#14181f;--border:#232b36;--border-hover:#3b4654;--text:#e2e8f0;--text-muted:#64748b;--accent:#94a3b8;--accent-hover:#cbd5e1;--nav-bg:#14181f;--badge-bg:#1e293b;--badge-text:#cbd5e1;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--card-bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.nav{background:var(--nav-bg);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-weight:700;font-size:16px;color:#fff;letter-spacing:.05em;display:flex;align-items:baseline;gap:6px}.brand span{color:var(--accent)}.brand .ver{font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px;background:var(--badge-bg);color:var(--badge-text)}.brand a.by{font-size:10px;font-weight:600;color:var(--text-muted);text-decoration:none;letter-spacing:0;padding:0;border:none;background:none}.brand a.by:hover{color:var(--accent)}
+.nav-links{display:flex;gap:10px;align-items:center}
+.nav a{color:var(--text);text-decoration:none;font-size:12px;padding:6px 12px;border-radius:6px;transition:all .15s;font-weight:600;background:var(--card-bg);border:1px solid var(--border)}
+.nav a:hover{border-color:var(--border-hover);color:var(--accent)}
+.main{max-width:1200px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stat{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+.stat .val{font-size:22px;font-weight:800;color:var(--text)}
+.stat .lbl{font-size:10px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.stat.danger .val{color:var(--accent)}
+.box{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+.box-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+input[type=number],input[type=text],.txt{padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .2s}
+input[type=number]:focus,input[type=text]:focus,.txt:focus{border-color:var(--accent)}
+input[type=number]{width:80px}
+textarea.txt{width:100%;resize:vertical;min-height:70px;font-family:'SF Mono',monospace;font-size:12px;line-height:1.5}
+.toolbar{display:flex;gap:10px;margin-bottom:14px}
+.search-box{flex:1;position:relative}
+.search-box input{width:100%;padding:10px 12px 10px 36px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .2s}
+.search-box input:focus{border-color:var(--accent)}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;color:var(--text)}
+.sec-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:all .2s}
+.card:hover{border-color:var(--border-hover);transform:translateY(-1px)}
+.ch{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+.cn{flex:1;min-width:0}
+.nm{font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.ur{font-size:11px;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.copy-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);padding:3px;border-radius:4px;font-size:11px;flex-shrink:0;transition:color .15s}
+.copy-btn:hover{color:var(--badge-text)}
+.badges{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.bdg{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;background:var(--border);color:var(--text)}
+.cb{padding:16px;display:none;border-top:1px solid var(--border);background:var(--bg)}
+.cb.open{display:block}
+.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text);cursor:pointer;user-select:none;font-weight:600}
+.tog input{width:36px;height:18px;appearance:none;background:var(--border);border-radius:9px;cursor:pointer;position:relative;transition:background .2s;outline:none;flex-shrink:0}
+.tog input:checked{background:var(--accent)}
+.tog input::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s}
+.tog input:checked::after{left:21px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.bp{background:var(--accent);color:#fff}.bp:hover{background:var(--accent-hover)}
+.bd{background:rgba(248,113,113,0.1);color:var(--accent);border:1px solid rgba(248,113,113,0.2)}.bd:hover{background:rgba(248,113,113,0.2)}
+.check-btn{background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid rgba(56,189,248,0.2);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}
+.check-btn:hover{background:rgba(56,189,248,0.2)}
+.check-status{font-size:11px;color:var(--text-muted);margin-left:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.tbl th{text-align:left;color:var(--text-muted);font-weight:700;padding:6px 10px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;word-break:break-all}
+.tbl tr:last-child td{border-bottom:none}
+.hw{font-family:'SF Mono',monospace;color:var(--badge-text);font-size:11px}
+.ts{color:var(--text-muted);font-size:11px;white-space:nowrap}
+.app-badge{padding:2px 8px;border-radius:4px;font-size:10px;background:var(--badge-bg);color:var(--badge-text);font-weight:700;white-space:nowrap}
+.model-badge{padding:2px 8px;border-radius:4px;font-size:10px;background:rgba(74,222,128,0.1);color:#4ade80;font-weight:700;white-space:nowrap}
+.emp{color:var(--text-muted);font-size:12px;padding:14px 0;text-align:center;font-weight:600}
+.tr-row{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;background:var(--card-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border)}
+.tr-item{font-size:12px;color:var(--text-muted)}.tr-item span{color:var(--text);font-weight:700}
+.tab-bar{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;background:var(--bg);border:1px solid var(--border)}
+.tab.active{background:var(--badge-bg);color:var(--badge-text);border-color:var(--border-hover)}
+.tab-content{display:none}.tab-content.active{display:block}
+.userinfo-bar{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;margin-bottom:12px;display:flex;gap:18px;flex-wrap:wrap}
+.ui-item{color:var(--text-muted)}.ui-item span{color:#4ade80;font-weight:700}
+.limit-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.limit-status-on{color:#4ade80;font-weight:800;font-size:13px}
+.limit-status-off{color:var(--accent);font-weight:800;font-size:13px}
+.limit-desc{font-size:11px;color:var(--text-muted);margin-top:4px}
+.sys-bar{background:var(--card-bg);border:1px solid var(--border);padding:14px;border-radius:10px;display:flex;gap:20px;margin-bottom:16px;justify-content:space-around;flex-wrap:wrap;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+.sys-item{text-align:center;flex:1}
+.sys-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:700}
+.sys-val{font-size:20px;font-weight:800;color:var(--badge-text)}
+.theme-selector{display:flex;gap:6px;background:var(--bg);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.theme-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s}
+.theme-dot:hover{transform:scale(1.15)}
+.theme-dot.active{border-color:#fff}
+</style>
+<link rel="stylesheet" href="/static/liquid-glass.css?v=4">
+<script src="/static/liquid-glass.js?v=2" defer></script>
+</head>
+<body data-theme="cyberpunk">
+<nav class="nav">
+  <div class="brand">⚡ <span>Macros</span> <small class="ver">v3</small> <a class="by" href="https://t.me/{{ author_tg }}" target="_blank" rel="noopener">by @{{ author_tg }}</a></div>
+  <div class="nav-links">
+    <div class="theme-selector" title="Tema Seçimi">
+      <div class="theme-dot" style="background:#f87171" onclick="setTheme('cyberpunk')" title="Cyberpunk Red"></div>
+      <div class="theme-dot" style="background:#22c55e" onclick="setTheme('matrix')" title="Matrix Green"></div>
+      <div class="theme-dot" style="background:#c084fc" onclick="setTheme('amethyst')" title="Deep Amethyst"></div>
+      <div class="theme-dot" style="background:#60a5fa" onclick="setTheme('obsidian')" title="Obsidian Minimal"></div>
+    <div class="theme-dot" style="background:#22d3ee" onclick="setTheme('ocean')" title="Ocean"></div>
+    <div class="theme-dot" style="background:#fb923c" onclick="setTheme('sunset')" title="Sunset"></div>
+    <div class="theme-dot" style="background:#f472b6" onclick="setTheme('rose')" title="Rose"></div>
+    <div class="theme-dot" style="background:#94a3b8" onclick="setTheme('slate')" title="Slate"></div>
+    <div class="theme-dot lg-dot" onclick="setTheme('liquid')" title="Liquid Glass"></div>
+    </div>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+    <div class="lang-bar" style="display:flex;gap:6px;font-size:11px;font-weight:700;">
+      <span onclick="setLang('tr')" id="l-tr" style="cursor:pointer;padding:2px 6px;border-radius:4px;">TR</span>
+      <span onclick="setLang('en')" id="l-en" style="cursor:pointer;padding:2px 6px;border-radius:4px;">EN</span>
+      <span onclick="setLang('ru')" id="l-ru" style="cursor:pointer;padding:2px 6px;border-radius:4px;">RU</span>
+      <span onclick="setLang('tm')" id="l-tm" style="cursor:pointer;padding:2px 6px;border-radius:4px;">TM</span>
+    </div>
+    <a href="/panel/stats" data-i18n="nav_stats">📊 İstatistik</a>
+    <a href="/panel/logs" data-i18n="nav_logs">🔥 Loglar</a>
+    <a href="/panel/sort-settings" data-i18n="sort_set">Ayarlar</a>
+    <a href="/panel/logout" data-i18n="logout">Çıkış</a>
+  </div>
+</nav>
+<div class="main">
+  
+  <div class="sys-bar">
+      <div class="sys-item">
+          <div class="sys-lbl" data-i18n="sys_cpu">CPU Yükü (Load)</div>
+          <div class="sys-val" style="color:var(--accent)">{{ sys_info.cpu }}</div>
+      </div>
+      <div class="sys-item">
+          <div class="sys-lbl" data-i18n="sys_ram">RAM Kullanımı</div>
+          <div class="sys-val" style="color:#fbbf24">{{ sys_info.ram }}%</div>
+      </div>
+      <div class="sys-item">
+          <div class="sys-lbl" data-i18n="sys_disk">Disk Kullanımı</div>
+          <div class="sys-val" style="color:#4ade80">{{ sys_info.disk }}%</div>
+      </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="val">{{ stats.total_subs }}</div><div class="lbl" data-i18n="s_sub">Sub</div></div>
+    <div class="stat"><div class="val">{{ stats.total_devices }}</div><div class="lbl" data-i18n="s_dev">Cihaz</div></div>
+    <div class="stat"><div class="val">{{ stats.total_reqs }}</div><div class="lbl" data-i18n="s_req">İstek</div></div>
+    <div class="stat danger"><div class="val">{{ stats.ua_blocks }}</div><div class="lbl" data-i18n="s_uablk">UA Blok</div></div>
+    <div class="stat danger"><div class="val">{{ stats.dev_blocks }}</div><div class="lbl" data-i18n="s_devblk">Cihaz Blok</div></div>
+    <div class="stat danger"><div class="val">{{ stats.blocked_subs }}</div><div class="lbl" data-i18n="s_blk">Blokeli</div></div>
+  </div>
+
+  <div class="box" id="limitBox">
+    <div class="box-title" data-i18n="g_limit">🔒 Global Cihaz Limiti</div>
+    <div class="limit-banner">
+      <div>
+        <div id="limitStatusText" class="{% if global_limit_enabled %}limit-status-on{% else %}limit-status-off{% endif %}" data-i18n="{% if global_limit_enabled %}lim_on{% else %}lim_off{% endif %}">
+          {% if global_limit_enabled %}✅ Cihaz limiti AKTİF — yeni cihazlar kontrol ediliyor{% else %}⚠️ Cihaz limiti DEVRE DIŞI — herkes bağlanabilir{% endif %}
+        </div>
+        <div class="limit-desc" data-i18n="lim_desc">Kapalıyken tüm sub'larda cihaz limiti atlanır. (Force açılanlar hariç)</div>
+      </div>
+      <label class="tog">
+        <input type="checkbox" id="globalLimitToggle" {% if global_limit_enabled %}checked{% endif %} onchange="toggleGlobalLimit(this.checked)">
+        <span id="limitToggleLabel" data-i18n="{% if global_limit_enabled %}on{% else %}off{% endif %}">{% if global_limit_enabled %}Açık{% else %}Kapalı{% endif %}</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="box-title" data-i18n="global_settings">🌐 Global Ayarlar</div>
+    <div class="grid2">
+      <div class="fld"><label data-i18n="g_meta">Global Metadata (tüm sublara eklenir)</label><textarea class="txt" id="g_meta" rows="3">{{ global_metadata }}</textarea></div>
+      <div class="fld"><label data-i18n="g_block">Global Sub Bloke Mesajı</label><textarea class="txt" id="g_blocked" rows="3">{{ global_blocked_metadata }}</textarea></div>
+    </div>
+    <div class="grid2">
+      <div class="fld"><label data-i18n="g_exp_msg">Süresi Dolanlar Mesajı (Expired)</label><textarea class="txt" id="g_expired" rows="3">{{ global_expired_metadata }}</textarea></div>
+      <div class="fld"><label data-i18n="g_data_msg">Kotası Dolanlar Mesajı (Data Limit)</label><textarea class="txt" id="g_data_limit" rows="3">{{ global_data_limit_metadata }}</textarea></div>
+    </div>
+    <div class="grid2">
+      <div class="fld"><label data-i18n="g_dev_block">Global Cihaz Bloke Mesajı</label><textarea class="txt" id="g_blocked_dev" rows="3">{{ global_blocked_device_metadata }}</textarea></div>
+      <div class="fld">
+        <label data-i18n="def_limit">Varsayılan Cihaz Limiti (Yeni Sublar İçin)</label>
+        <input type="number" id="g_def_limit" value="{{ default_device_limit }}" min="1" max="999" style="height:35px; width:100%;">
+      </div>
+    </div>
+    <button class="btn bp" onclick="saveGlobal()" data-i18n="save_btn" style="margin-top:10px">Kaydet</button>
+  </div>
+
+  <div class="box">
+    <div class="box-title" data-i18n="ua_bl">🚫 UA Kara Listesi</div>
+    <div class="row-flex" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="ua_pattern" placeholder="Engellenmek istenen UA..." style="flex:1;min-width:180px" data-i18n="ua_pat">
+      <input type="text" id="ua_note" placeholder="Not" style="width:140px" data-i18n="note">
+      <button class="btn bd" onclick="addUA()" data-i18n="add">+ Ekle</button>
+    </div>
+    {% if not ua_blacklist %}<div class="emp" data-i18n="emp">Liste boş.</div>{% endif %}
+    {% for u in ua_blacklist %}
+    <div class="lg" style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span class="app-badge">{{ u.pattern }}</span>{% if u.note %}<span style="color:var(--text-muted);margin-left:10px">{{ u.note }}</span>{% endif %}<span class="ts" style="margin-left:auto">{{ u.created_at[:16] }}</span><button class="btn bd" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="delUA({{u.id}})" data-i18n="del">Sil</button></div>
+    {% endfor %}
+  </div>
+
+  <div class="box">
+    <div class="box-title" style="color:#4ade80" data-i18n="ua_wl">✅ UA Beyaz Listesi</div>
+    <div class="row-flex" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="uaw_pattern" placeholder="Beyaz liste UA..." style="flex:1;min-width:180px" data-i18n="uaw_pat">
+      <input type="text" id="uaw_note" placeholder="Not" style="width:140px" data-i18n="note">
+      <button class="btn bp" style="background:#16a34a" onclick="addUAW()" data-i18n="add">+ Ekle</button>
+    </div>
+    {% if not ua_whitelist %}<div class="emp" data-i18n="emp">Liste boş.</div>{% endif %}
+    {% for u in ua_whitelist %}
+    <div class="lg" style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span class="app-badge" style="background:rgba(74,222,128,0.1);color:#4ade80">{{ u.pattern }}</span>{% if u.note %}<span style="color:var(--text-muted);margin-left:10px">{{ u.note }}</span>{% endif %}<span class="ts" style="margin-left:auto">{{ u.created_at[:16] }}</span><button class="btn bd" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="delUAW({{u.id}})" data-i18n="del">Sil</button></div>
+    {% endfor %}
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Arama yap..." value="{{ q }}" oninput="liveSearch(this.value)" data-i18n="search">
+    </div>
+  </div>
+
+  <div class="sec-title" data-i18n="sub_links">Sub Bağlantıları</div>
+  <div id="subList">
+  {% if not subs %}<div class="card"><div class="cb open emp" data-i18n="emp">Henüz sub yok.</div></div>{% endif %}
+  {% for sub in subs %}
+  <div class="card" data-name="{{ sub.name|lower }} {{ sub.url|lower }} {{ (sub.note or '')|lower }} {{ (sub.last_check_username or '')|lower }}">
+    <div class="ch" onclick="togSub('s{{sub.id}}',{{sub.id}})">
+      <div class="cn">
+        <div class="nm">
+          {% if sub.last_check_username %}<span style="color:#38bdf8">{{ sub.last_check_username }}</span> —{% endif %}
+          {{ sub.note or sub.name }}
+          {% if sub.blocked %}<span class="bdg" style="background:rgba(248,113,113,0.2);color:var(--accent)">BLOKE</span>{% endif %}
+          {% if sub.get('force_limit', 0) %}<span class="bdg" style="background:rgba(248,113,113,0.2);color:#f87171">⚡ FORCED LİMİT</span>{% endif %}
+        </div>
+        <div class="ur"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.url }}</span><button class="copy-btn" onclick="event.stopPropagation();copyText('{{ sub.url }}','URL')" title="URL Kopyala">📋</button></div>
+      </div>
+      <div class="badges">
+        {% if sub.unlimited %}
+          <span class="bdg" style="background:rgba(74,222,128,0.2);color:#4ade80">{{ sub.device_count }} <span data-i18n="b_dev">cihaz</span> · <span data-i18n="b_unlim">limitsiz</span></span>
+        {% else %}
+          <span class="bdg">{{ sub.device_count }}/{{ sub.device_limit }} <span data-i18n="b_dev">cihaz</span></span>
+          {% if not global_limit_enabled and not sub.get('force_limit', 0) %}
+            <span class="bdg" style="background:rgba(251,191,36,0.2);color:#fbbf24">GLOBAL KAPALI</span>
+          {% endif %}
+        {% endif %}
+        {% if sub.last_check_status %}<span class="bdg" style="background:rgba(45,212,191,0.2);color:#2dd4bf">{{ sub.last_check_status[:8] }}</span>{% endif %}
+        <span class="bdg">{{ sub.req_count }} <span data-i18n="b_req">istek</span></span>
+      </div>
+    </div>
+    <div class="cb" id="s{{sub.id}}">
+      <div class="tr-row">
+        <div class="tr-item"><span data-i18n="t_down">İndirme:</span> <span>{{ (sub.bytes_down/1024)|int }} KB</span></div>
+        <div class="tr-item"><span data-i18n="t_req">İstek:</span> <span>{{ sub.req_count }}</span></div>
+        <div class="tr-item"><span data-i18n="t_add">Eklenme:</span> <span>{{ sub.created_at[:16] }}</span></div>
+        {% if sub.last_checked %}<div class="tr-item"><span data-i18n="t_chk">Son kontrol:</span> <span>{{ sub.last_checked[:16] }}</span></div>{% endif %}
+      </div>
+      <div class="row-flex" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <button class="check-btn" onclick="checkSub({{sub.id}},'{{sub.url}}')" data-i18n="check_sub">🔍 Sub Kontrol</button>
+        <span class="check-status" id="cs{{sub.id}}">{% if sub.last_check_status %}{{ sub.last_check_status }}{% if sub.last_check_username %} · {{ sub.last_check_username }}{% endif %}{% endif %}</span>
+      </div>
+      <div id="ui{{sub.id}}"></div>
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab({{sub.id}},'settings',this)" data-i18n="tab_set">Ayarlar</div>
+        <div class="tab" onclick="switchTab({{sub.id}},'devices',this)" data-i18n="tab_dev">Cihazlar</div>
+        <div class="tab" onclick="switchTab({{sub.id}},'logs',this)" data-i18n="tab_log">Loglar</div>
+        <div class="tab" onclick="switchTab({{sub.id}},'meta',this)" data-i18n="tab_meta">Metadata</div>
+      </div>
+
+      <div class="tab-content active" id="tab-settings-{{sub.id}}">
+        <div class="grid2">
+          <div class="fld"><label data-i18n="note_lbl">Müşteri / Not</label><input type="text" id="nt{{sub.id}}" value="{{ sub.note or '' }}" data-i18n="note"></div>
+          <div class="fld">
+            <label data-i18n="lim_lbl">Cihaz Limiti (0 = Limitsiz)</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="number" id="lim{{sub.id}}" value="{{ sub.device_limit }}" min="0" max="999">
+              <label class="tog" style="font-size:12px" title="Bu kullanıcı için limiti kesin olarak uygular.">
+                <input type="checkbox" id="forceLim{{sub.id}}" {% if sub.get('force_limit', 0) %}checked{% endif %}>
+                <span style="color:var(--accent)">⚡ Zorunlu Limit (Force)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px">
+          <label class="tog"><input type="checkbox" id="blk{{sub.id}}" {% if sub.blocked %}checked{% endif %}><span style="color:var(--accent)" data-i18n="full_block">Tamamen Bloke</span></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="saveSub({{sub.id}})" data-i18n="save_btn">Kaydet</button>
+          <button class="btn bd" onclick="resetDev({{sub.id}})" data-i18n="res_dev">Cihazları Sıfırla</button>
+          <button class="btn bd" onclick="delSub({{sub.id}})" data-i18n="del_sub">Sub Sil</button>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-devices-{{sub.id}}"><div id="dv{{sub.id}}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
+      <div class="tab-content" id="tab-logs-{{sub.id}}"><div class="log-wrap" id="lg{{sub.id}}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
+      <div class="tab-content" id="tab-meta-{{sub.id}}">
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="fld"><label data-i18n="s_meta">Sub Metadata</label><textarea class="txt" id="meta{{sub.id}}">{{ sub.metadata or '' }}</textarea></div>
+          <div class="fld"><label data-i18n="s_b_meta">Sub Bloke Mesajı</label><textarea class="txt" id="bmeta{{sub.id}}">{{ sub.blocked_metadata or '' }}</textarea></div>
+        </div>
+        <div class="fld" style="margin-bottom:10px"><label data-i18n="s_bd_meta">Cihaz Bloke Mesajı</label><textarea class="txt" id="bdmeta{{sub.id}}">{{ sub.blocked_device_metadata or '' }}</textarea></div>
+        <button class="btn bp" onclick="saveSub({{sub.id}})" data-i18n="save_btn">Kaydet</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+
+<script>
+const dict={
+  tr:{sort_set:"Ayarlar",dashboard:"Dashboard",logout:"Çıkış",s_sub:"Sub",s_dev:"Cihaz",s_req:"İstek",s_uablk:"UA Blok",s_devblk:"Cihaz Blok",s_blk:"Blokeli",g_limit:"🔒 Global Cihaz Limiti",lim_on:"✅ Cihaz limiti AKTİF — yeni cihazlar kontrol ediliyor",lim_off:"⚠️ Cihaz limiti DEVRE DIŞI — herkes bağlanabilir",lim_desc:"Kapalıyken tüm sub'larda cihaz limiti atlanır. (Force açılanlar hariç)",on:"Açık",off:"Kapalı",global_settings:"🌐 Global Ayarlar",g_meta:"Global Metadata (tüm sublara eklenir)",g_block:"Global Sub Bloke Mesajı",g_dev_block:"Global Cihaz Bloke Mesajı",g_exp_msg:"Süresi Dolanlar Mesajı (Expired)",g_data_msg:"Kotası Dolanlar Mesajı (Data Limit)",def_limit:"Varsayılan Cihaz Limiti (Yeni Sublar İçin)",save_btn:"Kaydet",ua_bl:"🚫 UA Kara Listesi",ua_pat:"Engellenmek istenen UA...",note:"Not",add:"+ Ekle",emp:"Liste boş.",del:"Sil",ua_wl:"✅ UA Beyaz Listesi",uaw_pat:"Beyaz liste UA...",search:"Arama yap...",sub_links:"Sub Bağlantıları",b_dev:"cihaz",b_unlim:"limitsiz",b_req:"istek",t_down:"İndirme:",t_req:"İstek:",t_add:"Eklenme:",t_chk:"Son kontrol:",check_sub:"🔍 Sub Kontrol",tab_set:"Ayarlar",tab_dev:"Cihazlar",tab_log:"Loglar",tab_meta:"Metadata",note_lbl:"Müşteri / Not",lim_lbl:"Cihaz Limiti",lim_act:"Limit Aktif",full_block:"Tamamen Bloke",res_dev:"Cihazları Sıfırla",del_sub:"Sub Sil",loading:"Yükleniyor...",s_meta:"Sub Metadata",s_b_meta:"Sub Bloke Mesajı",s_bd_meta:"Cihaz Bloke Mesajı",nav_logs:"🔥 Loglar",nav_stats:"📊 İstatistik",sys_cpu:"CPU Yükü (Load)",sys_ram:"RAM Kullanımı",sys_disk:"Disk Kullanımı"},
+  en:{sort_set:"Settings",dashboard:"Dashboard",logout:"Logout",s_sub:"Subs",s_dev:"Devices",s_req:"Reqs",s_uablk:"UA Block",s_devblk:"Dev Block",s_blk:"Blocked",g_limit:"🔒 Global Device Limit",lim_on:"✅ Limit is ACTIVE",lim_off:"⚠️ Limit is DISABLED",lim_desc:"When disabled, limits are ignored.",on:"On",off:"Off",global_settings:"🌐 Global Settings",g_meta:"Global Metadata",g_block:"Global Block Message",g_dev_block:"Global Dev Block Message",g_exp_msg:"Expired Sub Message",g_data_msg:"Data Limit Exceeded Message",def_limit:"Default Device Limit (For New Subs)",save_btn:"Save",ua_bl:"🚫 UA Blacklist",ua_pat:"UA to block...",note:"Note",add:"+ Add",emp:"Empty.",del:"Del",ua_wl:"✅ UA Whitelist",uaw_pat:"UA to whitelist...",search:"Search...",sub_links:"Sub Links",b_dev:"devs",b_unlim:"unlim",b_req:"reqs",t_down:"DL:",t_req:"Req:",t_add:"Added:",t_chk:"Checked:",check_sub:"🔍 Check Sub",tab_set:"Settings",tab_dev:"Devices",tab_log:"Logs",tab_meta:"Metadata",note_lbl:"Client / Note",lim_lbl:"Device Limit",lim_act:"Limit Active",full_block:"Fully Blocked",res_dev:"Reset Devices",del_sub:"Delete Sub",loading:"Loading...",s_meta:"Sub Metadata",s_b_meta:"Sub Block Msg",s_bd_meta:"Dev Block Msg",nav_logs:"🔥 Logs",nav_stats:"📊 Statistics",sys_cpu:"CPU Load",sys_ram:"RAM Usage",sys_disk:"Disk Usage"},
+  ru:{sort_set:"Настройки",dashboard:"Панель",logout:"Выход",s_sub:"Сабы",s_dev:"Устр-ва",s_req:"Запросы",s_uablk:"UA Блок",s_devblk:"Дев Блок",s_blk:"Заблок.",g_limit:"🔒 Глобальный лимит",lim_on:"✅ Лимит ВКЛЮЧЕН",lim_off:"⚠️ Лимит ВЫКЛЮЧЕН",lim_desc:"Если выкл, лимиты игнорируются.",on:"Вкл",off:"Выкл",global_settings:"🌐 Глобальные настройки",g_meta:"Глобальные метаданные",g_block:"Сообщ. блок. саба",g_dev_block:"Сообщ. блок. устр.",g_exp_msg:"Сообщение (Истек срок)",g_data_msg:"Сообщение (Лимит данных)",def_limit:"Лимит устройств (по умолчанию)",save_btn:"Сохранить",ua_bl:"🚫 Черный список",ua_pat:"UA для блокировки...",note:"Заметка",add:"+ Добав",emp:"Пусто.",del:"Удал",ua_wl:"✅ Белый список",uaw_pat:"Белый список UA...",search:"Поиск...",sub_links:"Ссылки",b_dev:"устр",b_unlim:"безлим",b_req:"запр",t_down:"Скач:",t_req:"Запр:",t_add:"Добав:",t_chk:"Пров:",check_sub:"🔍 Пров. саб",tab_set:"Настройки",tab_dev:"Устр-ва",tab_log:"Логи",tab_meta:"Мета",note_lbl:"Клиент / Заметка",lim_lbl:"Лимит устр.",lim_act:"Лимит активен",full_block:"Полностью заблок.",res_dev:"Сброс устр.",del_sub:"Удалить",loading:"Загрузка...",s_meta:"Мета саба",s_b_meta:"Сообщ. блока",s_bd_meta:"Сообщ. блока устр.",nav_logs:"🔥 Логи",nav_stats:"📊 Статистика",sys_cpu:"Загрузка ЦП",sys_ram:"ОЗУ",sys_disk:"Диск"},
+  tm:{sort_set:"Sazlamalar",dashboard:"Panel",logout:"Çykyş",s_sub:"Sub",s_dev:"Enjam",s_req:"Talap",s_uablk:"UA Blok",s_devblk:"Enjam Blok",s_blk:"Bloklanan",g_limit:"🔒 Umumy Çäk",lim_on:"✅ Çäk AÇYK",lim_off:"⚠️ Çäk ÝAPYk",lim_desc:"Ýapykka çäkler islemeýär.",on:"Açyk",off:"Ýapyk",global_settings:"🌐 Umumy Sazlamalar",g_meta:"Umumy Metadata",g_block:"Umumy Blok Haty",g_dev_block:"Umumy Enjam Blok",g_exp_msg:"Möhleti Gutarýan Haty",g_data_msg:"Kwota Dolanda Çykjak Hat",def_limit:"Köpçülikleýin Enjam Çägi (Täzeler Üçin)",save_btn:"Ýatda Sakla",ua_bl:"🚫 Gara Sanaw",ua_pat:"Bloklanjak UA...",note:"Bellik",add:"+ Goş",emp:"Boş.",del:"Boz",ua_wl:"✅ Ak Sanaw",uaw_pat:"Ak sanaw UA...",search:"Gözle...",sub_links:"Linkler",b_dev:"enjam",b_unlim:"çäksiz",b_req:"talap",t_down:"Indirme:",t_req:"Talap:",t_add:"Goşuldy:",t_chk:"Barlanan:",check_sub:"🔍 Barlag",tab_set:"Sazlamalar",tab_dev:"Enjamlar",tab_log:"Loglar",tab_meta:"Meta",note_lbl:"Müşderi / Bellik",lim_lbl:"Enjam Çägi",lim_act:"Çäk Açyk",full_block:"Doly Blokly",res_dev:"Arassala",del_sub:"Boz",loading:"Ýüklenýär...",s_meta:"Sub Meta",s_b_meta:"Sub Blok Haty",s_bd_meta:"Enjam Blok Haty",nav_logs:"🔥 Loglar",nav_stats:"📊 Statistika",sys_cpu:"CPU Yük",sys_ram:"RAM",sys_disk:"Disk"}
+};
+function applyLang(){
+  const l=localStorage.getItem('lang')||'tr';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(dict[l]&&dict[l][el.dataset.i18n]){
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=dict[l][el.dataset.i18n];
+      else el.innerHTML=dict[l][el.dataset.i18n];
+    }
+  });
+}
+function setLang(l){
+  localStorage.setItem('lang',l);
+  document.querySelectorAll('.lang-bar span').forEach(e=>e.style.color='var(--text-muted)');
+  let act=document.getElementById('l-'+l); if(act)act.style.color='var(--accent)';
+  applyLang();
+}
+function setTheme(t){
+  document.body.setAttribute('data-theme', t);
+  localStorage.setItem('theme', t);
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  event.target.classList.add('active');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const savedLang = localStorage.getItem('lang')||'tr';
+  setLang(savedLang);
+  const savedTheme = localStorage.getItem('theme')||'cyberpunk';
+  document.body.setAttribute('data-theme', savedTheme);
+  document.querySelectorAll('.theme-dot').forEach(d=>{
+    if(d.title.toLowerCase().includes(savedTheme.substring(0,3))) d.classList.add('active');
+  });
+});
+
+async function saveGlobal(){
+  const r=await fetch('/panel/api/global/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    metadata:document.getElementById('g_meta').value,
+    blocked_metadata:document.getElementById('g_blocked').value,
+    blocked_device_metadata:document.getElementById('g_blocked_dev').value,
+    expired_metadata:document.getElementById('g_expired').value,
+    data_limit_metadata:document.getElementById('g_data_limit').value,
+    default_device_limit:parseInt(document.getElementById('g_def_limit').value)
+  })});
+  if((await r.json()).ok)toast('Kaydedildi ✓','#2dd4bf');
+}
+async function toggleGlobalLimit(enabled){
+  const box=document.getElementById('limitBox'), txt=document.getElementById('limitStatusText'), lbl=document.getElementById('limitToggleLabel'), l=localStorage.getItem('lang')||'tr';
+  const r=await fetch('/panel/api/global/device-limit-toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});
+  if((await r.json()).ok){
+    if(enabled){ txt.className='limit-status-on'; txt.dataset.i18n="lim_on"; lbl.dataset.i18n="on"; toast('Açıldı ✓','#4ade80');
+    } else { txt.className='limit-status-off'; txt.dataset.i18n="lim_off"; lbl.dataset.i18n="off"; toast('Kapatıldı','#f87171'); }
+    applyLang();
+  }
+}
+async function addUA(){const p=document.getElementById('ua_pattern').value.trim(); if(!p)return; const r=await fetch('/panel/api/ua-blacklist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:p,note:document.getElementById('ua_note').value})}); if((await r.json()).ok)location.reload();}
+async function delUA(id){await fetch(`/panel/api/ua-blacklist/${id}`,{method:'DELETE'});location.reload();}
+async function addUAW(){const p=document.getElementById('uaw_pattern').value.trim(); if(!p)return; const r=await fetch('/panel/api/ua-whitelist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:p,note:document.getElementById('uaw_note').value})}); if((await r.json()).ok)location.reload();}
+async function delUAW(id){await fetch(`/panel/api/ua-whitelist/${id}`,{method:'DELETE'});location.reload();}
+
+async function saveSub(id){
+  const bdmeta = document.getElementById(`bdmeta${id}`);
+  const forceLimEl = document.getElementById(`forceLim${id}`);
+  const r = await fetch('/panel/api/sub/update', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      id,
+      device_limit: parseInt(document.getElementById(`lim${id}`).value),
+      force_limit: forceLimEl ? forceLimEl.checked : false,
+      blocked: document.getElementById(`blk${id}`).checked ? 1 : 0,
+      note: document.getElementById(`nt${id}`).value,
+      metadata: document.getElementById(`meta${id}`).value,
+      blocked_metadata: document.getElementById(`bmeta${id}`).value,
+      blocked_device_metadata: bdmeta ? bdmeta.value : ''
+    })
+  }); 
+  if((await r.json()).ok){toast('Kaydedildi ✓','#2dd4bf');setTimeout(()=>location.reload(),600);}
+}
+
+async function checkSub(id,url){const el=document.getElementById(`cs${id}`); el.textContent='...'; el.style.color='#fbbf24'; const r=await fetch('/panel/api/sub/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,url})}); const d=await r.json(); el.textContent=d.status+(d.username?` · ${d.username}`:''); el.style.color=d.status.startsWith('OK')?'#2dd4bf':'#f87171'; if(d.userinfo){const ui=document.getElementById(`ui${id}`), parts={}; d.userinfo.split(';').forEach(p=>{const[k,v]=p.trim().split('=');if(k&&v)parts[k.trim()]=v.trim();}); const gb=v=>v?(parseInt(v)/1073741824).toFixed(2)+' GB':'?'; ui.innerHTML=`<div class="userinfo-bar"><span class="ui-item">↑ <span>${gb(parts.upload)}</span></span><span class="ui-item">↓ <span>${gb(parts.download)}</span></span><span class="ui-item">Toplam: <span>${gb(parts.total)}</span></span></div>`;}}
+
+function togSub(id,subId){const el=document.getElementById(id);const opening=!el.classList.contains('open');el.classList.toggle('open');if(opening){loadDev(subId);loadLog(subId);}}
+function switchTab(subId,tab,btn){document.querySelectorAll(`#s${subId} .tab`).forEach(t=>t.classList.remove('active'));document.querySelectorAll(`#s${subId} .tab-content`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(`tab-${tab}-${subId}`).classList.add('active');if(tab==='devices')loadDev(subId);if(tab==='logs')loadLog(subId);}
+
+async function loadDev(id){const el=document.getElementById(`dv${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/devices`);const d=await r.json();if(!d.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(); return;}el.innerHTML=`<table class="tbl"><tr><th>App</th><th>Model</th><th>Hardware ID</th><th>IP</th><th>İlk</th><th>Son</th><th></th></tr>${d.map(x=>`<tr style="${x.blocked?'opacity:.5':''}"><td><span class="app-badge">${x.app_name||'?'}</span></td><td><span class="model-badge">${x.device_model||'—'}</span></td><td><span class="hw" onclick="copyText('${x.hardware_id}')">${x.hardware_id}</span></td><td class="ts">${x.ip}</td><td class="ts">${x.last_seen.substring(5,16)}</td><td>${x.blocked?'🔴':'🟢'}</td><td style="display:flex;gap:4px"><button class="btn ${x.blocked?'bp':'bo'}" style="padding:2px 7px;font-size:11px" onclick="blockDev(${x.id},${id},${x.blocked?0:1})">${x.blocked?'Aç':'Blok'}</button><button class="btn bd" style="padding:2px 7px;font-size:11px" onclick="delDev(${x.id},${id})">Sil</button></td></tr>`).join('')}</table>`; applyLang();}
+async function loadLog(id){const el=document.getElementById(`lg${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/logs`);const logs=await r.json();if(!logs.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(); return;}const cls=e=>e.includes('BLOCK')||e.includes('EXPIRED')||e.includes('ERROR')||e.includes('QUOTA')?'e-err':e.includes('RESET')?'e-warn':e.includes('REGISTER')?'e-info':'e-ok';el.innerHTML=logs.map(l=>`<div class="lg" style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--text-muted)">${l.ts.substring(5,16)}</span><span class="app-badge ${cls(l.event)}">${l.event}</span><span style="color:var(--text);flex:1">${l.detail}</span></div>`).join(''); applyLang();}
+
+async function blockDev(devId,subId,state){await fetch('/panel/api/device/block',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:devId,blocked:state})});loadDev(subId);}
+async function resetDev(id){if(confirm('Emin misiniz?')){await fetch('/panel/api/sub/reset-devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});loadDev(id);}}
+async function delDev(devId,subId){if(confirm('Emin misiniz?')){await fetch('/panel/api/device/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:devId})});loadDev(subId);}}
+async function delSub(id){if(confirm('Sub silinsin mi?')){await fetch(`/panel/api/sub/${id}`,{method:'DELETE'});location.reload();}}
+function copyText(text,label){navigator.clipboard.writeText(text).then(()=>toast((label||'Kopyalandı')+' ✓','#2dd4bf'));}
+function liveSearch(q){const ql=q.toLowerCase();document.querySelectorAll('#subList .card').forEach(c=>{c.style.display=(c.dataset.name||'').includes(ql)?'':'none';});}
+function toast(msg,color='#38bdf8'){const t=document.createElement('div');t.textContent=msg;t.style.cssText=`position:fixed;bottom:20px;right:20px;background:${color};color:#000;padding:7px 15px;border-radius:6px;font-size:13px;font-weight:600;z-index:9999;transition:opacity .3s`;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2000);}
+</script>
+</body></html>

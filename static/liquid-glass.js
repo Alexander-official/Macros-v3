@@ -1,0 +1,191 @@
+/* Liquid Glass motoru: arka plan sahnesi + yüzey başına kenar kırılması (SVG displacement) + imleç ışığı
+   + 💧 ayar paneli. Sadece body[data-theme="liquid"] iken çalışır. Ayarlar bu tarayıcıda saklanır. */
+(function(){
+  const SEL = '.box,.nav';
+  const KEY = 'lg_cfg';
+  const DEF = { blur:16, refract:46, band:26, radius:22, tint:8, spec:55, sat:185, bright:106, speed:10, anim:true, refractOn:true,
+                c1:'#4f7bff', c2:'#ff5fb7', c3:'#2ee6c8', c4:'#ffb547', base:'#070915', accent:'#8fd8ff' };
+  const PRESETS = {
+    'Aurora':  { c1:'#4f7bff', c2:'#ff5fb7', c3:'#2ee6c8', c4:'#ffb547', base:'#070915', accent:'#8fd8ff' },
+    'Okyanus': { c1:'#0ea5e9', c2:'#22d3ee', c3:'#6366f1', c4:'#14b8a6', base:'#03101a', accent:'#67e8f9' },
+    'Gün Batımı': { c1:'#f97316', c2:'#ec4899', c3:'#facc15', c4:'#8b5cf6', base:'#140708', accent:'#fdba74' },
+    'Orman':   { c1:'#22c55e', c2:'#84cc16', c3:'#06b6d4', c4:'#eab308', base:'#03110a', accent:'#86efac' },
+    'Mor':     { c1:'#8b5cf6', c2:'#d946ef', c3:'#6366f1', c4:'#f472b6', base:'#0b0616', accent:'#d8b4fe' },
+    'Grafit':  { c1:'#64748b', c2:'#94a3b8', c3:'#475569', c4:'#cbd5e1', base:'#06070a', accent:'#e2e8f0' }
+  };
+  const isChromium = !!(navigator.userAgentData && navigator.userAgentData.brands &&
+      navigator.userAgentData.brands.some(b => /Chromium|Google Chrome|Edge|Opera/i.test(b.brand)));
+  let cfg = load(), svg, defs, ro, on = false, uid = 0, panel;
+  const maps = new WeakMap();
+
+  function load(){ try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return Object.assign({}, DEF); } }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
+  function applyVars(){
+    const b = document.body.style, set = (k, v) => b.setProperty(k, v);
+    set('--lg-blur', cfg.blur + 'px'); set('--lg-radius', cfg.radius + 'px'); set('--lg-tint', (cfg.tint / 100).toFixed(3));
+    set('--lg-spec', (cfg.spec / 100).toFixed(2)); set('--lg-sat', cfg.sat + '%'); set('--lg-bright', (cfg.bright / 100).toFixed(2));
+    set('--lg-speed', Math.max(.1, cfg.speed / 10).toFixed(2)); set('--lg-play', cfg.anim ? 'running' : 'paused');
+    ['c1','c2','c3','c4','base','accent'].forEach(k => set('--lg-' + k, cfg[k]));
+  }
+  function clearVars(){ ['blur','radius','tint','spec','sat','bright','speed','play','c1','c2','c3','c4','base','accent'].forEach(k => document.body.style.removeProperty('--lg-' + k)); }
+
+  function scene(){
+    if (document.querySelector('.lg-scene')) return;
+    const s = document.createElement('div'); s.className = 'lg-scene'; s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = '<i></i><i></i><i></i><i></i><b></b>';
+    document.body.prepend(s);
+  }
+  function ensureSvg(){
+    if (svg) return;
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+    svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+    defs = document.createElementNS(svg.namespaceURI, 'defs'); svg.appendChild(defs);
+    document.body.appendChild(svg);
+  }
+  /* Yuvarlatılmış dikdörtgen SDF'inden displacement map: R/G = içeri doğru normal * (kenara yakınlık)^2.
+     radii: [sol-üst, sağ-üst, sağ-alt, sol-alt] — nav gibi sadece alt köşesi yuvarlak yüzeyler için. */
+  function buildMap(w, h, radii, band){
+    const k = Math.min(1, 700 / Math.max(w, h));
+    const cw = Math.max(8, Math.round(w * k)), ch = Math.max(8, Math.round(h * k));
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const ctx = c.getContext('2d'); const img = ctx.createImageData(cw, ch); const d = img.data;
+    const B = band * k, hx = cw / 2, hy = ch / 2;
+    const R = radii.map(r => Math.min(r * k, hx, hy));
+    for (let y = 0; y < ch; y++){
+      for (let x = 0; x < cw; x++){
+        const px = x + .5 - hx, py = y + .5 - hy;
+        const rr = px < 0 ? (py < 0 ? R[0] : R[3]) : (py < 0 ? R[1] : R[2]);
+        const qx = Math.abs(px) - (hx - rr), qy = Math.abs(py) - (hy - rr);
+        const sd = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - rr;
+        const dist = -sd; let Rv = 128, Gv = 128;
+        if (dist < B){
+          let nx, ny;
+          if (qx > 0 && qy > 0){ const l = Math.hypot(qx, qy) || 1; nx = qx / l * Math.sign(px); ny = qy / l * Math.sign(py); }
+          else if (qx > qy){ nx = Math.sign(px); ny = 0; } else { nx = 0; ny = Math.sign(py); }
+          const t = Math.max(0, 1 - Math.max(dist, 0) / B), m = t * t;
+          Rv = 128 - nx * m * 127; Gv = 128 - ny * m * 127;
+        }
+        const i = (y * cw + x) * 4; d[i] = Rv; d[i + 1] = Gv; d[i + 2] = 128; d[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return c.toDataURL('image/png');
+  }
+  function refract(el){
+    const b = el.getBoundingClientRect(); const w = Math.round(b.width), h = Math.round(b.height);
+    if (w < 20 || h < 20) return;
+    const cs = getComputedStyle(el);
+    const radii = ['borderTopLeftRadius','borderTopRightRadius','borderBottomRightRadius','borderBottomLeftRadius'].map(p => parseFloat(cs[p]) || 0);
+    const key = [w, h, radii.join(','), cfg.band, cfg.refract].join('|'); let st = maps.get(el);
+    if (st && st.key === key) return;
+    if (!st){ st = { id: 'lg-f' + (++uid) }; maps.set(el, st); }
+    st.key = key;
+    let f = document.getElementById(st.id);
+    if (!f){ f = document.createElementNS(svg.namespaceURI, 'filter'); f.id = st.id; defs.appendChild(f); }
+    f.setAttribute('x', '0'); f.setAttribute('y', '0'); f.setAttribute('width', w); f.setAttribute('height', h);
+    f.setAttribute('filterUnits', 'userSpaceOnUse'); f.setAttribute('color-interpolation-filters', 'sRGB');
+    f.innerHTML = `<feImage href="${buildMap(w, h, radii, cfg.band)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="m" scale="${cfg.refract}" xChannelSelector="R" yChannelSelector="G"/>`;
+    el.style.setProperty('--lg-f', `url(#${st.id})`);
+  }
+  let pending = new Set(), raf = 0;
+  function queue(el){ pending.add(el); if (!raf) raf = requestAnimationFrame(() => { raf = 0; const p = pending; pending = new Set(); if (on && ro) p.forEach(refract); }); }
+  function refreshAll(){ document.querySelectorAll(SEL).forEach(el => { const st = maps.get(el); if (st) st.key = ''; queue(el); }); }
+  function onMove(e){
+    const el = e.target.closest && e.target.closest('.box'); if (!el) return;
+    const b = el.getBoundingClientRect();
+    el.style.setProperty('--mx', (e.clientX - b.left) + 'px'); el.style.setProperty('--my', (e.clientY - b.top) + 'px');
+  }
+  function startRefract(){
+    if (!isChromium || !cfg.refractOn || ro) return;
+    ensureSvg(); document.body.classList.add('lg-refract');
+    ro = new ResizeObserver(es => es.forEach(e => queue(e.target)));
+    document.querySelectorAll(SEL).forEach(el => { ro.observe(el); queue(el); });
+  }
+  function stopRefract(){
+    document.body.classList.remove('lg-refract');
+    if (ro){ ro.disconnect(); ro = null; }
+  }
+
+  /* ---------- 💧 Ayar paneli ---------- */
+  const SLIDERS = [
+    ['blur', 'Bulanıklık', 0, 40, 'px'], ['refract', 'Kırılma', 0, 120, ''], ['band', 'Kenar kalınlığı', 6, 60, 'px'],
+    ['radius', 'Köşe yuvarlaklığı', 0, 40, 'px'], ['tint', 'Opaklık', 0, 40, '%'], ['spec', 'Parlama', 0, 100, '%'],
+    ['sat', 'Renk doygunluğu', 100, 300, '%'], ['bright', 'Parlaklık', 70, 140, '%'], ['speed', 'Hareket hızı', 1, 40, '']
+  ];
+  function gear(){
+    document.querySelectorAll('.theme-selector').forEach(ts => {
+      if (ts.querySelector('.lg-gear')) return;
+      const g = document.createElement('span'); g.className = 'lg-gear'; g.title = 'Liquid Glass ayarları'; g.textContent = '💧';
+      g.addEventListener('click', e => { e.stopPropagation(); togglePanel(); });
+      ts.appendChild(g);
+    });
+  }
+  function buildPanel(){
+    panel = document.createElement('div'); panel.className = 'lg-panel'; panel.hidden = true;
+    let h = '<h4>💧 Liquid Glass <span data-x>✕</span></h4>';
+    h += '<div class="lg-sec">Cam</div>';
+    SLIDERS.forEach(([k, l, mn, mx, u]) => {
+      h += `<div class="lg-row"><label>${l}</label><input type="range" min="${mn}" max="${mx}" data-k="${k}" value="${cfg[k]}"><output data-o="${k}">${cfg[k]}${u}</output></div>`;
+    });
+    h += `<label class="lg-chk"><input type="checkbox" data-c="refractOn" ${cfg.refractOn ? 'checked' : ''}> Kenar kırılması${isChromium ? '' : ' (bu tarayıcı desteklemiyor)'}</label>`;
+    h += `<label class="lg-chk"><input type="checkbox" data-c="anim" ${cfg.anim ? 'checked' : ''}> Arka plan hareketli</label>`;
+    h += '<div class="lg-sec">Renk paleti</div><div class="lg-presets">';
+    Object.entries(PRESETS).forEach(([n, p]) => { h += `<button type="button" data-p="${n}" style="background:linear-gradient(135deg,${p.c1},${p.c2},${p.c3})">${n}</button>`; });
+    h += '</div><div class="lg-sec">Özel renkler</div><div class="lg-colors">';
+    ['c1','c2','c3','c4'].forEach(k => { h += `<input type="color" data-col="${k}" value="${cfg[k]}" title="Işık ${k.slice(1)}">`; });
+    h += `<input type="color" data-col="base" value="${cfg.base}" title="Zemin"><input type="color" data-col="accent" value="${cfg.accent}" title="Vurgu"></div>`;
+    h += '<button type="button" class="lg-reset">↺ Varsayılana dön</button>';
+    panel.innerHTML = h;
+    document.body.appendChild(panel);
+    const units = Object.fromEntries(SLIDERS.map(s => [s[0], s[4]]));
+    let regen = 0;
+    panel.addEventListener('input', e => {
+      const t = e.target;
+      if (t.dataset.k){ cfg[t.dataset.k] = +t.value; panel.querySelector(`[data-o="${t.dataset.k}"]`).textContent = t.value + units[t.dataset.k];
+        if (t.dataset.k === 'band' || t.dataset.k === 'refract' || t.dataset.k === 'radius'){ clearTimeout(regen); regen = setTimeout(refreshAll, 120); } }
+      if (t.dataset.col) cfg[t.dataset.col] = t.value;
+      applyVars(); save();
+    });
+    panel.addEventListener('change', e => {
+      const t = e.target; if (!t.dataset.c) return;
+      cfg[t.dataset.c] = t.checked; applyVars(); save();
+      if (t.dataset.c === 'refractOn'){ cfg.refractOn ? startRefract() : stopRefract(); }
+    });
+    panel.addEventListener('click', e => {
+      const t = e.target;
+      if (t.dataset.x !== undefined) panel.hidden = true;
+      if (t.dataset.p){ Object.assign(cfg, PRESETS[t.dataset.p]); syncPanel(); applyVars(); save(); }
+      if (t.classList.contains('lg-reset')){ cfg = Object.assign({}, DEF); syncPanel(); applyVars(); save(); stopRefract(); startRefract(); refreshAll(); }
+    });
+    document.addEventListener('click', e => { if (!panel.hidden && !panel.contains(e.target)) panel.hidden = true; });
+  }
+  function syncPanel(){
+    if (!panel) return;
+    panel.querySelectorAll('[data-k]').forEach(i => { i.value = cfg[i.dataset.k]; i.dispatchEvent(new Event('input', { bubbles: true })); });
+    panel.querySelectorAll('[data-col]').forEach(i => { i.value = cfg[i.dataset.col]; });
+    panel.querySelectorAll('[data-c]').forEach(i => { i.checked = !!cfg[i.dataset.c]; });
+  }
+  function togglePanel(){ if (!panel) buildPanel(); panel.hidden = !panel.hidden; }
+
+  function enable(){
+    if (on) return; on = true; scene(); applyVars(); gear();
+    document.addEventListener('pointermove', onMove, { passive: true });
+    startRefract();
+  }
+  function disable(){
+    if (!on) return; on = false;
+    document.removeEventListener('pointermove', onMove);
+    stopRefract(); clearVars(); if (panel) panel.hidden = true;
+  }
+  function check(){ (document.body.getAttribute('data-theme') === 'liquid') ? enable() : disable(); }
+  function boot(){
+    check();
+    new MutationObserver(check).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+    new MutationObserver(ms => { if (!ro) return; ms.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType !== 1) return; [n, ...n.querySelectorAll(SEL)].forEach(el => { if (el.matches && el.matches(SEL)) { ro.observe(el); queue(el); } });
+    })); }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();

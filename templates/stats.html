@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>İstatistik</title><style>
+body{font-family:sans-serif;background:#080b0f;color:#e2e8f0;padding:24px;max-width:900px;margin:0 auto}
+a{color:#38bdf8;text-decoration:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.box{background:#0b0f15;border:1px solid #1e293b;border-radius:8px;padding:16px;}
+.box-red{border-color:#5a1212;}
+.box-title{font-size:14px;font-weight:bold;margin-bottom:14px;text-transform:uppercase;color:#e2e8f0}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #0d1520;font-size:13px}
+.row:last-child{border-bottom:none}
+.bar-bg{background:#1e293b;height:6px;border-radius:3px;margin-top:4px;overflow:hidden}
+.bar-fg{background:#38bdf8;height:100%;}
+.bar-fg-red{background:#f87171;height:100%;}
+.lang-bar{display:flex;gap:10px;margin-bottom:20px;font-size:11px;color:#64748b;}
+.lang-bar span{cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .2s;font-weight:bold;}
+.lang-bar span:hover, .lang-bar span.active{background:#2d0707;color:#f87171;}
+</style></head><body>
+<div class="lang-bar">
+    <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
+    <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+</div>
+<p><a href="/panel/dashboard" data-i18n="back_dash">← Panele Dön</a></p>
+<h2 style="margin-bottom:20px;color:#2dd4bf" data-i18n="stat_title">📊 Sistem Analizi ve İstatistikleri</h2>
+<div class="grid">
+  <div class="box box-red">
+    <div class="box-title" style="color:#f87171" data-i18n="stat_exc">🚨 Limiti En Çok Aşan Sublar (Top 20)</div>
+    {% if not exceeded %}<div style="color:#64748b;font-size:12px" data-i18n="stat_no_exc">Hiç limit aşımı yok.</div>{% endif %}
+    {% for s in exceeded %}
+    <div class="row">
+        <div style="flex:1">
+            <span style="color:#e2e8f0">{{ s.name }}</span><br>
+            <div class="bar-bg"><div class="bar-fg-red" style="width:{{ (s.exc_count / exceeded[0].exc_count * 100)|int }}%"></div></div>
+        </div>
+        <div style="font-weight:bold;color:#f87171;margin-left:15px">{{ s.exc_count }} <span data-i18n="times">kez</span></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div>
+    <div class="box" style="margin-bottom:20px">
+        <div class="box-title" style="color:#fbbf24" data-i18n="stat_app">📱 En Çok Kullanılan İstemciler (Apps)</div>
+        {% for a in apps %}
+        <div class="row">
+            <div style="flex:1">{{ a.app_name }} <div class="bar-bg"><div class="bar-fg" style="background:#fbbf24;width:{{ (a.c / apps[0].c * 100)|int }}%"></div></div></div>
+            <div style="font-weight:bold;color:#fbbf24;margin-left:15px">{{ a.c }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="box">
+        <div class="box-title" style="color:#38bdf8" data-i18n="stat_mod">📱 En Çok Kullanılan Modeller</div>
+        {% for m in models %}
+        <div class="row">
+            <div style="flex:1">{{ m.device_model }} <div class="bar-bg"><div class="bar-fg" style="width:{{ (m.c / models[0].c * 100)|int }}%"></div></div></div>
+            <div style="font-weight:bold;color:#38bdf8;margin-left:15px">{{ m.c }}</div>
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+const dict={
+  tr:{back_dash:"← Panele Dön",stat_title:"📊 Sistem Analizi ve İstatistikleri",stat_exc:"🚨 Limiti En Çok Aşan Sublar (Top 20)",stat_no_exc:"Hiç limit aşımı yok.",stat_app:"📱 En Çok Kullanılan İstemciler (Apps)",stat_mod:"📱 En Çok Kullanılan Modeller",times:"kez"},
+  en:{back_dash:"← Dashboard",stat_title:"📊 System Analysis & Statistics",stat_exc:"🚨 Most Limit Exceeding Subs (Top 20)",stat_no_exc:"No limit exceptions.",stat_app:"📱 Most Used Clients (Apps)",stat_mod:"📱 Most Used Models",times:"times"},
+  ru:{back_dash:"← В панель",stat_title:"📊 Анализ системы и статистика",stat_exc:"🚨 Самые частые превышения лимитов (Топ 20)",stat_no_exc:"Превышений нет.",stat_app:"📱 Популярные клиенты (Приложения)",stat_mod:"📱 Популярные модели",times:"раз"},
+  tm:{back_dash:"← Pangele gaýt",stat_title:"📊 Ulgam Analizi we Statistika",stat_exc:"🚨 Iň köp çägi aşanlar (Top 20)",stat_no_exc:"Çäk aşan ýok.",stat_app:"📱 Iň köp ulanylan programmalar",stat_mod:"📱 Iň köp ulanylan modellar",times:"gezek"}
+};
+function applyLang(){
+  const l=localStorage.getItem('lang')||'tr';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(dict[l]&&dict[l][el.dataset.i18n]) el.innerHTML=dict[l][el.dataset.i18n];
+  });
+}
+function setLang(l){
+  localStorage.setItem('lang',l);
+  document.querySelectorAll('.lang-bar span').forEach(e=>e.classList.remove('active'));
+  let act=document.getElementById('l-'+l); if(act)act.classList.add('active');
+  applyLang();
+}
+document.addEventListener('DOMContentLoaded',()=>setLang(localStorage.getItem('lang')||'tr'));
+</script>
+</body></html>

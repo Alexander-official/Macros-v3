@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Loglar</title><style>
+body{font-family:sans-serif;background:#080b0f;color:#e2e8f0;padding:24px;max-width:900px;margin:0 auto}
+a{color:#38bdf8;text-decoration:none}
+.box{background:#0b0f15;border:1px solid #5a1212;border-radius:8px;padding:14px;margin-bottom:20px}
+.box-title{font-size:16px;font-weight:bold;color:#f87171;margin-bottom:14px;text-transform:uppercase}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{text-align:left;color:#94a3b8;padding:8px;border-bottom:1px solid #1e293b;}
+.tbl td{padding:8px;border-bottom:1px solid #0d1520;}
+.e-err{background:#2d0707;color:#f87171;padding:2px 6px;border-radius:4px;font-weight:bold}
+.e-info{background:#0c2a3d;color:#38bdf8;padding:2px 6px;border-radius:4px;font-weight:bold}
+.e-warn{background:#2d1a07;color:#fbbf24;padding:2px 6px;border-radius:4px;font-weight:bold}
+.e-ok{background:#042f2e;color:#2dd4bf;padding:2px 6px;border-radius:4px;font-weight:bold}
+.lang-bar{display:flex;gap:10px;margin-bottom:20px;font-size:11px;color:#64748b;}
+.lang-bar span{cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .2s;font-weight:bold;}
+.lang-bar span:hover, .lang-bar span.active{background:#2d0707;color:#f87171;}
+</style></head><body>
+<div class="lang-bar">
+    <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
+    <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+</div>
+<p><a href="/panel/dashboard" data-i18n="back_dash">← Panele Dön</a></p>
+
+<div class="box">
+  <div class="box-title" data-i18n="log_title">🔥 Panel İşlem Geçmişi (Son 100)</div>
+  <table class="tbl">
+    <tr><th data-i18n="th_date">Tarih</th><th data-i18n="th_action">İşlem</th><th data-i18n="th_ip">IP</th><th data-i18n="th_detail">Detay</th></tr>
+    {% for l in panel_logs %}
+    <tr><td style="color:#64748b">{{ l.ts[:16] }}</td><td><span class="{{ 'e-err' if 'DEL' in l.event else 'e-warn' if 'UPDAT' in l.event else 'e-ok' }}">{{ l.event }}</span></td><td>{{ l.ip }}</td><td>{{ l.detail }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="box" style="border-color:#1e293b;">
+  <div class="box-title" style="color:#38bdf8" data-i18n="log_sys_title">💻 Sistem Logları (Son 300)</div>
+  <table class="tbl">
+    <tr><th data-i18n="th_date">Tarih</th><th data-i18n="th_sub">Sub</th><th data-i18n="th_event">Olay</th><th data-i18n="th_detail">Detay</th></tr>
+    {% for l in sys_logs %}
+    <tr><td style="color:#64748b">{{ l.ts[:16] }}</td><td style="color:#fbbf24">{{ l.sub_name or '?' }}</td><td><span class="{{ 'e-err' if 'BLOCK' in l.event or 'ERROR' in l.event or 'EXCEED' in l.event or 'EXPIRED' in l.event else 'e-info' }}">{{ l.event }}</span></td><td>{{ l.detail[:100] }} <span style="color:#64748b;font-size:10px">{{ l.ip }}</span></td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<script>
+const dict={
+  tr:{back_dash:"← Panele Dön",log_title:"🔥 Panel İşlem Geçmişi (Son 100)",log_sys_title:"💻 Sistem Logları (Son 300)",th_date:"Tarih",th_action:"İşlem",th_ip:"IP",th_detail:"Detay",th_sub:"Sub",th_event:"Olay"},
+  en:{back_dash:"← Dashboard",log_title:"🔥 Panel History (Last 100)",log_sys_title:"💻 System Logs (Last 300)",th_date:"Date",th_action:"Action",th_ip:"IP",th_detail:"Detail",th_sub:"Sub",th_event:"Event"},
+  ru:{back_dash:"← В панель",log_title:"🔥 История панели (Последние 100)",log_sys_title:"💻 Системные логи (Последние 300)",th_date:"Дата",th_action:"Действие",th_ip:"IP",th_detail:"Детали",th_sub:"Саб",th_event:"Событие"},
+  tm:{back_dash:"← Pangele gaýt",log_title:"🔥 Panel Taryhy (Soňky 100)",log_sys_title:"💻 Ulgam Loglary (Soňky 300)",th_date:"Sene",th_action:"Görnüş",th_ip:"IP",th_detail:"Bellik",th_sub:"Sub",th_event:"Wakalar"}
+};
+function applyLang(){
+  const l=localStorage.getItem('lang')||'tr';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(dict[l]&&dict[l][el.dataset.i18n]) el.innerHTML=dict[l][el.dataset.i18n];
+  });
+}
+function setLang(l){
+  localStorage.setItem('lang',l);
+  document.querySelectorAll('.lang-bar span').forEach(e=>e.classList.remove('active'));
+  let act=document.getElementById('l-'+l); if(act)act.classList.add('active');
+  applyLang();
+}
+document.addEventListener('DOMContentLoaded',()=>setLang(localStorage.getItem('lang')||'tr'));
+</script>
+</body></html>

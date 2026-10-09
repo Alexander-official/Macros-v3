@@ -1,0 +1,127 @@
+/* ===== Liquid Glass tema =====
+   Katmanlar: hareketli renkli sahne -> cam (::before: backdrop blur + kenar kırılması, köşeye göre kırpılmış)
+   -> speküler parlama (iç gölgeler + imleci takip eden ışık). Tüm değerler --lg-* değişkenleriyle
+   ayarlanır (💧 menüsü, liquid-glass.js). Kırılma SVG feDisplacementMap ile (Chromium). */
+[data-theme="liquid"]{
+  --lg-blur:16px;--lg-sat:185%;--lg-bright:1.06;--lg-radius:22px;--lg-tint:.08;--lg-spec:.55;
+  --lg-c1:#4f7bff;--lg-c2:#ff5fb7;--lg-c3:#2ee6c8;--lg-c4:#ffb547;--lg-base:#070915;--lg-speed:1;--lg-play:running;
+  --lg-accent:#8fd8ff;
+  --bg:rgba(255,255,255,.055);--card-bg:rgba(255,255,255,calc(var(--lg-tint) + .0));
+  --border:rgba(255,255,255,.16);--border-hover:rgba(255,255,255,.38);
+  --text:#f4f7ff;--text-muted:rgba(214,224,245,.62);
+  --accent:var(--lg-accent);--accent-hover:#fff;--nav-bg:transparent;
+  --badge-bg:rgba(255,255,255,.12);--badge-text:#e6f6ff;
+}
+body[data-theme="liquid"]{background:var(--lg-base)}
+body[data-theme="liquid"] option{background:#11152a;color:#f4f7ff}
+
+/* --- Sahne --- */
+.lg-scene{display:none}
+body[data-theme="liquid"] .lg-scene{display:block;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;
+  background:radial-gradient(1200px 800px at 50% -10%,color-mix(in srgb,var(--lg-c1) 22%,var(--lg-base)) 0%,var(--lg-base) 62%)}
+.lg-scene i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.75;mix-blend-mode:screen;will-change:transform;animation-play-state:var(--lg-play)!important}
+.lg-scene i:nth-child(1){width:46vmax;height:46vmax;left:-10vmax;top:-12vmax;background:radial-gradient(circle at 30% 30%,var(--lg-c1),transparent 70%);animation:lgA calc(26s / var(--lg-speed)) ease-in-out infinite alternate}
+.lg-scene i:nth-child(2){width:40vmax;height:40vmax;right:-12vmax;top:8vmax;background:radial-gradient(circle at 60% 40%,var(--lg-c2),transparent 70%);animation:lgB calc(31s / var(--lg-speed)) ease-in-out infinite alternate}
+.lg-scene i:nth-child(3){width:38vmax;height:38vmax;left:18vmax;bottom:-16vmax;background:radial-gradient(circle,var(--lg-c3),transparent 70%);animation:lgC calc(23s / var(--lg-speed)) ease-in-out infinite alternate}
+.lg-scene i:nth-child(4){width:26vmax;height:26vmax;right:14vmax;bottom:4vmax;background:radial-gradient(circle,var(--lg-c4),transparent 70%);opacity:.55;animation:lgA calc(37s / var(--lg-speed)) ease-in-out infinite alternate-reverse}
+.lg-scene b{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes lgA{to{transform:translate(18vmax,14vmax) scale(1.15)}}
+@keyframes lgB{to{transform:translate(-16vmax,18vmax) scale(.9)}}
+@keyframes lgC{to{transform:translate(12vmax,-20vmax) scale(1.2)}}
+@media (prefers-reduced-motion:reduce){.lg-scene i{animation:none}}
+
+/* --- Cam yüzey: blur/kırılma ::before katmanında; köşeler clip-path ile yuvarlak kırpılır
+       (backdrop-filter:url() Chromium'da border-radius'a uymuyor -> sivri köşe sorunu buydu) --- */
+body[data-theme="liquid"] :is(.box,.nav,.slot,.pcard,.theme-selector){
+  background:transparent!important;border:1px solid rgba(255,255,255,.15)!important;
+  border-radius:var(--lg-radius)!important;
+  box-shadow:
+    inset 0 1px .5px rgba(255,255,255,var(--lg-spec)),
+    inset 0 -1px 1px rgba(255,255,255,calc(var(--lg-spec) * .2)),
+    inset 1px 0 1px rgba(255,255,255,calc(var(--lg-spec) * .2)),
+    inset 0 0 22px rgba(255,255,255,.05),
+    0 12px 40px -8px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.18)!important;
+}
+body[data-theme="liquid"] :is(.box,.slot,.pcard,.theme-selector){position:relative;z-index:0}
+body[data-theme="liquid"] :is(.slot,.pcard){border-radius:calc(var(--lg-radius) * .72)!important}
+body[data-theme="liquid"] .theme-selector{border-radius:999px!important;padding:4px 6px}
+body[data-theme="liquid"] .nav{border-width:0 0 1px 0!important;border-radius:0 0 var(--lg-radius) var(--lg-radius)!important;margin:0 8px}
+body[data-theme="liquid"] :is(.box,.nav,.slot,.pcard,.theme-selector)::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;
+  clip-path:inset(0 round var(--lg-r,var(--lg-radius)));
+  background:linear-gradient(150deg,rgba(255,255,255,calc(var(--lg-tint) * 1.7)) 0%,rgba(255,255,255,calc(var(--lg-tint) * .5)) 45%,rgba(255,255,255,var(--lg-tint)) 100%);
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+}
+body[data-theme="liquid"] :is(.slot,.pcard)::before{--lg-r:calc(var(--lg-radius) * .72)}
+body[data-theme="liquid"] .nav::before{--lg-r:0 0 var(--lg-radius) var(--lg-radius)}
+body[data-theme="liquid"] .theme-selector::before{--lg-r:999px}
+body[data-theme="liquid"].lg-refract :is(.box,.nav)[style*="--lg-f"]::before{
+  -webkit-backdrop-filter:var(--lg-f) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  backdrop-filter:var(--lg-f) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+}
+/* İmleci takip eden ışık */
+body[data-theme="liquid"] .box::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(420px circle at var(--mx,30%) var(--my,-20%),rgba(255,255,255,calc(var(--lg-spec) * .2)),transparent 60%)}
+body[data-theme="liquid"] .save-bar{background:transparent}
+/* Dashboard kullanıcı kartları: yarı saydam (yüzlerce kartta blur kaydırmayı kasar) */
+body[data-theme="liquid"] .card{background:rgba(255,255,255,var(--lg-tint));border:1px solid rgba(255,255,255,.12);border-radius:calc(var(--lg-radius) * .72);
+  box-shadow:inset 0 1px .5px rgba(255,255,255,calc(var(--lg-spec) * .65)),0 6px 20px -8px rgba(0,0,0,.4)}
+body[data-theme="liquid"] .card:hover{background:rgba(255,255,255,calc(var(--lg-tint) + .03));border-color:rgba(255,255,255,.24)}
+
+/* --- Kontroller --- */
+body[data-theme="liquid"] :is(input[type=number],input[type=text],input[type=password],input[type=url],select,textarea){
+  background:rgba(0,0,0,.18)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:calc(var(--lg-radius) * .55)!important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35),inset 0 -1px 0 rgba(255,255,255,.06);color:var(--text)}
+body[data-theme="liquid"] :is(input,select,textarea):focus{border-color:var(--lg-accent)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--lg-accent) 22%,transparent),inset 0 1px 2px rgba(0,0,0,.35)}
+body[data-theme="liquid"] .btn{border-radius:999px;position:relative;
+  box-shadow:inset 0 1px .5px rgba(255,255,255,calc(var(--lg-spec) + .05)),inset 0 -1px 1px rgba(0,0,0,.18),0 6px 18px -6px rgba(0,0,0,.5);
+  transition:transform .25s cubic-bezier(.3,1.6,.5,1),filter .2s,box-shadow .2s}
+body[data-theme="liquid"] .btn:hover{transform:translateY(-1px) scale(1.025);filter:brightness(1.12)}
+body[data-theme="liquid"] .btn:active{transform:scale(.97)}
+body[data-theme="liquid"] .bghost,body[data-theme="liquid"] .btn.bghost{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.18)!important;color:var(--text)!important}
+body[data-theme="liquid"] .nav a{border-radius:999px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);
+  box-shadow:inset 0 1px .5px rgba(255,255,255,calc(var(--lg-spec) * .8))}
+body[data-theme="liquid"] :is(.badge-local,.badge){border-radius:999px;box-shadow:inset 0 1px .5px rgba(255,255,255,.45)}
+body[data-theme="liquid"] .theme-dot.active{border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.7)}
+body[data-theme="liquid"] ::-webkit-scrollbar-track{background:transparent}
+body[data-theme="liquid"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25)}
+
+/* Tema noktası + ayar butonu */
+.theme-dot.lg-dot{background:conic-gradient(from 200deg,#8fd8ff,#ff7ad9,#7cf5d6,#ffcf6b,#8fd8ff)!important;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.9),inset 0 -2px 3px rgba(0,0,0,.25)}
+.lg-gear{display:none;cursor:pointer;font-size:13px;line-height:16px;padding:0 2px;user-select:none}
+body[data-theme="liquid"] .lg-gear{display:inline-block}
+
+/* --- 💧 Ayar paneli --- */
+.lg-panel{position:fixed;top:64px;right:16px;width:300px;max-height:calc(100vh - 80px);overflow:auto;z-index:1000;padding:16px;
+  border-radius:22px;color:#f4f7ff;font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:rgba(20,24,44,.55);-webkit-backdrop-filter:blur(28px) saturate(190%);backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px .5px rgba(255,255,255,.6),0 24px 60px -10px rgba(0,0,0,.6)}
+.lg-panel[hidden]{display:none}
+.lg-panel h4{margin:0 0 10px;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+.lg-panel h4 span{cursor:pointer;opacity:.6}
+.lg-panel .lg-row{display:grid;grid-template-columns:96px 1fr 38px;align-items:center;gap:8px;margin:7px 0}
+.lg-panel .lg-row label{opacity:.75;font-weight:600}
+.lg-panel .lg-row output{text-align:right;opacity:.7;font-variant-numeric:tabular-nums}
+.lg-panel input[type=range]{width:100%;accent-color:#8fd8ff}
+.lg-panel .lg-sec{margin:12px 0 6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;font-weight:800}
+.lg-panel .lg-presets{display:flex;flex-wrap:wrap;gap:6px}
+.lg-panel .lg-presets button{border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 10px;color:#fff;cursor:pointer;font-size:11px;font-weight:700;
+  box-shadow:inset 0 1px .5px rgba(255,255,255,.5)}
+.lg-panel .lg-colors{display:flex;gap:8px;align-items:center}
+.lg-panel input[type=color]{width:30px;height:30px;border:none;border-radius:50%;padding:0;background:none;cursor:pointer}
+.lg-panel input[type=color]::-webkit-color-swatch-wrapper{padding:0}.lg-panel input[type=color]::-webkit-color-swatch{border:2px solid rgba(255,255,255,.5);border-radius:50%}
+.lg-panel .lg-chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:600}
+.lg-panel .lg-reset{margin-top:12px;width:100%;padding:8px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-weight:700}
+
+/* --- Okunabilirlik: açık vurgu renginin üstünde koyu yazı (beyaz-üstüne-beyaz olmasın) --- */
+body[data-theme="liquid"] .bp,body[data-theme="liquid"] .bp:hover{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--lg-accent) 92%,#fff),color-mix(in srgb,var(--lg-accent) 80%,#000))!important;
+  color:#07111f!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+body[data-theme="liquid"] :is(.slot-badge-custom,.badge-local[style*="--accent"]){color:#07111f!important}
+body[data-theme="liquid"] .bd{background:rgba(248,113,113,.16)!important;color:#fecaca!important;border:1px solid rgba(248,113,113,.35)!important}
+body[data-theme="liquid"] :is(.bsky,.bgreen,.bviolet){color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+body[data-theme="liquid"] .chip-reset,body[data-theme="liquid"] .chip .mv{color:var(--text-muted)}
+
+body[data-theme="liquid"] .brand a.by{background:none!important;box-shadow:none!important;border:none!important;padding:0!important}
