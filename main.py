@@ -1512,6 +1512,103 @@ def auto_rename_node(line, cdn_label="", vps_label=""):
         base_uri = line[:line.find("#")] if "#" in line else line
         return f"{base_uri}#{urllib.parse.quote(new_name)}"
 
+def _xray_ob_to_link(ob, name):
+    """Xray outbound -> paylasim linki (vless/vmess/trojan/ss/hysteria2). Desteklenmezse None."""
+    proto = ob.get("protocol"); st = ob.get("settings") or {}; ss = ob.get("streamSettings") or {}
+    net = ss.get("network") or "tcp"; sec = ss.get("security") or "none"
+    q = {"type": net}
+    if sec in ("tls", "reality"):
+        q["security"] = sec
+        t = ss.get("tlsSettings") or ss.get("realitySettings") or {}
+        if t.get("serverName"): q["sni"] = t["serverName"]
+        if t.get("fingerprint"): q["fp"] = t["fingerprint"]
+        if t.get("alpn"): q["alpn"] = ",".join(t["alpn"]) if isinstance(t["alpn"], list) else t["alpn"]
+        if sec == "reality":
+            if t.get("publicKey"): q["pbk"] = t["publicKey"]
+            if t.get("shortId") is not None: q["sid"] = t.get("shortId") or ""
+            if t.get("spiderX"): q["spx"] = t["spiderX"]
+        if t.get("allowInsecure"): q["allowInsecure"] = "1"
+    else:
+        q["security"] = "none"
+    if net == "ws":
+        w = ss.get("wsSettings") or {}
+        q["path"] = w.get("path", "/"); h = w.get("host") or (w.get("headers") or {}).get("Host")
+        if h: q["host"] = h
+    elif net == "grpc":
+        g = ss.get("grpcSettings") or {}
+        q["serviceName"] = g.get("serviceName", "")
+        if g.get("multiMode"): q["mode"] = "multi"
+    elif net in ("xhttp", "splithttp"):
+        x = ss.get("xhttpSettings") or ss.get("splithttpSettings") or {}
+        q["type"] = "xhttp"; q["path"] = x.get("path", "/")
+        if x.get("host"): q["host"] = x["host"]
+        if x.get("mode"): q["mode"] = x["mode"]
+    elif net == "httpupgrade":
+        x = ss.get("httpupgradeSettings") or {}
+        q["path"] = x.get("path", "/")
+        if x.get("host"): q["host"] = x["host"]
+    elif net == "tcp":
+        hd = ((ss.get("tcpSettings") or {}).get("header") or {})
+        if hd.get("type") == "http":
+            q["headerType"] = "http"
+            req = hd.get("request") or {}
+            if req.get("path"): q["path"] = req["path"][0] if isinstance(req["path"], list) else req["path"]
+            hh = (req.get("headers") or {}).get("Host")
+            if hh: q["host"] = hh[0] if isinstance(hh, list) else hh
+    frag = "#" + urllib.parse.quote(name or ob.get("tag") or "node")
+    qs = lambda d: urllib.parse.urlencode({k: v for k, v in d.items() if v is not None}, safe="/,:")
+    try:
+        if proto in ("vless", "vmess"):
+            vn = (st.get("vnext") or [{}])[0]; u = (vn.get("users") or [{}])[0]
+            addr, port, uid = vn.get("address"), vn.get("port"), u.get("id")
+            if not (addr and port and uid): return None
+            if proto == "vless":
+                q["encryption"] = u.get("encryption") or "none"
+                if u.get("flow"): q["flow"] = u["flow"]
+                return f"vless://{uid}@{addr}:{port}?{qs(q)}{frag}"
+            vm = {"v": "2", "ps": name or ob.get("tag") or "node", "add": addr, "port": str(port), "id": uid,
+                  "aid": str(u.get("alterId", 0)), "scy": u.get("security", "auto"), "net": q.get("type", "tcp"),
+                  "type": q.get("headerType", "none"), "host": q.get("host", ""), "path": q.get("path", q.get("serviceName", "")),
+                  "tls": "tls" if sec == "tls" else "", "sni": q.get("sni", ""), "fp": q.get("fp", ""), "alpn": q.get("alpn", "")}
+            return "vmess://" + base64.b64encode(json.dumps(vm, ensure_ascii=False).encode()).decode()
+        if proto == "trojan":
+            sv = (st.get("servers") or [{}])[0]
+            if not (sv.get("address") and sv.get("port") and sv.get("password")): return None
+            return f"trojan://{urllib.parse.quote(sv['password'], safe='')}@{sv['address']}:{sv['port']}?{qs(q)}{frag}"
+        if proto == "shadowsocks":
+            sv = (st.get("servers") or [{}])[0]
+            if not (sv.get("address") and sv.get("port") and sv.get("password")): return None
+            ui = base64.urlsafe_b64encode(f"{sv.get('method', 'chacha20-ietf-poly1305')}:{sv['password']}".encode()).decode().rstrip("=")
+            return f"ss://{ui}@{sv['address']}:{sv['port']}{frag}"
+        if proto in ("hysteria2", "hysteria"):
+            sv = (st.get("servers") or [st])[0]
+            addr, port = sv.get("address"), sv.get("port")
+            pw = sv.get("password") or (ss.get("hysteriaSettings") or {}).get("auth")
+            if not (addr and port and pw): return None
+            hq = {k: q[k] for k in ("sni", "alpn") if k in q}
+            if q.get("allowInsecure"): hq["insecure"] = "1"
+            return f"hysteria2://{urllib.parse.quote(str(pw), safe='')}@{addr}:{port}?{qs(hq)}{frag}"
+    except Exception:
+        return None
+    return None
+
+def _xrayjson_to_links(text):
+    """Happ/Remnawave/Marzban xray-json abonelik (tek config ya da liste) -> link listesi."""
+    try: data = json.loads(text)
+    except Exception: return None
+    cfgs = data if isinstance(data, list) else [data]
+    out, seen = [], set()
+    for c in cfgs:
+        if not isinstance(c, dict): continue
+        obs = [o for o in (c.get("outbounds") or []) if isinstance(o, dict) and o.get("protocol") in ("vless", "vmess", "trojan", "shadowsocks", "hysteria2", "hysteria")]
+        for o in obs:
+            nm = c.get("remarks") or o.get("tag") or ""
+            if len(obs) > 1 and o.get("tag") and o.get("tag") not in ("proxy",): nm = f"{nm} {o['tag']}".strip()
+            l = _xray_ob_to_link(o, nm)
+            if l and l.split("#")[0] not in seen:
+                seen.add(l.split("#")[0]); out.append(l)
+    return out
+
 def decode_sub_content(raw_bytes):
     from urllib.parse import unquote
     def dec(t):
@@ -1524,6 +1621,9 @@ def decode_sub_content(raw_bytes):
         return "\n".join(result)
     try:
         t = raw_bytes.decode("utf-8").strip()
+        if t[:1] in ("[", "{"):  # xray-json abonelik (Happ UA ile cekince bazi paneller JSON verir)
+            links = _xrayjson_to_links(t)
+            if links: return "\n".join(links), False
         if any(t.startswith(p) for p in ["vless://","ss://","trojan://","vmess://","hysteria","tuic","#"]): 
             return dec(t), False
         clean_t = t.replace("\n", "").replace("\r", "").replace(" ", "")
@@ -1659,13 +1759,67 @@ async def _process_sub_lines(lines, pos, allowed_protos, do_ping, ping_timeout, 
         url_bot = sort_links(url_bot, o, v, m)
     return url_top, url_bot
 
-async def _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort=None, rename=True, max_ms=0):
-    async with httpx.AsyncClient(timeout=10, verify=False) as client:
-        resp = await client.get(url, headers={"User-Agent": "v2ray"})
+def _slot_headers(o=None):
+    """Slotun istek basliklari: kullanici UA'si (yoksa v2ray) + HWID verildiyse Happ tarzi cihaz basliklari."""
+    o = o or {}
+    h = {"User-Agent": (o.get("ua") or "").strip() or "v2ray"}
+    hw = (o.get("hwid") or "").strip()
+    if hw:
+        h["x-hwid"] = hw
+        h["x-device-os"] = (o.get("dev_os") or "Android").strip()
+        h["x-ver-os"] = (o.get("dev_ver") or "14").strip()
+        h["x-device-model"] = (o.get("dev_model") or "SM-S918B").strip()
+    return h
+
+async def _fetch_sub_lines(url, o=None):
+    """Sub'i slotun UA/HWID basliklariyla ceker; node satirlarini dondurur. Hata/bos -> exception."""
+    async with httpx.AsyncClient(timeout=12, verify=False, follow_redirects=True) as client:
+        resp = await client.get(url, headers=_slot_headers(o))
         resp.raise_for_status()
-        content, _ = decode_sub_content(resp.content)
-        lines = content.split("\n")
-    return await _process_sub_lines(lines, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, max_ms)
+    content, _ = decode_sub_content(resp.content)
+    lines = [l for l in content.split("\n") if "://" in l]
+    if not lines: raise RuntimeError("sub boş / kod yok")
+    return lines
+
+async def _any_alive(lines, protos, timeout, n=6):
+    """Hizli saglik kontrolu: izinli ilk n node'dan biri bile calisiyor mu?"""
+    obs = [parse_link_for_xray(l) for l in lines if _node_allowed(l, protos)]
+    obs = [o for o in obs if o][:n]
+    if not obs: return False
+    res = await asyncio.gather(*[proxy_latency_ms(o, timeout) for o in obs], return_exceptions=True)
+    return any(isinstance(r, int) for r in res)
+
+_slot_status = {}  # slot anahtari -> {"used": "main"|"fallback"|"fail", "err": str, "ts": t}
+
+async def _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort=None, rename=True, max_ms=0, opts=None):
+    """Ana sub'i isler; ana sub ENGELLENIRSE (hata/bos) ya da icindeki kodlarin HICBIRI calismiyorsa
+    slotun fallback sub'ina gecer. Ping kapaliyken saglik icin ilk birkac node hizlica denenir."""
+    opts = opts or {}
+    fb = (opts.get("fallback") or "").strip()
+    err = ""
+    try:
+        lines = await _fetch_sub_lines(url, opts)
+        if fb and not do_ping and not await _any_alive(lines, allowed_protos, ping_timeout):
+            raise RuntimeError("ana sub'daki kodların hiçbiri çalışmıyor")
+        top, bot = await _process_sub_lines(lines, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, max_ms)
+        if top or bot or not fb:
+            _slot_status[url] = {"used": "main", "err": "", "ts": time.time()}
+            return top, bot
+        err = "ana sub'da çalışan kod kalmadı"
+    except Exception as e:
+        err = str(e)[:120]
+        if not fb:
+            _slot_status[url] = {"used": "fail", "err": err, "ts": time.time()}
+            raise
+    try:
+        lines = await _fetch_sub_lines(fb, opts)
+        top, bot = await _process_sub_lines(lines, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, max_ms)
+        _slot_status[url] = {"used": "fallback", "err": err, "ts": time.time()}
+        add_panel_log("SLOT_FALLBACK", f"{url[:80]} -> fallback ({err})", "")
+        return top, bot
+    except Exception as e2:
+        _slot_status[url] = {"used": "fail", "err": f"ana: {err} · fallback: {str(e2)[:80]}", "ts": time.time()}
+        raise
 
 async def _process_local_source(text, pos, allowed_protos, do_ping, ping_timeout, slot_sort=None, rename=True, max_ms=0):
     """URL yerine elle yapistirilmis node metnini isler (base64 veya duz)."""
@@ -1700,7 +1854,7 @@ async def do_external_fetch():
         rename = item.get("rename", True) is not False
         try:
             if url:
-                u_top, u_bot = await _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(item))
+                u_top, u_bot = await _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(item), item)
             else:
                 u_top, u_bot = await _process_local_source(local, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(item))
             new_cache[key] = {"top": u_top, "bottom": u_bot}
@@ -2151,14 +2305,16 @@ async def api_format_links(request: Request):
     res = [auto_rename_node(l) if "://" in l else l for l in lines]
     return {"ok": True, "formatted": "\n".join(res)}
 
-async def _get_source_lines(url, local):
-    """URL varsa cek, yoksa local metni cozumle; node satirlarini dondur."""
+async def _get_source_lines(url, local, opts=None):
+    """URL varsa (slot UA/HWID ile) cek — hata/bossa fallback'e gec; yoksa local metni cozumle."""
     if url:
-        async with httpx.AsyncClient(timeout=10, verify=False) as client:
-            resp = await client.get(url, headers={"User-Agent": "v2ray"})
-            resp.raise_for_status()
-            content, _ = decode_sub_content(resp.content)
-            return content.split("\n")
+        try: return await _fetch_sub_lines(url, opts)
+        except Exception:
+            fb = ((opts or {}).get("fallback") or "").strip()
+            if not fb: raise
+            lines = await _fetch_sub_lines(fb, opts)
+            opts["_used"] = "fallback"
+            return lines
     content, _ = decode_sub_content((local or "").encode("utf-8"))
     return content.split("\n")
 
@@ -2171,7 +2327,7 @@ async def api_preview_slot(request: Request):
     allowed_protos = d.get("protocols", [])
     if not url and not local.strip(): return {"ok": False, "msg": "URL veya local içerik gerekli."}
     try:
-        lines = await _get_source_lines(url, local)
+        lines = await _get_source_lines(url, local, d)
     except Exception as e:
         return {"ok": False, "msg": f"Bağlantı hatası: {str(e)[:50]}"}
     auto_ren = get_global("auto_rename_enabled", "1") == "1"
@@ -2241,7 +2397,7 @@ async def api_preview_final(request: Request):
             continue
         if not url and not local.strip(): continue
         try:
-            lines = await _get_source_lines(url, local)
+            lines = await _get_source_lines(url, local, s)
         except:
             errors += 1
             continue
@@ -2287,7 +2443,7 @@ async def api_test_slot(request: Request):
     xray_status = "🟢 Xray Motoru Aktif" if os.path.exists(os.path.join(BASE_DIR, "xray", "xray")) else "🔴 Xray Bulunamadı!"
 
     try:
-        lines = await _get_source_lines(url, local)
+        lines = await _get_source_lines(url, local, d)
     except Exception as e:
         return {"ok": False, "msg": f"Bağlantı hatası: {str(e)[:50]}"}
 
@@ -2321,9 +2477,21 @@ async def api_test_slot(request: Request):
         dead = len(nodes_to_test) - len(lats)
         avg = f" | ⏱ ort. {int(sum(lats)/len(lats))} ms" if lats else ""
         lim = f" | 🐢 {max_ms} ms üstü (alınmaz): {slow}" if max_ms else ""
-        return {"ok": True, "msg": f"{xray_status} | 📦 Filtrelenen: {len(nodes_to_test)} | ✅ Alınacak: {ok_n}{lim} | ❌ Ölü: {dead}{avg}"}
+        fbm = " | ↪ ANA SUB AÇILMADI → FALLBACK" if d.get("_used") == "fallback" else ""
+        if d.get("fallback") and not d.get("_used") and ok_n == 0 and nodes_to_test:
+            try:
+                fl = await _fetch_sub_lines(d["fallback"].strip(), d)
+                fbm = f" | ↪ Ana sub'da çalışan yok → fallback devreye girer ({len(fl)} kod)"
+            except Exception as e: fbm = f" | ⚠ Fallback da açılmadı: {str(e)[:40]}"
+        return {"ok": True, "msg": f"{xray_status} | 📦 Filtrelenen: {len(nodes_to_test)} | ✅ Alınacak: {ok_n}{lim} | ❌ Ölü: {dead}{avg}{fbm}"}
     else:
-        return {"ok": True, "msg": f"⚙️ Ping Kapalı! | 📦 Filtreden Geçen ve Alınan: {len(nodes_to_test)}"}
+        return {"ok": True, "msg": f"⚙️ Ping Kapalı! | 📦 Filtreden Geçen ve Alınan: {len(nodes_to_test)}" + (" | ↪ ANA SUB AÇILMADI → FALLBACK" if d.get("_used") == "fallback" else "")}
+
+@app.post("/panel/api/external/slot-status")
+async def api_slot_status(request: Request):
+    """Her URL slotunun son cekimde ana/fallback/basarisiz durumu."""
+    if not authed(request): raise HTTPException(401)
+    return {"ok": True, "status": _slot_status}
 
 @app.post("/panel/api/external/force-fetch-single")
 async def force_fetch_external_single(request: Request):
@@ -2343,7 +2511,7 @@ async def force_fetch_external_single(request: Request):
 
     try:
         if url:
-            url_top, url_bot = await _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(d))
+            url_top, url_bot = await _fetch_and_process_url(url, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(d), d)
         else:
             url_top, url_bot = await _process_local_source(local, pos, allowed_protos, do_ping, ping_timeout, slot_sort, rename, _ping_max_ms(d))
     except Exception as e:

@@ -18,6 +18,9 @@ Marzban / 3x-ui abonelik (subscription) yönetim ve birleştirme paneli. Müşte
 
 ### Kaynaklar ve slotlar
 - **Harici sub kaynakları** — URL ya da yerel (Local) kaynak; otomatik çekme.
+- **↪ Fallback sub** — her slota yedek link: ana sub engellenirse ya da içindeki kodların hiçbiri çalışmazsa otomatik yedeğe geçer (panelde ↪ FALLBACK rozeti).
+- **📱 Slot başına User-Agent + 🆔 HWID** — kaynağı Happ / v2rayNG / Hiddify gibi çeker (`x-hwid` + cihaz başlıkları); HWID elle ya da 🎲 rastgele.
+- **JSON kaynak desteği** — kaynak Xray JSON verirse otomatik linke çevrilir.
 - **📍 Kaynak Sub bloğu** — abonenin kendi kodları, istediğin konuma sürüklenir.
 - **🔗 Panel blokları** — entegre panellerdeki kodlar ayrı blok olarak konumlanır.
 - **Sürükle-bırak slotlar**, slot bazlı protokol filtresi ve sıralama.
@@ -45,6 +48,7 @@ Marzban / 3x-ui abonelik (subscription) yönetim ve birleştirme paneli. Müşte
 ### Arayüz
 - 9 tema + **💧 Liquid Glass** (gerçek kenar kırılması, renk/bulanıklık/köşe vb. ayarlanabilir).
 - 4 dil: TR / EN / RU / TM.
+- **Telefon uyumlu** — tüm sayfalar mobil için optimize (iOS zoom yok, kaydırılabilir menü/tablolar, büyük dokunma alanları).
 - İstatistik ve log sayfaları, katlanabilir/sabitlenebilir ayar kutuları, JSON ayar dışa/içe aktarma.
 
 ---
