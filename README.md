@@ -1,111 +1,240 @@
 # ⚡ Macros v3
 
-**by [@alexvpns](https://t.me/alexvpns)** — Telegram
+**by [@alexvpns](https://t.me/alexvpns)** · Telegram
 
-Marzban / 3x-ui abonelik (subscription) yönetim ve birleştirme paneli. Müşterinin mevcut sub linkini proxyler; harici kaynakları, birden fazla paneli ve kendi node'larını tek, sıralı, isimlendirilmiş bir abonelikte birleştirir. Uygulamaya göre düz liste ya da tam **Xray JSON** verir.
+> 🇹🇷 Türkçe · [🇬🇧 English](#-english)
+
+Marzban ve 3x-ui için **abonelik (sub) birleştirme ve yönetim paneli**.
+
+Müşterinizin mevcut sub linkini kendi alan adınız üzerinden sunar ve şunları tek, sıralı, düzgün isimlendirilmiş bir abonelikte birleştirir:
+- müşterinin kendi kodları,
+- diğer panellerinizdeki kodları,
+- harici kaynaklar.
+
+Uygulamaya göre düz liste ya da tam **Xray JSON** verir.
+
+```
+Müşteri (Happ / v2rayNG / …)
+        │  https://sub.domain.com/macros?url=<asıl-sub-linki>
+        ▼
+   ⚡ Macros v3 ──► Ana panel (Marzban)   : müşterinin kendi kodları
+        │       ├─► Diğer paneller (3x-ui) : aynı müşterinin oradaki kodları
+        │       └─► Harici sub'lar          : filtre + ping + fallback
+        ▼
+  Birleşik, sıralı, isimlendirilmiş abonelik (liste veya Xray JSON)
+```
+
+---
+
+## İçindekiler
+1. [Özellikler](#özellikler)
+2. [Gereksinimler](#gereksinimler)
+3. [Kurulum](#kurulum)
+4. [İlk ayarlar](#ilk-ayarlar)
+5. [Güncelleme](#güncelleme)
+6. [Yapılandırma (.env)](#yapılandırma-env)
+7. [Dosya yapısı](#dosya-yapısı)
+8. [Sık sorulanlar](#sık-sorulanlar)
+9. [Kaldırma](#kaldırma)
+10. [Lisans ve destek](#lisans-ve-destek)
 
 ---
 
 ## Özellikler
 
-### Abonelik
-- **Sub proxy** — `https://domain/macros?url=<kaynak-sub>` ya da kısa token linki `/macros/<token>`.
-- **Eski linkler bozulmaz** — `EXTRA_SUB_PATHS` ile ek yollar tanımlanır.
-- **Cihaz limiti** — sub başına cihaz sayısı, global aç/kapa, zorunlu limit.
-- **UA kara/beyaz liste** — istenmeyen istemcileri engelle.
-- **İzinli paneller** — yalnızca belirlenen panellerin linkleri proxylenir.
-- **Announce / profil başlıkları** korunur.
+### 🔗 Abonelik
+- Linkler `/macros?url=<kaynak-sub>` ya da kısa token ile `/macros/<token>`.
+- Eski linkler bozulmaz: `EXTRA_SUB_PATHS` ile ek yollar açılır.
+- Cihaz limiti (sub başına, global, zorunlu).
+- User-Agent kara/beyaz listesi.
+- İzinli paneller listesi.
+- Announce ve profil başlıkları korunur.
 
-### Kaynaklar ve slotlar
-- **Harici sub kaynakları** — URL ya da yerel (Local) kaynak; otomatik çekme.
-- **↪ Fallback sub** — her slota yedek link: ana sub engellenirse ya da içindeki kodların hiçbiri çalışmazsa otomatik yedeğe geçer (panelde ↪ FALLBACK rozeti).
-- **📱 Slot başına User-Agent + 🆔 HWID** — kaynağı Happ / v2rayNG / Hiddify gibi çeker (`x-hwid` + cihaz başlıkları); HWID elle ya da 🎲 rastgele.
-- **JSON kaynak desteği** — kaynak Xray JSON verirse otomatik linke çevrilir.
-- **📍 Kaynak Sub bloğu** — abonenin kendi kodları, istediğin konuma sürüklenir.
-- **🔗 Panel blokları** — entegre panellerdeki kodlar ayrı blok olarak konumlanır.
-- **Sürükle-bırak slotlar**, slot bazlı protokol filtresi ve sıralama.
-- **⚡ Gerçek gecikme testi** — Xray ile; ölü kodlar ve **ms limitinin** üstündekiler alınmaz (global ya da slot başına).
-- **👁 Final önizleme** — birleşik + sıralı son çıktı.
+### 🧩 Slotlar (sürükle-bırak)
 
-### Adlandırma
-- Bayrak + ülke ile otomatik isim, slot başına aç/kapa.
-- VLESS WS için CDN etiketi (Google / CloudFront / Fastly).
-- Doğrudan node'lar için cloud etiketi (Azure / AWS / Google / Oracle) — metinler özelleştirilebilir.
+| Slot | Ne yapar |
+|---|---|
+| **Harici sub** | URL'den kod çeker. Protokol filtresi, ⚡ gerçek gecikme testi ve ms limiti uygulanır. |
+| **↪ Fallback** | Ana sub engellenirse ya da kodlarının hiçbiri çalışmazsa yedek linke geçer. |
+| **📱 UA / 🆔 HWID** | Kaynağı Happ / v2rayNG / Hiddify gibi çeker (`x-hwid`). HWID 🎲 ile rastgele üretilebilir. |
+| **Local** | Elle yapıştırılan kodlar. |
+| **📍 Kaynak Sub** | Abonenin kendi kodları; konumu seçilir. |
+| **🔗 Panel** | Entegre paneldeki kodlar ayrı blok olarak gelir. |
 
-### JSON abonelik
-- Seçilen uygulamalara (Happ, v2rayN, v2rayNG …) tam **Xray JSON** config.
-- Direct siteler/IP'ler, reklam engelleme, **otomatik balancer** (leastPing).
-- İstemci profilleri: uygulamaya göre format ve protokol filtresi.
+Ayrıca:
+- Her slotun kendi protokol sıralaması olabilir.
+- Final önizleme, birleşik son çıktıyı gösterir.
+- Kaynak Xray JSON verirse otomatik olarak linke çevrilir.
 
-### Çoklu panel entegrasyonu
-- Birden fazla **Marzban** ve **3x-ui** paneli. Ana panel otomatik algılanır (`.env`'deki Marzban).
-- Ana paneldeki kullanıcılar ikincil 3x-ui panellerde **tüm inbound'larla** otomatik açılır.
-- Limit ve süre ana panelden gelir; **trafik tüm panellerin toplamıdır**.
-- Manuel/otomatik senkron, durum kartları, ayrıntılı rapor (panelin kendi / eşleşen / macros'un eklediği / bu senkronda eklenen).
-- **Güvenli:** senkron hiçbir kullanıcıyı silmez; hata olursa loglar ve bildirir.
-- Panel kaldırılırken yalnızca macros'un açtığı kullanıcılar silinir; panelin kendi kullanıcılarına dokunulmaz.
+### 🏷️ Otomatik adlandırma
+- Bayrak + ülke adı.
+- CDN etiketi (Google / CloudFront / Fastly).
+- Cloud etiketi (Azure / AWS / Google / Oracle).
+- Etiket metinleri ayarlanabilir, slot başına açılıp kapatılabilir.
 
-### Arayüz
-- 9 tema + **💧 Liquid Glass** (gerçek kenar kırılması, renk/bulanıklık/köşe vb. ayarlanabilir).
+### 📦 JSON abonelik
+- Seçilen uygulamalara tam Xray config verilir.
+- İçinde direct siteler/IP'ler, reklam engelleme ve otomatik balancer (leastPing) bulunur.
+
+### 🔄 Çoklu panel (Marzban + 3x-ui)
+- Ana panel otomatiktir (`.env`'deki Marzban).
+- Ana paneldeki kullanıcılar 3x-ui panellerinde **tüm inbound'larla** açılır.
+- Limit ve süre ana panelden gelir; trafik tüm panellerin **toplamıdır**.
+- Senkron kullanıcı **silmez**; hata olursa loglar.
+- Panel kaldırılırken yalnızca Macros'un açtığı kullanıcılar silinir.
+
+### 🎨 Arayüz
+- 10 tema, aralarında 💧 **Liquid Glass** (ayarlanabilir).
 - 4 dil: TR / EN / RU / TM.
-- **Telefon uyumlu** — tüm sayfalar mobil için optimize (iOS zoom yok, kaydırılabilir menü/tablolar, büyük dokunma alanları).
-- İstatistik ve log sayfaları, katlanabilir/sabitlenebilir ayar kutuları, JSON ayar dışa/içe aktarma.
+- Telefon uyumlu.
+- İstatistik ve log sayfaları.
 
 ---
 
-## Kurulum (otomatik)
+## Gereksinimler
+- Ubuntu 22.04+ veya Debian 12+, **root** erişimi
+- A kaydı bu sunucuya yönlendirilmiş bir **alan adı** (ör. `sub.domain.com`)
+- 80 ve 443 portları boş olmalı. Aynı sunucuda başka bir nginx sitesi olabilir.
+- En az 1 GB RAM
 
-Gereken: Ubuntu 22.04+ / Debian 12+, root erişimi, sunucuya yönlendirilmiş bir domain.
+## Kurulum
 
 ```bash
-# Dosyaları sunucuya kopyalayın (ör. /opt/macros), sonra:
+apt update && apt install -y git
+git clone https://github.com/Alexander-official/Macros-v3.git /opt/macros
 cd /opt/macros
 chmod +x install.sh
 sudo ./install.sh
 ```
 
-Sihirbaz şunları sorar ve kendisi kurar:
-- Domain ve SSL e-postası (Let's Encrypt otomatik).
-- Admin kullanıcı adı ve şifresi.
-- Ana Marzban paneli (opsiyonel).
-- Ek sub yolu (opsiyonel).
+Sihirbaz sırayla şunları sorar:
 
-Kurduğu bileşenler: Python ortamı, Xray-core, systemd servisi (`macros2`), Nginx.
+| Soru | Örnek |
+|---|---|
+| Panel domaini | `sub.domain.com` |
+| SSL e-postası | `admin@domain.com` |
+| Kurulum dizini / port | Enter (varsayılan) |
+| Admin kullanıcı / şifre | `admin` / güçlü bir şifre |
+| Marzban URL / kullanıcı / şifre | `https://panel.domain.com:8000` (boş bırakılabilir) |
+| Ek sub yolu | eski linkleriniz için, yoksa boş |
 
-- **Panel:** `https://<domain>/panel/login`
-- **Sub linki:** `https://<domain>/macros?url=<kaynak-sub-linki>`
+Kurulum şunları kendisi yapar:
+- Python ortamını kurar.
+- Xray-core'u indirir.
+- `macros2` systemd servisini oluşturur.
+- Nginx'i ayarlar.
+- Let's Encrypt SSL sertifikasını alır.
+
+Bittiğinde:
+- **Panel:** `https://sub.domain.com/panel/login`
+- **Müşteri linki:** `https://sub.domain.com/macros?url=https://panel.domain.com:8000/sub/XXXX`
+
+## İlk ayarlar
+1. Panele girin. **⚙️ Ayarlar → Harici Sub Kaynakları** bölümünde **📍 Kaynak Sub Bloğu** ekleyin; müşterinin kendi kodları buraya gelir.
+2. Harici kaynak eklemek için **+ Yeni Kaynak**: URL, gerekirse fallback, UA ve HWID girin.
+3. Diğer panelleriniz için **Entegre Paneller** bölümünü kullanın. 3x-ui eklerken API token gerekir: *3x-ui → Ayarlar → Güvenlik → API Token*.
+4. **💾 Kaydet**. Ardından **👁 Final Önizleme** ile çıktıyı kontrol edin.
 
 ## Güncelleme
-
 ```bash
 cd /opt/macros
-./backup.sh                              # önce yedek
-# yeni dosyaları kopyalayın (.env ve macros.db'ye dokunmayın)
+./backup.sh                         # yedek: backups/
+git pull
 ./venv/bin/pip install -r requirements.txt
 systemctl restart macros2
 ```
+`.env` ve `macros.db` güncellemeden etkilenmez.
 
-## Yapılandırma
+## Yapılandırma (.env)
 
-| Dosya | İçerik |
+| Değişken | Açıklama |
 |---|---|
-| `.env` | Admin girişi, ana Marzban paneli, `EXTRA_SUB_PATHS`, opsiyonel `BOT_TOKEN` / `BOT_CHAT_ID`. Gizlidir, paylaşılmaz. |
-| `macros.db` | Tüm panel ayarları ve müşteri verisi (SQLite). Panelden yönetilir. |
+| `ADMIN_USER`, `ADMIN_PASS` | Panel girişi. Şifre boşsa her açılışta rastgele bir şifre üretilip loga yazılır. |
+| `MARZBAN_URL`, `MARZBAN_USER`, `MARZBAN_PASS` | Ana panel (opsiyonel) |
+| `EXTRA_SUB_PATHS` | Ek sub yolları, virgülle (ör. `mysub,eski`) |
+| `BOT_TOKEN`, `BOT_CHAT_ID` | Opsiyonel Telegram izleme/yedek botu (`bot.py`) |
 
-Opsiyonel Telegram botu (`bot.py`): servis izleme, otomatik yeniden başlatma, yedek gönderimi.
+Değişiklikten sonra: `systemctl restart macros2`
 
-## Yedekleme
+## Dosya yapısı
+```
+main.py            Uygulama (FastAPI)
+templates/         Panel sayfaları
+static/            Liquid Glass + mobil stiller
+install.sh         Otomatik kurulum
+backup.sh          Yedekleme
+bot.py             Opsiyonel Telegram botu
+healthcheck.sh     Opsiyonel bekçi (yanıt vermezse yeniden başlatır)
+.env.example       Örnek ayar dosyası
+```
+`macros.db` (veritabanı) ve `.env` (şifreler) kurulumda oluşturulur. İkisi de repoda **yoktur**.
 
+## Sık sorulanlar
+
+**Servis durumu / loglar?**
 ```bash
-./backup.sh      # main.py + macros.db + templates + static + .env -> backups/
+systemctl status macros2
+journalctl -u macros2 -f
 ```
 
-## Güvenlik
+**Şifremi unuttum.**
+`.env` içindeki `ADMIN_PASS`'ı değiştirin, sonra `systemctl restart macros2`.
 
-- `macros.db` müşteri verisi, `.env` şifre içerir — ikisi de asla paylaşılmamalı (`.gitignore`'dadır).
-- Admin şifresini güçlü seçin.
-- Senkron varsayılan olarak hiçbir kullanıcıyı silmez.
+**SSL alınamadı.**
+Domainin bu sunucuya yönlendiğinden emin olun, sonra: `certbot --nginx -d sub.domain.com`
+
+**Ping testi çalışmıyor.**
+`xray/xray` dosyası var mı kontrol edin. Yoksa `install.sh`'ı tekrar çalıştırın.
+
+**Gecikme kimden ölçülüyor?**
+Sunucudan; kullanıcının telefonundan ölçülen değer farklı olabilir.
+
+## Kaldırma
+```bash
+systemctl disable --now macros2
+rm /etc/systemd/system/macros2.service /etc/nginx/sites-enabled/macros2 /etc/nginx/sites-available/macros2
+systemctl restart nginx
+rm -rf /opt/macros        # önce ./backup.sh ile yedek alın
+```
 
 ## Lisans ve destek
+Ticari yazılımdır: [LICENSE](LICENSE). Kaynak kodu inceleme amacıyla açıktır; satış ve dağıtım izne tabidir.
+Lisans, kurulum ve destek için: **Telegram [@alexvpns](https://t.me/alexvpns)**
 
-Ticari yazılımdır — bkz. [LICENSE](LICENSE). Lisans, kurulum ve destek: **Telegram [@alexvpns](https://t.me/alexvpns)**
+---
+
+## 🇬🇧 English
+
+**Macros v3** is a subscription merge & management panel for **Marzban** and **3x-ui**.
+
+It serves your customers' existing sub links through your own domain and merges into one sorted, well-named subscription:
+- the customer's own nodes,
+- nodes from your other panels,
+- external sources.
+
+Output is a plain list or full **Xray JSON**, depending on the client app.
+
+**Highlights**
+- Drag-and-drop slots: external sources with real Xray latency test, ms limit, **fallback sub**, custom **User-Agent + HWID**.
+- Source / panel blocks; per-slot sorting; final preview.
+- Auto naming with flag/country, CDN and cloud labels.
+- Xray JSON output with routing, ad-block and auto balancer.
+- Multi-panel sync: users mirrored to 3x-ui on all inbounds, limits from the main panel, traffic summed. Never deletes users.
+- 10 themes including 💧 Liquid Glass; 4 languages; mobile-friendly.
+
+**Install** (Ubuntu 22.04+ / Debian 12+, root, a domain pointing to the server):
+```bash
+apt update && apt install -y git
+git clone https://github.com/Alexander-official/Macros-v3.git /opt/macros
+cd /opt/macros && chmod +x install.sh && sudo ./install.sh
+```
+- **Panel:** `https://<domain>/panel/login`
+- **Sub link:** `https://<domain>/macros?url=<original-sub-link>`
+
+**Update:**
+```bash
+./backup.sh && git pull && ./venv/bin/pip install -r requirements.txt && systemctl restart macros2
+```
+
+**License:** commercial, source-available. See [LICENSE](LICENSE).
+**Support:** Telegram [@alexvpns](https://t.me/alexvpns)

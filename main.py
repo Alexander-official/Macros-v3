@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.0.0"
+APP_VERSION = "3.1.0"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
