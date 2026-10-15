@@ -36,6 +36,7 @@ müşterinin kendi kodları · diğer panellerindeki kodları · harici kaynakla
 - `/<yol>/<token>` — **token linkleri**: müşteri panel adresini hiç görmez
 - **Domain / URL şeması**: link aynı kalır, kaynak gerçek adresten çekilir (ör. `:8000` → `:443`)
 - **Link oluşturucu**: bir linki yapıştır, tüm eşdeğer biçimleri kopyala
+- **Kaynak tarama**: müşteri linklerindeki adresler denenir; cevap vermeyene tek tıkla kural önerilir
 - Hepsi panelden canlı değişir, yeniden başlatma gerekmez
 
 </td>

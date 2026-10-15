@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.3.0"
+APP_VERSION = "3.4.0"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -2871,6 +2871,39 @@ async def links_build(request: Request):
     return {"ok": True, "source": src, "fetch": _rewrite_upstream(src), "token": _token_of(src),
             "user": _sub_username({"url": src, "name": ""}) if src.startswith("http") else "",
             "known": bool(sub), "name": sub["name"] if sub else "", "forms": forms}
+
+@app.post("/panel/api/url-rules/hosts")
+async def url_rules_hosts(request: Request):
+    """Kayitli sub'larin kaynak adresleri (adres:port), sayilari ve su anki durumlari.
+    Her adres icin ornek bir sub kurallar uygulanmis haliyle denenir; cevap vermeyenlere kural onerilir."""
+    if not authed(request): raise HTTPException(401)
+    from collections import Counter
+    cnt, sample = Counter(), {}
+    with db_session() as con:
+        for (u,) in con.execute("SELECT url FROM subs WHERE url LIKE 'http%'"):
+            try: sp = urllib.parse.urlsplit(u); nl = sp.netloc.lower()
+            except Exception: continue
+            h = (sp.hostname or "")
+            if not re.fullmatch(r"([a-z0-9-]+\.)+[a-z]{2,}|\d{1,3}(\.\d{1,3}){3}", h): continue   # yazim hatali adresleri atla
+            cnt[(sp.scheme, nl)] += 1; sample.setdefault((sp.scheme, nl), u)
+    top = cnt.most_common(12)
+    async def probe(key):
+        src = sample[key]; to = _rewrite_upstream(src)
+        try:
+            async with httpx.AsyncClient(timeout=7, verify=False, follow_redirects=True) as cl:
+                r = await cl.get(to, headers={"User-Agent": _UPSTREAM_UA})
+            return r.status_code, ""
+        except Exception as e: return 0, type(e).__name__
+    res = await asyncio.gather(*[probe(k) for k, _ in top])
+    out = []
+    for (key, n), (st, err) in zip(top, res):
+        sch, nl = key
+        host = nl.rsplit(":", 1)[0] if re.search(r":\d+$", nl) else nl
+        to = _rewrite_upstream(sample[key])
+        out.append({"netloc": nl, "scheme": sch, "count": n, "status": st, "err": err,
+                    "ruled": to != sample[key], "fetch": urllib.parse.urlsplit(to).netloc,
+                    "suggest": host if host != nl else ""})
+    return {"ok": True, "hosts": out}
 
 @app.post("/panel/api/url-rules/test")
 async def url_rules_test(request: Request):
