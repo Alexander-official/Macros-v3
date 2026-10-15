@@ -29,6 +29,8 @@ body[data-theme="liquid"] .lg-scene{display:block;position:fixed;inset:0;z-index
 @keyframes lgB{to{transform:translate(-16vmax,18vmax) scale(.9)}}
 @keyframes lgC{to{transform:translate(12vmax,-20vmax) scale(1.2)}}
 @media (prefers-reduced-motion:reduce){.lg-scene i{animation:none}}
+/* Kaydirma sirasinda / sekme arka plandayken sahne durur (liquid-glass.js) */
+body.lg-pause .lg-scene i,body.lg-hidden .lg-scene i{animation-play-state:paused!important}
 
 /* --- Cam yüzey: blur/kırılma ::before katmanında; köşeler clip-path ile yuvarlak kırpılır
        (backdrop-filter:url() Chromium'da border-radius'a uymuyor -> sivri köşe sorunu buydu) --- */

@@ -60,7 +60,7 @@ textarea.txt{width:100%;resize:vertical;min-height:70px;font-family:'SF Mono',mo
 .search-box input:focus{border-color:var(--accent)}
 .search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;color:var(--text)}
 .sec-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
-.card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:all .2s}
+.card{content-visibility:auto;contain-intrinsic-size:auto 74px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:all .2s}
 .card:hover{border-color:var(--border-hover);transform:translateY(-1px)}
 .ch{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
 .cn{flex:1;min-width:0}
@@ -114,8 +114,8 @@ textarea.txt{width:100%;resize:vertical;min-height:70px;font-family:'SF Mono',mo
 .theme-dot:hover{transform:scale(1.15)}
 .theme-dot.active{border-color:#fff}
 </style>
-<link rel="stylesheet" href="/static/liquid-glass.css?v=4">
-<script src="/static/liquid-glass.js?v=4" defer></script>
+<link rel="stylesheet" href="/static/liquid-glass.css?v=5">
+<script src="/static/liquid-glass.js?v=5" defer></script>
 <link rel="stylesheet" href="/static/mobile.css?v=1">
 </head>
 <body data-theme="cyberpunk">
@@ -254,7 +254,7 @@ textarea.txt{width:100%;resize:vertical;min-height:70px;font-family:'SF Mono',mo
           {% if sub.blocked %}<span class="bdg" style="background:rgba(248,113,113,0.2);color:var(--accent)">BLOKE</span>{% endif %}
           {% if sub.get('force_limit', 0) %}<span class="bdg" style="background:rgba(248,113,113,0.2);color:#f87171" data-i18n="b_forced">⚡ ZORUNLU LİMİT</span>{% endif %}
         </div>
-        <div class="ur"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.url }}</span><button class="copy-btn" onclick="event.stopPropagation();copyText('{{ sub.url }}','URL')" title="URL Kopyala">📋</button></div>
+        <div class="ur"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.url }}</span><button class="copy-btn" data-u="{{ sub.url }}" onclick="event.stopPropagation();copyText(this.dataset.u,'URL')" title="URL Kopyala">📋</button></div>
       </div>
       <div class="badges">
         {% if sub.unlimited %}
@@ -269,64 +269,12 @@ textarea.txt{width:100%;resize:vertical;min-height:70px;font-family:'SF Mono',mo
         <span class="bdg">{{ sub.req_count }} <span data-i18n="b_req">istek</span></span>
       </div>
     </div>
-    <div class="cb" id="s{{sub.id}}">
-      <div class="tr-row">
-        <div class="tr-item"><span data-i18n="t_down">İndirme:</span> <span>{{ (sub.bytes_down/1024)|int }} KB</span></div>
-        <div class="tr-item"><span data-i18n="t_req">İstek:</span> <span>{{ sub.req_count }}</span></div>
-        <div class="tr-item"><span data-i18n="t_add">Eklenme:</span> <span>{{ sub.created_at[:16] }}</span></div>
-        {% if sub.last_checked %}<div class="tr-item"><span data-i18n="t_chk">Son kontrol:</span> <span>{{ sub.last_checked[:16] }}</span></div>{% endif %}
-      </div>
-      <div class="row-flex" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <button class="check-btn" onclick="checkSub({{sub.id}},'{{sub.url}}')" data-i18n="check_sub">🔍 Sub Kontrol</button>
-        <span class="check-status" id="cs{{sub.id}}">{% if sub.last_check_status %}{{ sub.last_check_status }}{% if sub.last_check_username %} · {{ sub.last_check_username }}{% endif %}{% endif %}</span>
-      </div>
-      <div id="ui{{sub.id}}"></div>
-      <div class="tab-bar">
-        <div class="tab active" onclick="switchTab({{sub.id}},'settings',this)" data-i18n="tab_set">Ayarlar</div>
-        <div class="tab" onclick="switchTab({{sub.id}},'devices',this)" data-i18n="tab_dev">Cihazlar</div>
-        <div class="tab" onclick="switchTab({{sub.id}},'logs',this)" data-i18n="tab_log">Loglar</div>
-        <div class="tab" onclick="switchTab({{sub.id}},'meta',this)" data-i18n="tab_meta">Metadata</div>
-      </div>
-
-      <div class="tab-content active" id="tab-settings-{{sub.id}}">
-        <div class="grid2">
-          <div class="fld"><label data-i18n="note_lbl">Müşteri / Not</label><input type="text" id="nt{{sub.id}}" value="{{ sub.note or '' }}" data-i18n="note"></div>
-          <div class="fld">
-            <label data-i18n="lim_lbl">Cihaz Limiti (0 = Limitsiz)</label>
-            <div style="display:flex;align-items:center;gap:10px">
-              <input type="number" id="lim{{sub.id}}" value="{{ sub.device_limit }}" min="0" max="999">
-              <label class="tog" style="font-size:12px" title="Bu kullanıcı için limiti kesin olarak uygular." data-i18n-title="force_t">
-                <input type="checkbox" id="forceLim{{sub.id}}" {% if sub.get('force_limit', 0) %}checked{% endif %}>
-                <span style="color:var(--accent)" data-i18n="force_l">⚡ Zorunlu Limit (Force)</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px">
-          <label class="tog"><input type="checkbox" id="blk{{sub.id}}" {% if sub.blocked %}checked{% endif %}><span style="color:var(--accent)" data-i18n="full_block">Tamamen Bloke</span></label>
-        </div>
-        <div class="btn-row">
-          <button class="btn bp" onclick="saveSub({{sub.id}})" data-i18n="save_btn">Kaydet</button>
-          <button class="btn bd" onclick="resetDev({{sub.id}})" data-i18n="res_dev">Cihazları Sıfırla</button>
-          <button class="btn bd" onclick="delSub({{sub.id}})" data-i18n="del_sub">Sub Sil</button>
-        </div>
-      </div>
-      <div class="tab-content" id="tab-devices-{{sub.id}}"><div id="dv{{sub.id}}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
-      <div class="tab-content" id="tab-logs-{{sub.id}}"><div class="log-wrap" id="lg{{sub.id}}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
-      <div class="tab-content" id="tab-meta-{{sub.id}}">
-        <div class="grid2" style="margin-bottom:10px">
-          <div class="fld"><label data-i18n="s_meta">Sub Metadata</label><textarea class="txt" id="meta{{sub.id}}">{{ sub.metadata or '' }}</textarea></div>
-          <div class="fld"><label data-i18n="s_b_meta">Sub Bloke Mesajı</label><textarea class="txt" id="bmeta{{sub.id}}">{{ sub.blocked_metadata or '' }}</textarea></div>
-        </div>
-        <div class="fld" style="margin-bottom:10px"><label data-i18n="s_bd_meta">Cihaz Bloke Mesajı</label><textarea class="txt" id="bdmeta{{sub.id}}">{{ sub.blocked_device_metadata or '' }}</textarea></div>
-        <button class="btn bp" onclick="saveSub({{sub.id}})" data-i18n="save_btn">Kaydet</button>
-      </div>
-    </div>
+    <div class="cb" id="s{{sub.id}}"></div>
   </div>
   {% endfor %}
   </div>
 </div>
-
+<script type="application/json" id="subsData">{{ subs_data|tojson }}</script>
 <script>
 const dict={
   tr:{theme_t:"Tema Seçimi",b_forced:"⚡ ZORUNLU LİMİT",b_goff:"GLOBAL KAPALI",force_t:"Bu kullanıcı için limiti kesin olarak uygular.",force_l:"⚡ Zorunlu Limit (Force)",saved_t:"Kaydedildi ✓",opened_t:"Açıldı ✓",closed_t:"Kapatıldı",total:"Toplam",last_seen:"Son görülme",state:"Durum",unblock:"Aç",block:"Blok",del:"Sil",sure:"Emin misiniz?",del_sub_q:"Sub silinsin mi?",copied:"Kopyalandı",sort_set:"Ayarlar",dashboard:"Dashboard",logout:"Çıkış",s_sub:"Sub",s_dev:"Cihaz",s_req:"İstek",s_uablk:"UA Blok",s_devblk:"Cihaz Blok",s_blk:"Blokeli",g_limit:"🔒 Global Cihaz Limiti",lim_on:"✅ Cihaz limiti AKTİF — yeni cihazlar kontrol ediliyor",lim_off:"⚠️ Cihaz limiti DEVRE DIŞI — herkes bağlanabilir",lim_desc:"Kapalıyken tüm sub'larda cihaz limiti atlanır. (Force açılanlar hariç)",on:"Açık",off:"Kapalı",global_settings:"🌐 Global Ayarlar",g_meta:"Global Metadata (tüm sublara eklenir)",g_block:"Global Sub Bloke Mesajı",g_dev_block:"Global Cihaz Bloke Mesajı",g_exp_msg:"Süresi Dolanlar Mesajı (Expired)",g_data_msg:"Kotası Dolanlar Mesajı (Data Limit)",def_limit:"Varsayılan Cihaz Limiti (Yeni Sublar İçin)",save_btn:"Kaydet",ua_bl:"🚫 UA Kara Listesi",ua_pat:"Engellenmek istenen UA...",note:"Not",add:"+ Ekle",emp:"Liste boş.",del:"Sil",ua_wl:"✅ UA Beyaz Listesi",uaw_pat:"Beyaz liste UA...",search:"Arama yap...",sub_links:"Sub Bağlantıları",b_dev:"cihaz",b_unlim:"limitsiz",b_req:"istek",t_down:"İndirme:",t_req:"İstek:",t_add:"Eklenme:",t_chk:"Son kontrol:",check_sub:"🔍 Sub Kontrol",tab_set:"Ayarlar",tab_dev:"Cihazlar",tab_log:"Loglar",tab_meta:"Metadata",note_lbl:"Müşteri / Not",lim_lbl:"Cihaz Limiti",lim_act:"Limit Aktif",full_block:"Tamamen Bloke",res_dev:"Cihazları Sıfırla",del_sub:"Sub Sil",loading:"Yükleniyor...",s_meta:"Sub Metadata",s_b_meta:"Sub Bloke Mesajı",s_bd_meta:"Cihaz Bloke Mesajı",nav_logs:"🔥 Loglar",nav_stats:"📊 İstatistik",sys_cpu:"CPU Yükü (Load)",sys_ram:"RAM Kullanımı",sys_disk:"Disk Kullanımı"},
@@ -335,10 +283,11 @@ const dict={
   tm:{theme_t:"Tema",b_forced:"⚡ HÖKMANY ÇÄK",b_goff:"UMUMY ÝAPYK",force_t:"Bu ulanyjy üçin çägi hökmany ulanýar.",force_l:"⚡ Hökmany çäk",saved_t:"Ýatda saklandy ✓",opened_t:"Açyldy ✓",closed_t:"Ýapyldy",total:"Jemi",last_seen:"Soňky gezek",state:"Ýagdaý",unblock:"Aç",block:"Blok",del:"Poz",sure:"Ynanýaňyzmy?",del_sub_q:"Sub pozulsynmy?",copied:"Göçürildi",sort_set:"Sazlamalar",dashboard:"Panel",logout:"Çykyş",s_sub:"Sub",s_dev:"Enjam",s_req:"Talap",s_uablk:"UA Blok",s_devblk:"Enjam Blok",s_blk:"Bloklanan",g_limit:"🔒 Umumy Çäk",lim_on:"✅ Çäk AÇYK",lim_off:"⚠️ Çäk ÝAPYk",lim_desc:"Ýapykka çäkler islemeýär.",on:"Açyk",off:"Ýapyk",global_settings:"🌐 Umumy Sazlamalar",g_meta:"Umumy Metadata",g_block:"Umumy Blok Haty",g_dev_block:"Umumy Enjam Blok",g_exp_msg:"Möhleti Gutarýan Haty",g_data_msg:"Kwota Dolanda Çykjak Hat",def_limit:"Köpçülikleýin Enjam Çägi (Täzeler Üçin)",save_btn:"Ýatda Sakla",ua_bl:"🚫 Gara Sanaw",ua_pat:"Bloklanjak UA...",note:"Bellik",add:"+ Goş",emp:"Boş.",del:"Boz",ua_wl:"✅ Ak Sanaw",uaw_pat:"Ak sanaw UA...",search:"Gözle...",sub_links:"Linkler",b_dev:"enjam",b_unlim:"çäksiz",b_req:"talap",t_down:"Indirme:",t_req:"Talap:",t_add:"Goşuldy:",t_chk:"Barlanan:",check_sub:"🔍 Barlag",tab_set:"Sazlamalar",tab_dev:"Enjamlar",tab_log:"Loglar",tab_meta:"Meta",note_lbl:"Müşderi / Bellik",lim_lbl:"Enjam Çägi",lim_act:"Çäk Açyk",full_block:"Doly Blokly",res_dev:"Arassala",del_sub:"Boz",loading:"Ýüklenýär...",s_meta:"Sub Meta",s_b_meta:"Sub Blok Haty",s_bd_meta:"Enjam Blok Haty",nav_logs:"🔥 Loglar",nav_stats:"📊 Statistika",sys_cpu:"CPU Yük",sys_ram:"RAM",sys_disk:"Disk"}
 };
 function T(k){const l=localStorage.getItem('lang')||'tr';return (dict[l]&&dict[l][k])||dict.tr[k]||k;}
-function applyLang(){
+function applyLang(root){
+  root=(root&&root.querySelectorAll)?root:document;
   const l=localStorage.getItem('lang')||'tr';
-  document.querySelectorAll('[data-i18n-title]').forEach(el=>{if(dict[l]&&dict[l][el.dataset.i18nTitle])el.title=dict[l][el.dataset.i18nTitle];});
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
+  root.querySelectorAll('[data-i18n-title]').forEach(el=>{if(dict[l]&&dict[l][el.dataset.i18nTitle])el.title=dict[l][el.dataset.i18nTitle];});
+  root.querySelectorAll('[data-i18n]').forEach(el=>{
     if(dict[l]&&dict[l][el.dataset.i18n]){
       if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=dict[l][el.dataset.i18n];
       else el.innerHTML=dict[l][el.dataset.i18n];
@@ -414,11 +363,68 @@ async function saveSub(id){
 
 async function checkSub(id,url){const el=document.getElementById(`cs${id}`); el.textContent='...'; el.style.color='#fbbf24'; const r=await fetch('/panel/api/sub/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,url})}); const d=await r.json(); el.textContent=d.status+(d.username?` · ${d.username}`:''); el.style.color=d.status.startsWith('OK')?'#2dd4bf':'#f87171'; if(d.userinfo){const ui=document.getElementById(`ui${id}`), parts={}; d.userinfo.split(';').forEach(p=>{const[k,v]=p.trim().split('=');if(k&&v)parts[k.trim()]=v.trim();}); const gb=v=>v?(parseInt(v)/1073741824).toFixed(2)+' GB':'?'; ui.innerHTML=`<div class="userinfo-bar"><span class="ui-item">↑ <span>${gb(parts.upload)}</span></span><span class="ui-item">↓ <span>${gb(parts.download)}</span></span><span class="ui-item">${T('total')}: <span>${gb(parts.total)}</span></span></div>`;}}
 
-function togSub(id,subId){const el=document.getElementById(id);const opening=!el.classList.contains('open');el.classList.toggle('open');if(opening){loadDev(subId);loadLog(subId);}}
+/* Kart govdesi: sadece acilinca cizilir (339 kart icin sayfa 1.6 MB yerine ~%80 daha hafif, aninda acilir) */
+let SUBS=null;
+function subsData(){if(!SUBS){try{SUBS=JSON.parse(document.getElementById('subsData').textContent)||{};}catch(e){SUBS={};}}return SUBS;}
+const _e=v=>(v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function cardBody(id){
+  const x=subsData()[id]||{};
+  return `<div class="tr-row">
+        <div class="tr-item"><span data-i18n="t_down">İndirme:</span> <span>${Math.floor((x.bytes_down||0)/1024)} KB</span></div>
+        <div class="tr-item"><span data-i18n="t_req">İstek:</span> <span>${x.req_count||0}</span></div>
+        <div class="tr-item"><span data-i18n="t_add">Eklenme:</span> <span>${_e((x.created_at||'').slice(0,16))}</span></div>
+        ${x.last_checked?`<div class="tr-item"><span data-i18n="t_chk">Son kontrol:</span> <span>${_e(x.last_checked.slice(0,16))}</span></div>`:''}
+      </div>
+      <div class="row-flex" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <button class="check-btn" onclick="checkSub(${id},subsData()[${id}].url)" data-i18n="check_sub">🔍 Sub Kontrol</button>
+        <span class="check-status" id="cs${id}">${x.last_check_status?_e(x.last_check_status)+(x.last_check_username?' · '+_e(x.last_check_username):''):''}</span>
+      </div>
+      <div id="ui${id}"></div>
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab(${id},'settings',this)" data-i18n="tab_set">Ayarlar</div>
+        <div class="tab" onclick="switchTab(${id},'devices',this)" data-i18n="tab_dev">Cihazlar</div>
+        <div class="tab" onclick="switchTab(${id},'logs',this)" data-i18n="tab_log">Loglar</div>
+        <div class="tab" onclick="switchTab(${id},'meta',this)" data-i18n="tab_meta">Metadata</div>
+      </div>
+      <div class="tab-content active" id="tab-settings-${id}">
+        <div class="grid2">
+          <div class="fld"><label data-i18n="note_lbl">Müşteri / Not</label><input type="text" id="nt${id}" value="${_e(x.note)}" data-i18n="note"></div>
+          <div class="fld">
+            <label data-i18n="lim_lbl">Cihaz Limiti (0 = Limitsiz)</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="number" id="lim${id}" value="${_e(x.device_limit)}" min="0" max="999">
+              <label class="tog" style="font-size:12px" title="${_e(T('force_t'))}" data-i18n-title="force_t">
+                <input type="checkbox" id="forceLim${id}" ${x.force_limit?'checked':''}>
+                <span style="color:var(--accent)" data-i18n="force_l">⚡ Zorunlu Limit (Force)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px">
+          <label class="tog"><input type="checkbox" id="blk${id}" ${x.blocked?'checked':''}><span style="color:var(--accent)" data-i18n="full_block">Tamamen Bloke</span></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="saveSub(${id})" data-i18n="save_btn">Kaydet</button>
+          <button class="btn bd" onclick="resetDev(${id})" data-i18n="res_dev">Cihazları Sıfırla</button>
+          <button class="btn bd" onclick="delSub(${id})" data-i18n="del_sub">Sub Sil</button>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-devices-${id}"><div id="dv${id}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
+      <div class="tab-content" id="tab-logs-${id}"><div class="log-wrap" id="lg${id}"><div class="emp" data-i18n="loading">Yükleniyor...</div></div></div>
+      <div class="tab-content" id="tab-meta-${id}">
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="fld"><label data-i18n="s_meta">Sub Metadata</label><textarea class="txt" id="meta${id}">${_e(x.metadata)}</textarea></div>
+          <div class="fld"><label data-i18n="s_b_meta">Sub Bloke Mesajı</label><textarea class="txt" id="bmeta${id}">${_e(x.blocked_metadata)}</textarea></div>
+        </div>
+        <div class="fld" style="margin-bottom:10px"><label data-i18n="s_bd_meta">Cihaz Bloke Mesajı</label><textarea class="txt" id="bdmeta${id}">${_e(x.blocked_device_metadata)}</textarea></div>
+        <button class="btn bp" onclick="saveSub(${id})" data-i18n="save_btn">Kaydet</button>
+      </div>`;
+}
+function togSub(id,subId){const el=document.getElementById(id);const opening=!el.classList.contains('open');if(opening&&!el.dataset.built){el.innerHTML=cardBody(subId);el.dataset.built='1';applyLang(el);}el.classList.toggle('open');if(opening){loadDev(subId);loadLog(subId);}}
 function switchTab(subId,tab,btn){document.querySelectorAll(`#s${subId} .tab`).forEach(t=>t.classList.remove('active'));document.querySelectorAll(`#s${subId} .tab-content`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(`tab-${tab}-${subId}`).classList.add('active');if(tab==='devices')loadDev(subId);if(tab==='logs')loadLog(subId);}
 
-async function loadDev(id){const el=document.getElementById(`dv${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/devices`);const d=await r.json();if(!d.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(); return;}el.innerHTML=`<table class="tbl"><tr><th>App</th><th>Model</th><th>Hardware ID</th><th>IP</th><th>${T('last_seen')}</th><th>${T('state')}</th><th></th></tr>${d.map(x=>`<tr style="${x.blocked?'opacity:.5':''}"><td><span class="app-badge">${x.app_name||'?'}</span></td><td><span class="model-badge">${x.device_model||'—'}</span></td><td><span class="hw" onclick="copyText('${x.hardware_id}')">${x.hardware_id}</span></td><td class="ts">${x.ip}</td><td class="ts">${x.last_seen.substring(5,16)}</td><td>${x.blocked?'🔴':'🟢'}</td><td style="display:flex;gap:4px"><button class="btn ${x.blocked?'bp':'bo'}" style="padding:2px 7px;font-size:11px" onclick="blockDev(${x.id},${id},${x.blocked?0:1})">${x.blocked?T('unblock'):T('block')}</button><button class="btn bd" style="padding:2px 7px;font-size:11px" onclick="delDev(${x.id},${id})">${T('del')}</button></td></tr>`).join('')}</table>`; applyLang();}
-async function loadLog(id){const el=document.getElementById(`lg${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/logs`);const logs=await r.json();if(!logs.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(); return;}const cls=e=>e.includes('BLOCK')||e.includes('EXPIRED')||e.includes('ERROR')||e.includes('QUOTA')?'e-err':e.includes('RESET')?'e-warn':e.includes('REGISTER')?'e-info':'e-ok';el.innerHTML=logs.map(l=>`<div class="lg" style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--text-muted)">${l.ts.substring(5,16)}</span><span class="app-badge ${cls(l.event)}">${l.event}</span><span style="color:var(--text);flex:1">${l.detail}</span></div>`).join(''); applyLang();}
+async function loadDev(id){const el=document.getElementById(`dv${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/devices`);const d=await r.json();if(!d.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(el); return;}el.innerHTML=`<table class="tbl"><tr><th>App</th><th>Model</th><th>Hardware ID</th><th>IP</th><th>${T('last_seen')}</th><th>${T('state')}</th><th></th></tr>${d.map(x=>`<tr style="${x.blocked?'opacity:.5':''}"><td><span class="app-badge">${_e(x.app_name||'?')}</span></td><td><span class="model-badge">${_e(x.device_model||'—')}</span></td><td><span class="hw" data-v="${_e(x.hardware_id)}" onclick="copyText(this.dataset.v)">${_e(x.hardware_id)}</span></td><td class="ts">${_e(x.ip)}</td><td class="ts">${_e((x.last_seen||'').substring(5,16))}</td><td>${x.blocked?'🔴':'🟢'}</td><td style="display:flex;gap:4px"><button class="btn ${x.blocked?'bp':'bo'}" style="padding:2px 7px;font-size:11px" onclick="blockDev(${x.id},${id},${x.blocked?0:1})">${x.blocked?T('unblock'):T('block')}</button><button class="btn bd" style="padding:2px 7px;font-size:11px" onclick="delDev(${x.id},${id})">${T('del')}</button></td></tr>`).join('')}</table>`; applyLang(el);}
+async function loadLog(id){const el=document.getElementById(`lg${id}`);if(!el)return;const r=await fetch(`/panel/api/sub/${id}/logs`);const logs=await r.json();if(!logs.length){el.innerHTML=`<div class="emp" data-i18n="emp">Boş.</div>`; applyLang(el); return;}const cls=e=>e.includes('BLOCK')||e.includes('EXPIRED')||e.includes('ERROR')||e.includes('QUOTA')?'e-err':e.includes('RESET')?'e-warn':e.includes('REGISTER')?'e-info':'e-ok';el.innerHTML=logs.map(l=>`<div class="lg" style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--text-muted)">${_e((l.ts||'').substring(5,16))}</span><span class="app-badge ${cls(l.event)}">${_e(l.event)}</span><span style="color:var(--text);flex:1;word-break:break-all">${_e(l.detail)}</span></div>`).join(''); applyLang(el);}
 
 async function blockDev(devId,subId,state){await fetch('/panel/api/device/block',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:devId,blocked:state})});loadDev(subId);}
 async function resetDev(id){if(confirm(T('sure'))){await fetch('/panel/api/sub/reset-devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});loadDev(id);}}

@@ -13,9 +13,12 @@
     'Mor':     { c1:'#8b5cf6', c2:'#d946ef', c3:'#6366f1', c4:'#f472b6', base:'#0b0616', accent:'#d8b4fe' },
     'Grafit':  { c1:'#64748b', c2:'#94a3b8', c3:'#475569', c4:'#cbd5e1', base:'#06070a', accent:'#e2e8f0' }
   };
+  // Zayif cihazda (<=4 cekirdek / <=4 GB) kenar kirilmasi varsayilan kapali gelir; kullanici 💧'dan acabilir.
+  // Kaydedilmis ayar varsa ona dokunulmaz.
+  if ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4) DEF.refractOn = false;
   const isChromium = !!(navigator.userAgentData && navigator.userAgentData.brands &&
       navigator.userAgentData.brands.some(b => /Chromium|Google Chrome|Edge|Opera/i.test(b.brand)));
-  let cfg = load(), svg, defs, ro, on = false, uid = 0, panel;
+  let cfg = load(), svg, defs, ro, io, on = false, uid = 0, panel;
   const maps = new WeakMap();
 
   function load(){ try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return Object.assign({}, DEF); } }
@@ -72,7 +75,18 @@
     ctx.putImageData(img, 0, 0);
     return c.toDataURL('image/png');
   }
+  // Ayni boyut/kose icin harita bir kez uretilir (PNG kodlama pahali); boyut 8px adimlara yuvarlanir.
+  const mapCache = new Map();
+  function getMap(w, h, radii, band){
+    const qw = Math.max(8, Math.round(w / 8) * 8), qh = Math.max(8, Math.round(h / 8) * 8);
+    const k = [qw, qh, radii.join(','), band].join('|');
+    let u = mapCache.get(k);
+    if (!u){ u = buildMap(qw, qh, radii, band); if (mapCache.size > 150) mapCache.clear(); mapCache.set(k, u); }
+    return u;
+  }
+  const visible = new WeakMap();   // ekran disindaki yuzeyler icin harita uretilmez (gorununce uretilir)
   function refract(el){
+    if (visible.get(el) === false) return;
     const b = el.getBoundingClientRect(); const w = Math.round(b.width), h = Math.round(b.height);
     if (w < 20 || h < 20) return;
     const cs = getComputedStyle(el);
@@ -85,27 +99,44 @@
     if (!f){ f = document.createElementNS(svg.namespaceURI, 'filter'); f.id = st.id; defs.appendChild(f); }
     f.setAttribute('x', '0'); f.setAttribute('y', '0'); f.setAttribute('width', w); f.setAttribute('height', h);
     f.setAttribute('filterUnits', 'userSpaceOnUse'); f.setAttribute('color-interpolation-filters', 'sRGB');
-    f.innerHTML = `<feImage href="${buildMap(w, h, radii, cfg.band)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>` +
+    f.innerHTML = `<feImage href="${getMap(w, h, radii, cfg.band)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="m" scale="${cfg.refract}" xChannelSelector="R" yChannelSelector="G"/>`;
     el.style.setProperty('--lg-f', `url(#${st.id})`);
   }
   let pending = new Set(), raf = 0;
   function queue(el){ pending.add(el); if (!raf) raf = requestAnimationFrame(() => { raf = 0; const p = pending; pending = new Set(); if (on && ro) p.forEach(refract); }); }
   function refreshAll(){ document.querySelectorAll(SEL).forEach(el => { const st = maps.get(el); if (st) st.key = ''; queue(el); }); }
+  let mvEv = null, mvRaf = 0;
   function onMove(e){
-    const el = e.target.closest && e.target.closest('.box'); if (!el) return;
-    const b = el.getBoundingClientRect();
-    el.style.setProperty('--mx', (e.clientX - b.left) + 'px'); el.style.setProperty('--my', (e.clientY - b.top) + 'px');
+    mvEv = e; if (mvRaf) return;
+    mvRaf = requestAnimationFrame(() => {
+      mvRaf = 0; const ev = mvEv;
+      const el = ev.target.closest && ev.target.closest('.box'); if (!el) return;
+      const b = el.getBoundingClientRect();
+      el.style.setProperty('--mx', (ev.clientX - b.left) + 'px'); el.style.setProperty('--my', (ev.clientY - b.top) + 'px');
+    });
   }
+  // Kaydirirken ve sekme arka plandayken hareketli sahne durur (gorunum ayni, islemci rahatlar)
+  let scT = 0;
+  function onScroll(){ document.body.classList.add('lg-pause'); clearTimeout(scT); scT = setTimeout(() => document.body.classList.remove('lg-pause'), 200); }
+  function onVis(){ document.body.classList.toggle('lg-hidden', document.hidden); }
   function startRefract(){
     if (!isChromium || !cfg.refractOn || ro) return;
     ensureSvg(); document.body.classList.add('lg-refract');
-    ro = new ResizeObserver(es => es.forEach(e => queue(e.target)));
-    document.querySelectorAll(SEL).forEach(el => { ro.observe(el); queue(el); });
+    const rt = new WeakMap();
+    // Boyut degisirken mevcut harita aninda yeni boyuta esnetilir (bosluk olmaz); asil harita 150 ms sakinlesince uretilir
+    const stretch = el => { const st = maps.get(el), f = st && document.getElementById(st.id); if (!f) return;
+      const r = el.getBoundingClientRect(), w = Math.round(r.width), h = Math.round(r.height);
+      f.setAttribute('width', w); f.setAttribute('height', h);
+      const im = f.querySelector('feImage'); if (im){ im.setAttribute('width', w); im.setAttribute('height', h); } };
+    ro = new ResizeObserver(es => es.forEach(e => { const el = e.target; stretch(el); clearTimeout(rt.get(el)); rt.set(el, setTimeout(() => queue(el), 150)); }));
+    io = new IntersectionObserver(es => es.forEach(e => { visible.set(e.target, e.isIntersecting); if (e.isIntersecting) queue(e.target); }), { rootMargin: '300px' });
+    document.querySelectorAll(SEL).forEach(el => { ro.observe(el); io.observe(el); queue(el); });
   }
   function stopRefract(){
     document.body.classList.remove('lg-refract');
     if (ro){ ro.disconnect(); ro = null; }
+    if (io){ io.disconnect(); io = null; }
   }
 
   /* ---------- 💧 Ayar paneli ---------- */
@@ -192,11 +223,14 @@
   function enable(){
     if (on) return; on = true; scene(); applyVars(); gear();
     document.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true }); document.addEventListener('visibilitychange', onVis);
     startRefract();
   }
   function disable(){
     if (!on) return; on = false;
     document.removeEventListener('pointermove', onMove);
+    window.removeEventListener('scroll', onScroll); document.removeEventListener('visibilitychange', onVis);
+    document.body.classList.remove('lg-pause', 'lg-hidden');
     stopRefract(); clearVars(); if (panel) panel.hidden = true;
   }
   function check(){ (document.body.getAttribute('data-theme') === 'liquid') ? enable() : disable(); }
@@ -204,7 +238,7 @@
     check();
     new MutationObserver(check).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
     new MutationObserver(ms => { if (!ro) return; ms.forEach(m => m.addedNodes.forEach(n => {
-      if (n.nodeType !== 1) return; [n, ...n.querySelectorAll(SEL)].forEach(el => { if (el.matches && el.matches(SEL)) { ro.observe(el); queue(el); } });
+      if (n.nodeType !== 1) return; [n, ...n.querySelectorAll(SEL)].forEach(el => { if (el.matches && el.matches(SEL)) { ro.observe(el); if (io) io.observe(el); queue(el); } });
     })); }).observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

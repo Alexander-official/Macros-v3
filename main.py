@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.2.0"
+APP_VERSION = "3.3.0"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -585,7 +585,8 @@ def _sub_username(sub):
     Cozulemezse sub adina duser."""
     url = (sub["url"] if sub else "") or ""
     try:
-        m = re.search(r"/sub/([A-Za-z0-9_\-=]+)", urllib.parse.urlparse(url).path)
+        pth = urllib.parse.urlparse(url).path
+        m = re.search(r"/sub/([A-Za-z0-9_\-=]+)", pth) or re.search(r"/([A-Za-z0-9_\-=]{8,})/?$", pth)
         if m:
             tok = m.group(1)
             for cut in range(len(tok), 7, -1):
@@ -2011,12 +2012,23 @@ async def lifespan(app: FastAPI):
     init_db(); global _bg_task; _bg_task = asyncio.create_task(fetch_external_subs_loop()); yield
     if _bg_task: _bg_task.cancel()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 from fastapi.staticfiles import StaticFiles
 os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"), exist_ok=True)
 app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")), name="static")
 # allow_origins=["*"] ile allow_credentials=True gecersiz bir kombinasyon (tarayici reddeder).
 # Panel ayni-origin cerez auth kullanir; sub endpoint'leri cerezsizdir. credentials=False dogru olan.
+from starlette.middleware.gzip import GZipMiddleware
+class _PanelGZip:
+    """Panel sayfalari/API ve statik dosyalar gzip'li gider (1.5 MB dashboard -> ~100 KB). Sub ciktisina dokunulmaz."""
+    def __init__(self, app):
+        self.app, self.gz = app, GZipMiddleware(app, minimum_size=1024)
+    async def __call__(self, scope, receive, send):
+        p = scope.get("path", "") if scope.get("type") == "http" else ""
+        if p.startswith("/panel") or p.startswith("/static"):
+            return await self.gz(scope, receive, send)
+        return await self.app(scope, receive, send)
+app.add_middleware(_PanelGZip)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 @app.middleware("http")
@@ -2817,6 +2829,49 @@ async def panels_preview(request: Request):
     return {"ok": True, "inbounds": inbounds, "rows": rows, "ports": [{"port": x, "inbound": ", ".join(port_inb.get(x, []))} for x in ports],
             "sample": [c.get("email") for c in pick], "clients": len(cl)}
 
+@app.post("/panel/api/links/build")
+async def links_build(request: Request):
+    """Link olusturucu: herhangi bir link (musteri linki, kaynak sub linki, kisa link) -> tum esdeger bicimler."""
+    if not authed(request): raise HTTPException(401)
+    d = await request.json()
+    origin = (d.get("origin") or "").rstrip("/")
+    raw = (d.get("url") or "").strip()
+    if not raw: return {"ok": False, "msg": "URL gerekli"}
+    if not origin: origin = f"{request.url.scheme}://{request.headers.get('host', '')}"
+    # Gecici (kaydedilmemis) ayarlarla da denenebilsin
+    aliases = [_clean_path(x) for x in d["aliases"]] if isinstance(d.get("aliases"), list) else _sub_aliases()
+    aliases = [a for a in aliases if a and a.split("/")[0] not in _RESERVED]
+    profs = _link_profiles() if not isinstance(d.get("profiles"), list) else sorted(
+        [{"path": _clean_path(x.get("path")), "source": (x.get("source") or "").strip()} for x in d["profiles"]
+         if isinstance(x, dict) and x.get("on", True) is not False and _clean_path(x.get("path")) and (x.get("source") or "").strip()],
+        key=lambda p: -len(p["path"]))
+    src = raw
+    u = urllib.parse.urlsplit(raw)
+    qs = urllib.parse.parse_qs(u.query)
+    if qs.get("url"): src = qs["url"][0]                                     # musteri linki: ...?url=<kaynak>
+    else:
+        path = _clean_path(u.path)
+        for pr in profs:                                                      # profil linki: /<yol>/<token>
+            if path.startswith(pr["path"] + "/"):
+                src = _profile_url(pr["source"], path[len(pr["path"]) + 1:]); break
+        else:
+            m = re.match(r"^(?:macros|" + "|".join(re.escape(a) for a in aliases) + r")/([^/]+)$", path) if aliases else re.match(r"^macros/([^/]+)$", path)
+            if m:                                                             # kisa link: /macros/<kisa-token>
+                with db_session() as con: row = con.execute("SELECT url FROM subs WHERE token=? AND token!=''", (m.group(1),)).fetchone()
+                if row: src = row["url"]
+    with db_session() as con: sub = con.execute("SELECT id,name,token FROM subs WHERE url=?", (src,)).fetchone()
+    q = urllib.parse.quote(src, safe=":/")
+    forms = [{"kind": "query", "path": "macros", "url": f"{origin}/macros?url={q}"}]
+    forms += [{"kind": "query", "path": a, "url": f"{origin}/{a}?url={q}"} for a in aliases]
+    for pr in profs:
+        tok = _token_of(src, pr)
+        if tok: forms.append({"kind": "profile", "path": pr["path"], "url": f"{origin}/{pr['path']}/{urllib.parse.quote(tok, safe='=-_.~')}"})
+    if sub and sub["token"]:
+        forms.append({"kind": "short", "path": "macros", "url": f"{origin}/macros/{sub['token']}"})
+    return {"ok": True, "source": src, "fetch": _rewrite_upstream(src), "token": _token_of(src),
+            "user": _sub_username({"url": src, "name": ""}) if src.startswith("http") else "",
+            "known": bool(sub), "name": sub["name"] if sub else "", "forms": forms}
+
 @app.post("/panel/api/url-rules/test")
 async def url_rules_test(request: Request):
     """Domain/URL semasi testi: verilen musteri linkinin kaynagi hangi adresten cekilecek + o adres calisiyor mu."""
@@ -2963,6 +3018,11 @@ async def dashboard(request: Request, q: str=""):
 
     return templates.TemplateResponse(request=request, name="dashboard.html", context={
         "subs":[dict(s) for s in subs],
+        # Kart govdeleri tarayicida acilinca cizilir; sadece gereken alanlar gider
+        "subs_data":{s["id"]: {k: s[k] for k in ("url", "note", "device_limit", "blocked", "metadata", "blocked_metadata",
+                     "blocked_device_metadata", "created_at", "last_checked", "last_check_status", "last_check_username",
+                     "bytes_down", "req_count") if k in s.keys()} | {"force_limit": s["force_limit"] if "force_limit" in s.keys() else 0}
+                     for s in subs},
         "ua_blacklist":[dict(u) for u in ua_blacklist], "ua_whitelist":[dict(u) for u in ua_whitelist], "stats":dict(stats), "q":q,
         "global_metadata":get_global("metadata",""), "global_blocked_metadata":get_global("blocked_metadata",""),
         "global_blocked_device_metadata":get_global("blocked_device_metadata",""), 
@@ -3184,6 +3244,9 @@ async def sort_settings_get(request: Request):
         panel_sync_seconds=get_global("panel_sync_seconds", "30"),
         main_host=_main_panel_host(),
         url_rewrites=json.loads(get_global("url_rewrites", "[]") or "[]"),
+        sub_aliases=json.loads(get_global("sub_aliases", "[]") or "[]"),
+        env_aliases=[a for a in (_clean_path(x) for x in os.environ.get("EXTRA_SUB_PATHS", "").split(",")) if a],
+        link_profiles=json.loads(get_global("link_profiles", "[]") or "[]"),
         ext_subs=ext_subs
     ))
 
@@ -3256,6 +3319,20 @@ async def sort_settings_post(request: Request):
                     "note": str(x.get("note", ""))[:80], "on": x.get("on", True) is not False}
                     for x in parsed if isinstance(x, dict) and str(x.get("from", "")).strip()]))
         except Exception: pass
+    for fk, gk in (("sub_aliases_json", "sub_aliases"), ("link_profiles_json", "link_profiles")):
+        v = form.get(fk)
+        if v is None: continue
+        try:
+            parsed = json.loads(v)
+            if not isinstance(parsed, list): continue
+            if gk == "sub_aliases":
+                val = [c for c in (_clean_path(x) for x in parsed) if c and c.split("/")[0] not in _RESERVED]
+            else:
+                val = [{"path": _clean_path(x.get("path")), "source": str(x.get("source", "")).strip(), "note": str(x.get("note", ""))[:80],
+                        "on": x.get("on", True) is not False} for x in parsed
+                       if isinstance(x, dict) and _clean_path(x.get("path")) and _clean_path(x.get("path")).split("/")[0] not in _RESERVED]
+            set_global(gk, json.dumps(val))
+        except Exception: pass
     pj = form.get("panels_json")
     if pj is not None:
         try:
@@ -3269,9 +3346,60 @@ async def sort_settings_post(request: Request):
     global _last_external_fetch_time; _last_external_fetch_time = 0
     return RedirectResponse("/panel/sort-settings", status_code=303)
 
-# Ek sub yollari (.env: EXTRA_SUB_PATHS=yol1,yol2). Varsayilan /macros her zaman acik; eski musteri
-# linkleri baska bir yol kullaniyorsa (ör. /alexander77) buraya eklenir ki linkler bozulmasin.
-for _sp in [x.strip().strip("/") for x in os.environ.get("EXTRA_SUB_PATHS", "").split(",") if x.strip().strip("/")]:
-    if _sp in ("macros", "panel", "static", "healthcheck"): continue
-    app.add_api_route(f"/{_sp}/{{path:path}}", sub_proxy_path, methods=["GET"])
-    app.add_api_route(f"/{_sp}", sub_proxy, methods=["GET"])
+# ---- LINK YAPISI: sub yollari + token profilleri (panelden canli degistirilir, yeniden baslatma gerekmez) ----
+# 1) Sub yolu (alias): https://<macros>/<yol>?url=<kaynak>  ==  /macros?url=<kaynak>   (ör. eski /alexander77)
+#    .env EXTRA_SUB_PATHS ile verilenler de gecerlidir.
+# 2) Token profili:    https://<macros>/<yol>/<token>  ->  kaynak = sablon ("https://fin.domain.ru/sub/{token}")
+#    Musteriye panel adresi hic gorunmez; panel tasinirsa sadece sablon degisir, linkler ayni kalir.
+_RESERVED = {"panel", "static", "macros", "healthcheck", "favicon.ico", "robots.txt"}
+
+def _clean_path(x):
+    return "/".join(seg for seg in str(x or "").strip().strip("/").split("/") if seg and seg not in (".", ".."))
+
+def _sub_aliases():
+    env = [_clean_path(x) for x in os.environ.get("EXTRA_SUB_PATHS", "").split(",")]
+    try: db = json.loads(get_global("sub_aliases", "[]") or "[]")
+    except Exception: db = []
+    out = []
+    for x in env + [_clean_path(v) for v in (db if isinstance(db, list) else [])]:
+        if x and x.split("/")[0] not in _RESERVED and x not in out: out.append(x)
+    return out
+
+def _link_profiles():
+    try: r = json.loads(get_global("link_profiles", "[]") or "[]")
+    except Exception: r = []
+    out = []
+    for x in r if isinstance(r, list) else []:
+        if not isinstance(x, dict) or x.get("on", True) is False: continue
+        pth, src = _clean_path(x.get("path")), (x.get("source") or "").strip()
+        if pth and src and pth.split("/")[0] not in _RESERVED: out.append({"path": pth, "source": src})
+    return sorted(out, key=lambda p: -len(p["path"]))  # en uzun yol once eslesir
+
+def _profile_url(src, token):
+    tok = urllib.parse.quote(token, safe="=-_.~")
+    return src.replace("{token}", tok) if "{token}" in src else src.rstrip("/") + "/" + tok
+
+def _token_of(url, prof=None):
+    """Kaynak linkten token: profil sablonunun onekine gore, yoksa son yol parcasi."""
+    if prof:
+        pre = prof["source"].split("{token}")[0] if "{token}" in prof["source"] else prof["source"].rstrip("/") + "/"
+        for u in (url, _rewrite_upstream(url)):
+            if u.startswith(pre): return urllib.parse.unquote(u[len(pre):].split("?")[0].split("#")[0].strip("/"))
+        return None
+    seg = [x for x in urllib.parse.urlsplit(url).path.split("/") if x]
+    return urllib.parse.unquote(seg[-1]) if seg else None
+
+@app.get("/{full_path:path}")
+async def _dynamic_sub_routes(request: Request, full_path: str):
+    fp = _clean_path(full_path)
+    if not fp or fp.split("/")[0] in _RESERVED: raise HTTPException(404, "bulunamadi")
+    if fp in _sub_aliases():                                     # /<yol>?url=...
+        return await sub_proxy(request, url=request.query_params.get("url"))
+    for pr in _link_profiles():                                  # /<yol>/<token>
+        if fp.startswith(pr["path"] + "/"):
+            tok = fp[len(pr["path"]) + 1:]
+            if tok: return await sub_proxy(request, url=_profile_url(pr["source"], tok))
+    for al in _sub_aliases():                                    # /<yol>/<kisa-token>  (== /macros/<kisa-token>)
+        if fp.startswith(al + "/"):
+            return await sub_proxy_path(request, fp[len(al) + 1:])
+    raise HTTPException(404, "bulunamadi")

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <defs>
+    <filter id="blur" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2080" height="1360"><feGaussianBlur stdDeviation="70"/></filter>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f7bff" stop-opacity=".35"/><stop offset="1" stop-color="#ff5fb7" stop-opacity=".22"/></linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fd8ff"/><stop offset=".5" stop-color="#ff7ad9"/><stop offset="1" stop-color="#ffcf6b"/></linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8fd8ff"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7cf5d6"/></marker>
+    <clipPath id="frame"><rect width="1280" height="560" rx="28"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="560" fill="#070915"/>
+    <g filter="url(#blur)" opacity=".6">
+      <circle cx="120" cy="80" r="200" fill="#4f7bff"/><circle cx="1180" cy="500" r="220" fill="#ff5fb7"/><circle cx="640" cy="560" r="200" fill="#2ee6c8" opacity=".6"/>
+    </g>
+
+    <!-- musteri uygulamasi -->
+    <g transform="translate(40 170)">
+      <rect width="230" height="200" rx="26" fill="url(#glass)" stroke="#fff" stroke-opacity=".25"/>
+      <rect x="85" y="26" width="60" height="96" rx="12" fill="none" stroke="#dbe6ff" stroke-width="3"/>
+      <circle cx="115" cy="110" r="4" fill="#dbe6ff"/>
+      <text x="115" y="152" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">Customer app</text>
+      <text x="115" y="178" text-anchor="middle" font-size="14" fill="#c9d6f5">Happ · v2rayNG · Hiddify</text>
+    </g>
+
+    <!-- istek / cevap oklari -->
+    <path d="M280 235 H392" stroke="#8fd8ff" stroke-width="3" fill="none" marker-end="url(#ar)"/>
+    <text x="336" y="222" text-anchor="middle" font-size="13" fill="#8fd8ff">request</text>
+    <path d="M392 305 H280" stroke="#7cf5d6" stroke-width="3" fill="none" marker-end="url(#arg)"/>
+    <text x="336" y="330" text-anchor="middle" font-size="13" fill="#7cf5d6">one merged sub</text>
+
+    <!-- macros cekirdek -->
+    <g transform="translate(400 60)">
+      <rect width="430" height="440" rx="34" fill="url(#core)" stroke="#fff" stroke-opacity=".35" stroke-width="1.5"/>
+      <g transform="translate(30 28)">
+        <rect width="60" height="60" rx="16" fill="#fff" fill-opacity=".1" stroke="#fff" stroke-opacity=".3"/>
+        <path d="M35 8 L16 34 H28 L24 53 L44 25 H32 Z" fill="url(#bolt)"/>
+      </g>
+      <text x="108" y="68" font-size="32" font-weight="800" fill="#fff">Macros v3</text>
+      <g font-size="16" fill="#f4f7ff">
+        <g transform="translate(30 112)"><rect width="370" height="50" rx="14" fill="#fff" fill-opacity=".08"/><text x="18" y="22" font-weight="700">Link structure</text><text x="18" y="41" font-size="13" fill="#c9d6f5">/path?url=… · /path/&lt;token&gt; · URL rules</text></g>
+        <g transform="translate(30 172)"><rect width="370" height="50" rx="14" fill="#fff" fill-opacity=".08"/><text x="18" y="22" font-weight="700">Access control</text><text x="18" y="41" font-size="13" fill="#c9d6f5">device limit · UA filter · allowed panels</text></g>
+        <g transform="translate(30 232)"><rect width="370" height="50" rx="14" fill="#fff" fill-opacity=".08"/><text x="18" y="22" font-weight="700">Health</text><text x="18" y="41" font-size="13" fill="#c9d6f5">real Xray ping · ms limit · fallback sub</text></g>
+        <g transform="translate(30 292)"><rect width="370" height="50" rx="14" fill="#fff" fill-opacity=".08"/><text x="18" y="22" font-weight="700">Order &amp; naming</text><text x="18" y="41" font-size="13" fill="#c9d6f5">drag-drop slots · flags · CDN / cloud labels</text></g>
+        <g transform="translate(30 352)"><rect width="370" height="50" rx="14" fill="#fff" fill-opacity=".08"/><text x="18" y="22" font-weight="700">Output</text><text x="18" y="41" font-size="13" fill="#c9d6f5">plain list or Xray JSON (routing · balancer)</text></g>
+      </g>
+    </g>
+
+    <!-- kaynaklar -->
+    <g font-size="14" fill="#c9d6f5">
+      <path d="M838 140 H940" stroke="#8fd8ff" stroke-width="2.5" fill="none" marker-start="url(#ar)" marker-end="url(#ar)" opacity=".8"/>
+      <path d="M838 280 H940" stroke="#8fd8ff" stroke-width="2.5" fill="none" marker-start="url(#ar)" marker-end="url(#ar)" opacity=".8"/>
+      <path d="M838 420 H940" stroke="#8fd8ff" stroke-width="2.5" fill="none" marker-start="url(#ar)" marker-end="url(#ar)" opacity=".8"/>
+      <g transform="translate(948 80)"><rect width="292" height="120" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".25"/>
+        <text x="22" y="42" font-size="20" font-weight="700" fill="#fff">Main panel</text><text x="22" y="68">Marzban · limits &amp; expiry</text><text x="22" y="92">customer's own nodes</text></g>
+      <g transform="translate(948 220)"><rect width="292" height="120" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".25"/>
+        <text x="22" y="42" font-size="20" font-weight="700" fill="#fff">Other panels</text><text x="22" y="68">3x-ui · mirrored users, summed traffic</text><text x="22" y="92">port / address override</text></g>
+      <g transform="translate(948 360)"><rect width="292" height="120" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".25"/>
+        <text x="22" y="42" font-size="20" font-weight="700" fill="#fff">External subs</text><text x="22" y="68">custom UA / HWID · JSON subs</text><text x="22" y="92">filter · ping · fallback</text></g>
+    </g>
+  </g>
+</svg>
