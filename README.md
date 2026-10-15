@@ -82,10 +82,26 @@ Ayrıca:
 - Limit ve süre ana panelden gelir; trafik tüm panellerin **toplamıdır**.
 - Senkron kullanıcı **silmez**; hata olursa loglar.
 - Panel kaldırılırken yalnızca Macros'un açtığı kullanıcılar silinir.
+- **👁 Önizleme:** 3x-ui paneli eklerken, o paneldeki kodları müşteriye gideceği haliyle görürsün.
+- **🔌 Port / adres değiştirme:** paneldeki inbound `8443` olsa bile müşteriye giden config'te `443` yazabilirsin. İstersen tek tek inbound'a göre, istersen tüm portları birden. Adres de değiştirilebilir (ör. CDN domaini). **Panele dokunulmaz**; değişiklik sadece çıkan config'lerde olur.
+
+### 🌐 Domain / URL şeması
+Müşteriye verilen link aynı kalır; Macros kaynağı senin yazdığın gerçek adresten çeker.
+
+Örnek: müşteri linki `https://sub.domain.com/macros?url=https://fin.domain.ru:8000/sub/XXXX`, ama panel artık `:443`'te çalışıyor. Kural:
+
+| Kaynak | Hedef | Sonuç |
+|---|---|---|
+| `fin.domain.ru:8000` | `fin.domain.ru` | `https://fin.domain.ru/sub/XXXX` |
+| `https://fin.domain.ru:8000/sub/` | `https://yeni.domain.ru/s/` | `https://yeni.domain.ru/s/XXXX` |
+
+- `adres:port` biçimi sadece adresi değiştirir; şema ve yol aynı kalır.
+- Tam önek (`https://...`) biçimi yolu da değiştirir.
+- Panelde **⚡ Test Et** ile bir müşteri linki yapıştırıp nereden çekileceğini ve çalışıp çalışmadığını görürsün.
 
 ### 🎨 Arayüz
 - 10 tema, aralarında 💧 **Liquid Glass** (ayarlanabilir).
-- 4 dil: TR / EN / RU / TM.
+- 4 dil: TR / EN / RU / TM — dil değişince sunucu mesajları ve loglar dahil her şey değişir.
 - Telefon uyumlu.
 - İstatistik ve log sayfaları.
 
@@ -136,14 +152,24 @@ Bittiğinde:
 4. **💾 Kaydet**. Ardından **👁 Final Önizleme** ile çıktıyı kontrol edin.
 
 ## Güncelleme
+Sunucuda zaten Macros varsa (eski sürüm dahil) `install.sh` bunu kendisi algılar ve **kurulum yerine güncelleme** yapar:
+
 ```bash
-cd /opt/macros
-./backup.sh                         # yedek: backups/
-git pull
-./venv/bin/pip install -r requirements.txt
-systemctl restart macros2
+git clone https://github.com/Alexander-official/Macros-v3.git /root/macros-new
+cd /root/macros-new && sudo ./install.sh
 ```
-`.env` ve `macros.db` güncellemeden etkilenmez.
+
+Güncelleme sırasında:
+- `macros.db` (müşteriler, cihazlar, ayarlar) ve `.env` **korunur**; `.env`'e sadece eksik ayarlar eklenir.
+- Önce `backups/` altına kod ve veritabanı yedeği alınır.
+- Eski sürümdeki sub yolları (ör. `/alexander77`) otomatik korunur, eski müşteri linkleri çalışmaya devam eder.
+- Nginx ve SSL ayarlarına dokunulmaz.
+- Yeni sürüm açılmazsa eski koda **otomatik geri dönülür**.
+
+Kurulu dizinde `git pull` ile de güncelleyebilirsin:
+```bash
+cd /opt/macros && git pull && sudo ./install.sh
+```
 
 ## Yapılandırma (.env)
 
@@ -220,7 +246,9 @@ Output is a plain list or full **Xray JSON**, depending on the client app.
 - Auto naming with flag/country, CDN and cloud labels.
 - Xray JSON output with routing, ad-block and auto balancer.
 - Multi-panel sync: users mirrored to 3x-ui on all inbounds, limits from the main panel, traffic summed. Never deletes users.
-- 10 themes including 💧 Liquid Glass; 4 languages; mobile-friendly.
+- 3x-ui panel **preview** and **port / address override** (e.g. inbound `8443` → `443` in client configs only; the panel itself is never modified).
+- **Domain / URL scheme rules**: customer links stay the same while Macros fetches the source from the real address (e.g. `fin.domain.ru:8000` → `fin.domain.ru`).
+- 10 themes including 💧 Liquid Glass; 4 languages (TR / EN / RU / TM, fully translated); mobile-friendly.
 
 **Install** (Ubuntu 22.04+ / Debian 12+, root, a domain pointing to the server):
 ```bash
@@ -231,10 +259,7 @@ cd /opt/macros && chmod +x install.sh && sudo ./install.sh
 - **Panel:** `https://<domain>/panel/login`
 - **Sub link:** `https://<domain>/macros?url=<original-sub-link>`
 
-**Update:**
-```bash
-./backup.sh && git pull && ./venv/bin/pip install -r requirements.txt && systemctl restart macros2
-```
+**Update:** run `install.sh` from a fresh clone. If Macros is already installed (any older version), it updates in place: database and `.env` are kept, a backup is taken first, old sub paths are preserved, nginx/SSL are untouched, and it rolls back automatically if the new version fails to start.
 
 **License:** commercial, source-available. See [LICENSE](LICENSE).
 **Support:** Telegram [@alexvpns](https://t.me/alexvpns)

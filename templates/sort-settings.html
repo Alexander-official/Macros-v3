@@ -156,6 +156,21 @@ select{height:38px;cursor:pointer}
 .pc-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:12px}
 .pc-grid .pc-tok{grid-column:span 2}
 @media(max-width:700px){.pc-grid{grid-template-columns:1fr}.pc-grid .pc-tok{grid-column:auto}}
+.pc-ovr{margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:10px}
+.pc-ovr-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.pc-ovr-row .fld{flex:1 1 160px;margin:0}
+.pc-ports{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pc-port{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px}
+.pc-port input{width:80px;height:30px}
+.pc-port .inb{color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-prev{margin-top:10px;max-height:300px;overflow:auto;font-size:12px;font-family:'SF Mono',ui-monospace,monospace}
+.pc-prev .pr{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.pc-prev .pr .nm{flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-prev .chg{color:#4ade80;font-weight:700}
+.ur-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ur-row .ur_from,.ur-row .ur_to{flex:2 1 200px;min-width:0}
+.ur-row .ur_note{flex:1 1 120px;min-width:0}
+.ur-arrow{color:var(--accent);font-weight:800}
 .pc-ro{margin-top:8px;font-size:12px;color:var(--text-muted);font-family:'SF Mono',ui-monospace,monospace;word-break:break-all}
 
 .box-pin{float:right;cursor:pointer;opacity:.35;font-size:13px;transition:opacity .15s}
@@ -181,7 +196,7 @@ select{height:38px;cursor:pointer}
 a.plain{color:var(--badge-text);text-decoration:none;font-size:12px;font-weight:600}
 a.plain:hover{color:var(--accent)}
 </style><link rel="stylesheet" href="/static/liquid-glass.css?v=4">
-<script src="/static/liquid-glass.js?v=3" defer></script>
+<script src="/static/liquid-glass.js?v=4" defer></script>
 <link rel="stylesheet" href="/static/mobile.css?v=1">
 </head>
 <body data-theme="cyberpunk">
@@ -201,8 +216,8 @@ a.plain:hover{color:var(--accent)}
     </div>
     <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
     <div class="lang-bar">
-      <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
-      <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+      <span onclick="pickLang('tr')" id="l-tr">TR</span><span onclick="pickLang('en')" id="l-en">EN</span>
+      <span onclick="pickLang('ru')" id="l-ru">RU</span><span onclick="pickLang('tm')" id="l-tm">TM</span>
     </div>
     <a href="/panel/dashboard" data-i18n="nav_dash">← Panel</a>
     <a href="/panel/stats" data-i18n="nav_stats">📊 İstatistik</a>
@@ -296,17 +311,17 @@ a.plain:hover{color:var(--accent)}
     {% if sub.source or sub.panel %}
     <div class="slot source{% if sub.panel %} pslot{% endif %}" data-sid="{{ sub.sid or '' }}"{% if sub.panel %} data-panel="{{ sub.panel }}" data-pname="{{ sub.pname or sub.panel }}"{% else %} data-source="1"{% endif %}{% if sub.sort_order or sub.vless_sort or sub.vmess_sort %} data-customsort="1" data-so="{{ sub.sort_order or '' }}" data-vl="{{ sub.vless_sort or '' }}" data-vm="{{ sub.vmess_sort or '' }}"{% endif %}>
       <div class="slot-top">
-        <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+        <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown(this)">⠿</span>
         {% if sub.panel %}<span class="badge-local pbadge">🔗 {{ sub.pname or sub.panel }}</span>
         <span style="flex:1;color:var(--text-muted);font-size:12px" data-i18n="panel_slot_desc">Abonenin bu entegre paneldeki kodları (otomatik)</span>
-        {% else %}<span class="badge-local" style="background:var(--accent)">📍 KAYNAK SUB</span>
+        {% else %}<span class="badge-local" style="background:var(--accent)" data-i18n="src_badge">📍 KAYNAK SUB</span>
         <span style="flex:1;color:var(--text-muted);font-size:12px" data-i18n="source_desc">Bu abonenin kaynak paneldeki kendi kodları (otomatik)</span>{% endif %}
         <select class="ext_pos">
           <option value="top" {% if sub.pos == 'top' %}selected{% endif %} data-i18n="pos_top">Üst</option>
           <option value="bottom" {% if sub.pos == 'bottom' %}selected{% endif %} data-i18n="pos_bot">Alt</option>
         </select>
         <button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="Sıralama" data-i18n-title="slot_sort">⚙️</button>
-        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil">✕</button>
+        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil" data-i18n-title="del_t">✕</button>
       </div>
       <div class="slot-bot proto-checks">
         <label class="pchk"><input type="checkbox" value="ss" {% if 'ss' in p %}checked{% endif %}> SS</label>
@@ -331,7 +346,7 @@ a.plain:hover{color:var(--accent)}
     {% else %}
     <div class="slot {% if sub.local %}local{% endif %}" data-sid="{{ sub.sid or '' }}"{% if sub.sort_order or sub.vless_sort or sub.vmess_sort %} data-customsort="1" data-so="{{ sub.sort_order or '' }}" data-vl="{{ sub.vless_sort or '' }}" data-vm="{{ sub.vmess_sort or '' }}"{% endif %}>
       <div class="slot-top">
-        <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+        <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown(this)">⠿</span>
         {% if sub.local %}<span class="badge-local">LOCAL</span>{% endif %}
         <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
         {% if not sub.local %}<input type="text" class="ext_url" value="{{ sub.url }}" placeholder="https://...">{% endif %}
@@ -343,7 +358,7 @@ a.plain:hover{color:var(--accent)}
         <button type="button" class="btn bghost icon-btn" onclick="toggleSlotSort(this)" title="Sıralama" data-i18n-title="slot_sort">⚙️</button>
         <button type="button" class="btn bsky icon-btn" onclick="testSlot(this)" title="Test" data-i18n-title="test">⚡</button>
         <button type="button" class="btn bviolet icon-btn" onclick="fetchSingleSlot(this)" title="Çek" data-i18n-title="fetch">📥</button>
-        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil">✕</button>
+        <button type="button" class="btn bd icon-btn" onclick="this.closest('.slot').remove()" title="Sil" data-i18n-title="del_t">✕</button>
       </div>
       {% if sub.local %}<textarea class="ext_local" placeholder="Node kodları (her satıra bir tane)..." data-i18n="local_ph">{{ sub.local }}</textarea>{% else %}<div class="slot-adv" data-fb="{{ sub.fallback or '' }}" data-ua="{{ sub.ua or '' }}" data-hwid="{{ sub.hwid or '' }}"></div>{% endif %}
       <div class="slot-bot proto-checks">
@@ -355,7 +370,7 @@ a.plain:hover{color:var(--accent)}
         <label class="pchk"><input type="checkbox" value="hysteria2" {% if 'hysteria2' in p %}checked{% endif %}> Hysteria2</label>
         <span class="sep"></span>
         <label class="pchk" style="color:var(--accent)"><input type="checkbox" class="slot-ping" value="1" {% if sub.ping %}checked{% endif %}> ⚡ <span data-i18n="ping">Ping Testi</span></label>
-        <label class="pchk ms-lim" title="Bu slot için ms limiti (boş = global)"><span>⏱ ≤</span><input type="number" class="slot-maxms" min="0" step="10" value="{{ sub.max_ms or '' }}" placeholder="{{ ping_max_ms if ping_max_ms and ping_max_ms != '0' else '∞' }}"> ms</label>
+        <label class="pchk ms-lim" title="Bu slot için ms limiti (boş = global)" data-i18n-title="slot_ms_t"><span>⏱ ≤</span><input type="number" class="slot-maxms" min="0" step="10" value="{{ sub.max_ms or '' }}" placeholder="{{ ping_max_ms if ping_max_ms and ping_max_ms != '0' else '∞' }}"> ms</label>
         <label class="pchk"><input type="checkbox" class="slot-rename" {% if sub.rename is not defined or sub.rename %}checked{% endif %}> 🏷️ <span data-i18n="rename_opt">İsmi değiştir</span></label>
       </div>
       <div class="slot-sort" hidden>
@@ -437,6 +452,20 @@ a.plain:hover{color:var(--accent)}
     <div id="panels-report" style="max-height:420px;overflow:auto;font-size:12px"></div>
   </div>
 
+  <!-- DOMAIN / URL SEMASI -->
+  <div class="box">
+    <div class="box-title">🌐 <span data-i18n="ur_title">Domain / URL Şeması</span></div>
+    <div class="box-sub" data-i18n="ur_sub">Müşteriye verilen link aynı kalır; Macros kaynağı burada yazdığın gerçek adresten çeker. Ör: link <code>finland.domain.ru:8000</code> diyor ama panel artık <code>:443</code>'te çalışıyor.</div>
+    <div id="ur-container"></div>
+    <button type="button" class="btn bgreen" onclick="urRow({});FORM_DIRTY=true" data-i18n="ur_add">+ Kural Ekle</button>
+    <div class="hint" style="margin-top:10px" data-i18n="ur_help">Kaynak iki biçimde yazılabilir: <b>adres:port</b> (ör. <code>fin.domain.ru:8000</code> → <code>fin.domain.ru</code>; şema ve yol aynı kalır) ya da <b>tam önek</b> (ör. <code>https://fin.domain.ru:8000/sub/</code> → <code>https://yeni.domain.ru/s/</code>; yol da değişir). İlk eşleşen kural uygulanır.</div>
+    <div class="ur-row" style="margin-top:12px">
+      <input type="text" id="urTestUrl" class="ur_from" placeholder="https://.../macros?url=https://fin.domain.ru:8000/sub/XXXX" data-i18n="ur_test_ph">
+      <button type="button" class="btn bsky" onclick="testUrlRules(this)" data-i18n="ur_test">⚡ Test Et</button>
+    </div>
+    <div id="urTestRes" class="slot-res"></div>
+  </div>
+
   <!-- JSON ABONELIGI -->
   <div class="box">
     <div class="box-title">🧩 <span data-i18n="js_title">JSON Aboneliği (Xray / v2rayN / Happ)</span></div>
@@ -490,7 +519,7 @@ a.plain:hover{color:var(--accent)}
       <button type="button" class="btn bghost" onclick="var e=document.getElementById('cfgImport');e.hidden=!e.hidden" data-i18n="cfg_import_t">⬆ İçe Aktar</button>
     </div>
     <div id="cfgImport" hidden style="margin-top:12px">
-      <textarea class="txt" id="cfgJson" rows="5" placeholder="Dışa aktarılan JSON'u buraya yapıştır..."></textarea>
+      <textarea class="txt" id="cfgJson" rows="5" placeholder="Dışa aktarılan JSON'u buraya yapıştır..." data-i18n="cfg_paste_ph"></textarea>
       <button type="button" class="btn bgreen" onclick="importConfig()" data-i18n="cfg_do_import" style="margin-top:8px">İçe Aktar ve Uygula</button>
     </div>
   </div>
@@ -504,10 +533,10 @@ a.plain:hover{color:var(--accent)}
 <script>
 /* ---------- i18n ---------- */
 const dict={
- tr:{fb_lbl:"Fallback",fb_t:"Yedek sub: ana sub engellenirse ya da içindeki kodların hiçbiri çalışmazsa bu kullanılır",fb_ph:"Yedek sub URL (ana engellenirse / kodları ölürse)",default:"varsayılan",hwid_ph:"boş = gönderilmez",hwid_rand:"Rastgele HWID üret",g_ping_ms:"Maks. Gecikme (ms, 0 = limitsiz)",g_ping_ms_h:"Ping testi açık slotlarda bu değerin üstündeki kodlar alınmaz.",ms_slot_t:"Bu slot için ms limiti (boş = global)",pn_own:"kendi",pn_own_long:"Panelin kendi",pn_macros_long:"Macros ekledi",pn_rm_q:"«{name}» paneli kaldırılsın mı?\n\n• Macros’un bu panelde açtığı {n} kullanıcı SİLİNECEK.\n• Panelin kendi {o} kullanıcısına dokunulmayacak.",pn_rm_keep_q:"Panele bağlanılamadı. Kullanıcıları silmeden sadece panel kaldırılsın mı?",pn_rm_doing:"Kullanıcılar siliniyor...",pn_rm_done:"Panel kaldırıldı · {n} macros kullanıcısı silindi",add_pslot:"🔗 Panel Blokları",panel_slot_desc:"Abonenin bu entegre paneldeki kodları (otomatik)",panel_slot_none:"Ana olmayan aktif 3x-ui paneli yok",panel_slot_exists:"Tüm paneller zaten slotta",nav_dash:"← Panel",nav_stats:"📊 İstatistik",nav_logs:"🔥 Loglar",sort_set:"⚙️ Ayarlar",page_title:"İçerik & Sıralama Ayarları",page_sub:"Harici kaynaklar, protokol sıralaması ve çıktı davranışını buradan yönetin.",engine:"Sıralama Motoru",engine_sub:"Node'ların müşteriye hangi sırayla sunulacağını belirler.",t_sort:"Sıralamayı Aktif Et",t_sort_d:"Kapalıyken node'lar kaynaktaki sırayla sunulur.",t_ren:"Otomatik Adlandır",t_ren_d:"Bayrak + ülke adıyla node'ları yeniden adlandırır.",t_cdn:"CDN Etiketi",t_cdn_d:"VLESS WS IP'si Google/CloudFront/Fastly ise '4G/WiFi' arkasına yazar.",prot_order:"Protokol Sırası",vless_order:"VLESS Alt Sırası",vmess_order:"VMess Alt Sırası",reset:"Sıfırla",chip_hint:"💡 Sürükleyerek ya da ◀ ▶ ile sırala. Üstüne tıklayıp bir protokolü sıralama dışı (en sona) bırakabilirsin.",ext_sub_title:"Harici Sub Kaynakları",ext_sub_sub:"Dış abonelik linklerini otomatik çekip filtreler ve ana çıktıya ekler.",ext_int:"Otomatik Çekme Aralığı (Dakika)",g_ping_to:"Ping Zaman Aşımı (Sn)",pos_top:"Üst",pos_bot:"Alt",ping:"Ping Testi",add_slot:"+ Yeni Kaynak",force_upd:"⟳ Şimdi Çek (Tüm Kaynakları Aktar)",manual_title:"Manuel Ek Linkler",manual_sub:"Her istekte çıktıya elle eklenen sabit node'lar.",g_pos:"Konum",pos_top_f:"Üstte",pos_bot_f:"Altta",format_btn:"🪄 Otomatik Adlandır",g_ext:"Linkler (her satıra bir tane)",sec_title:"Güvenlik & Mesajlar",allowed_p:"İzinli Paneller (virgülle ayır — boşsa tüm panellere izin)",allowed_p_h:"Sadece bu adresleri içeren sub URL'lerine proxy yapılır.",err_msg:"Genel Hata Mesajı",err_404:"Kaynak 404 Mesajı",save_btn:"💾 Tüm Ayarları Kaydet",note:"Not",test:"Test",fetch:"Çek",fetched:"Tamamlandı!",fetch_err:"Bulunamadı.",need_url:"Önce URL girin!",testing:"Test ediliyor, lütfen bekleyin...",filtering:"Filtreleniyor (Ping kapalı)...",fetching:"Veriler çekiliyor ve aktarılıyor...",added:"Sisteme eklendi ve kaydedildi!",valid:"Sağlam",conn_err:"Bağlantı koptu veya zaman aşımı.",formatted:"Formatlandı! ✓",updating:"Güncelleniyor...",prev:"Önizle",add_local:"+ Local Kaynak",local_ph:"Node kodları (her satıra bir tane)...",loading_prev:"Önizleme yükleniyor...",prev_empty:"Uygun node bulunamadı.",prev_head:"Görünecek node",rename_off:"rename kapalı",final_prev:"👁 Final Önizleme (Tüm kaynaklar birleşik + sıralı)",slot_sort:"Bu kaynağın sıralaması",slot_sort_clear:"↩ Global sıraya dön",slot_sort_hint:"Boş = global sıra kullanılır",slot_sort_cleared:"Global sıraya dönüldü",custom:"ÖZEL SIRA",t_vps:"VPS Cloud Etiketi",t_vps_d:"WS/xHTTP dışı node IP'si bu cloud'lara aitse ismine yazar.",cfg_title:"Yapılandırma (JSON)",cfg_sub:"Tüm panel ayarlarını tek JSON olarak dışa/içe aktar.",cfg_export:"⬇ Dışa Aktar (indir)",cfg_import_t:"⬆ İçe Aktar",cfg_do_import:"İçe Aktar ve Uygula",cfg_exported:"Dışa aktarıldı ✓",cfg_imported:"İçe aktarıldı",cfg_bad_json:"Geçersiz JSON!",lbl_as:"Yazılacak metin:",cp_title:"İstemci Profilleri (App Formatları)",cp_sub:"Seçtiğin uygulama sub'ı çekerken senin yazdığın formatta (ör. JSON) alsın.",cp_on:"Aktif",cp_add:"+ Yeni Profil",cp_fmt:"Format",cp_proto:"Protokol filtresi",cp_balancer:"Balancer (otomatik en iyi)",cp_balname:"Balancer ismi",add_source:"📍 Kaynak Sub Bloğu",source_desc:"Bu abonenin kaynak paneldeki kendi kodları (otomatik)",source_exists:"Zaten bir Kaynak Sub bloğu var",rename_opt:"İsmi değiştir",pn_title:"Entegre Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Durumları Yenile",pn_main:"Ana",pn_sync:"🔁 Senkronize Et (trafik topla)",pn_main_badge:"ANA PANEL",pn_auto:"otomatik · .env",pn_name_ph:"Panel adı",pn_url:"Panel URL",pn_user:"Kullanıcı",pn_pass:"Şifre",pn_token:"API Token",pn_token_ph:"3x-ui → Ayarlar → Güvenlik → API Token",pn_users:"kullanıcı",pn_online:"panel çevrimiçi",pn_sub:"Birden fazla Marzban/3x-ui paneli ekle. Ana panel OTOMATİK: müşteri sub linklerinin geldiği panel (⭐). Diğerleri trafik toplamaya katılır."},
- en:{fb_lbl:"Fallback",fb_t:"Backup sub: used if the main sub is blocked or none of its nodes work",fb_ph:"Backup sub URL (if main is blocked / dead)",default:"default",hwid_ph:"empty = not sent",hwid_rand:"Generate random HWID",g_ping_ms:"Max Latency (ms, 0 = no limit)",g_ping_ms_h:"In slots with ping test on, nodes above this are dropped.",ms_slot_t:"ms limit for this slot (empty = global)",pn_own:"own",pn_own_long:"Panel own",pn_macros_long:"Added by Macros",pn_rm_q:"Remove panel «{name}»?\n\n• {n} users created by Macros on this panel will be DELETED.\n• The panel’s own {o} users stay untouched.",pn_rm_keep_q:"Panel unreachable. Remove only the panel without deleting users?",pn_rm_doing:"Deleting users...",pn_rm_done:"Panel removed · {n} macros users deleted",add_pslot:"🔗 Panel Blocks",panel_slot_desc:"This subscriber's codes on this integrated panel (automatic)",panel_slot_none:"No active secondary 3x-ui panel",panel_slot_exists:"All panels already have a slot",nav_dash:"← Dashboard",nav_stats:"📊 Statistics",nav_logs:"🔥 Logs",sort_set:"⚙️ Settings",page_title:"Content & Sorting Settings",page_sub:"Manage external sources, protocol order and output behavior here.",engine:"Sorting Engine",engine_sub:"Controls the order nodes are served to the client.",t_sort:"Enable Sorting",t_sort_d:"When off, nodes are served in source order.",t_ren:"Auto Rename",t_ren_d:"Renames nodes with flag + country name.",t_cdn:"CDN Label",t_cdn_d:"If VLESS WS IP is Google/CloudFront/Fastly, appends it after '4G/WiFi'.",prot_order:"Protocol Order",vless_order:"VLESS Sub-order",vmess_order:"VMess Sub-order",reset:"Reset",chip_hint:"💡 Drag or use ◀ ▶ to reorder. Click a chip to drop a protocol out of sorting (to the end).",ext_sub_title:"External Sub Sources",ext_sub_sub:"Auto-fetches, filters external subs and appends to main output.",ext_int:"Auto Fetch Interval (Mins)",g_ping_to:"Ping Timeout (Sec)",pos_top:"Top",pos_bot:"Bottom",ping:"Ping Test",add_slot:"+ Add Source",force_upd:"⟳ Fetch Now (Push All Sources)",manual_title:"Manual Links",manual_sub:"Static nodes appended to every request's output.",g_pos:"Position",pos_top_f:"Top",pos_bot_f:"Bottom",format_btn:"🪄 Auto Rename",g_ext:"Links (one per line)",sec_title:"Security & Messages",allowed_p:"Allowed Panels (comma separated — empty = allow all)",allowed_p_h:"Only sub URLs containing these hosts will be proxied.",err_msg:"Generic Error Message",err_404:"Source 404 Message",save_btn:"💾 Save All Settings",note:"Note",test:"Test",fetch:"Fetch",fetched:"Done!",fetch_err:"Not found.",need_url:"Enter a URL first!",testing:"Testing, please wait...",filtering:"Filtering (ping off)...",fetching:"Fetching and importing...",added:"Imported and saved!",valid:"Valid",conn_err:"Connection lost or timed out.",formatted:"Formatted! ✓",updating:"Updating...",prev:"Preview",add_local:"+ Local Source",local_ph:"Node codes (one per line)...",loading_prev:"Loading preview...",prev_empty:"No matching nodes.",prev_head:"Nodes shown",rename_off:"rename off",final_prev:"👁 Final Preview (all sources merged + sorted)",slot_sort:"This source's sorting",slot_sort_clear:"↩ Use global order",slot_sort_hint:"Empty = global order used",slot_sort_cleared:"Reverted to global order",custom:"CUSTOM",t_vps:"VPS Cloud Label",t_vps_d:"If a non-WS/xHTTP node IP belongs to these clouds, appends it to the name.",cfg_title:"Configuration (JSON)",cfg_sub:"Export/import all panel settings as a single JSON.",cfg_export:"⬇ Export (download)",cfg_import_t:"⬆ Import",cfg_do_import:"Import & Apply",cfg_exported:"Exported ✓",cfg_imported:"Imported",cfg_bad_json:"Invalid JSON!",lbl_as:"Label text:",cp_title:"Client Profiles (App Formats)",cp_sub:"Selected apps receive the sub in the format you define when they fetch it.",cp_on:"On",cp_add:"+ New Profile",cp_fmt:"Format",cp_proto:"Protocol filter",cp_balancer:"Balancer (auto best)",cp_balname:"Balancer name",add_source:"📍 Source Sub Block",source_desc:"This sub's own codes from the source panel (automatic)",source_exists:"A Source Sub block already exists",rename_opt:"Rename",pn_title:"Integrated Panels (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Refresh status",pn_main:"Main",pn_sync:"🔁 Sync now (collect traffic)",pn_main_badge:"MAIN PANEL",pn_auto:"automatic · .env",pn_name_ph:"Panel name",pn_url:"Panel URL",pn_user:"Username",pn_pass:"Password",pn_token:"API Token",pn_token_ph:"3x-ui → Settings → Security → API Token",pn_users:"users",pn_online:"panels online",pn_sub:"Add multiple Marzban/3x-ui panels. Main panel is AUTOMATIC: the panel your customers' sub links come from (⭐). Others add to traffic totals."},
- ru:{fb_lbl:"Резерв",fb_t:"Резервный саб: если основной заблокирован или ни один узел не работает",fb_ph:"URL резервного саба",default:"по умолч.",hwid_ph:"пусто = не отправлять",hwid_rand:"Случайный HWID",g_ping_ms:"Макс. задержка (мс, 0 = без лимита)",g_ping_ms_h:"В слотах с пинг-тестом узлы выше лимита не берутся.",ms_slot_t:"Лимит мс для слота (пусто = глобальный)",pn_own:"свои",pn_own_long:"Свои",pn_macros_long:"Добавил Macros",pn_rm_q:"Удалить панель «{name}»?\n\n• {n} пользователей, созданных Macros, будут УДАЛЕНЫ.\n• Собственные {o} пользователей панели не трогаются.",pn_rm_keep_q:"Панель недоступна. Удалить только панель, не удаляя пользователей?",pn_rm_doing:"Удаление пользователей...",pn_rm_done:"Панель удалена · удалено {n}",add_pslot:"🔗 Блоки панелей",panel_slot_desc:"Коды абонента на этой панели (авто)",panel_slot_none:"Нет активных доп. панелей 3x-ui",panel_slot_exists:"Все панели уже добавлены",nav_dash:"← Панель",nav_stats:"📊 Статистика",nav_logs:"🔥 Логи",sort_set:"⚙️ Настройки",page_title:"Контент и сортировка",page_sub:"Управляйте внешними источниками, порядком протоколов и выводом.",engine:"Движок сортировки",engine_sub:"Определяет порядок выдачи узлов клиенту.",t_sort:"Включить сортировку",t_sort_d:"Если выкл — узлы в исходном порядке.",t_ren:"Авто-переименование",t_ren_d:"Переименовывает узлы: флаг + страна.",t_cdn:"CDN метка",t_cdn_d:"Если IP VLESS WS — Google/CloudFront/Fastly, добавит после '4G/WiFi'.",prot_order:"Порядок протоколов",vless_order:"Под-порядок VLESS",vmess_order:"Под-порядок VMess",reset:"Сброс",chip_hint:"💡 Перетащите или ◀ ▶ для порядка. Клик — исключить протокол (в конец).",ext_sub_title:"Внешние источники",ext_sub_sub:"Авто-загрузка, фильтр внешних сабов и добавление в вывод.",ext_int:"Интервал загрузки (мин)",g_ping_to:"Тайм-аут пинга (сек)",pos_top:"Верх",pos_bot:"Низ",ping:"Пинг-тест",add_slot:"+ Источник",force_upd:"⟳ Загрузить сейчас",manual_title:"Ручные ссылки",manual_sub:"Статичные узлы в каждом выводе.",g_pos:"Позиция",pos_top_f:"Сверху",pos_bot_f:"Снизу",format_btn:"🪄 Авто-имя",g_ext:"Ссылки (по одной в строке)",sec_title:"Безопасность и сообщения",allowed_p:"Разрешённые панели (через запятую — пусто = все)",allowed_p_h:"Проксируются только URL с этими хостами.",err_msg:"Сообщение об ошибке",err_404:"Сообщение 404",save_btn:"💾 Сохранить всё",note:"Заметка",test:"Тест",fetch:"Загрузить",fetched:"Готово!",fetch_err:"Не найдено.",need_url:"Сначала URL!",testing:"Тест, подождите...",filtering:"Фильтрация (пинг выкл)...",fetching:"Загрузка и импорт...",added:"Импортировано и сохранено!",valid:"Рабочих",conn_err:"Соединение потеряно.",formatted:"Готово! ✓",updating:"Обновление...",prev:"Превью",add_local:"+ Локальный",local_ph:"Коды узлов (по одному в строке)...",loading_prev:"Загрузка превью...",prev_empty:"Нет подходящих узлов.",prev_head:"Узлов",rename_off:"переим. выкл",final_prev:"👁 Финал превью (все источники + сортировка)",slot_sort:"Сортировка источника",slot_sort_clear:"↩ Глобальный порядок",slot_sort_hint:"Пусто = глобальный порядок",slot_sort_cleared:"Возврат к глобальному",custom:"СВОЙ",t_vps:"VPS Cloud метка",t_vps_d:"Если IP узла (не WS/xHTTP) принадлежит этим облакам — добавит к имени.",cfg_title:"Конфигурация (JSON)",cfg_sub:"Экспорт/импорт всех настроек одним JSON.",cfg_export:"⬇ Экспорт (скачать)",cfg_import_t:"⬆ Импорт",cfg_do_import:"Импорт и применить",cfg_exported:"Экспортировано ✓",cfg_imported:"Импортировано",cfg_bad_json:"Неверный JSON!",lbl_as:"Текст метки:",cp_title:"Профили клиентов (форматы)",cp_sub:"Выбранные приложения получают саб в заданном вами формате.",cp_on:"Вкл",cp_add:"+ Профиль",cp_fmt:"Формат",cp_proto:"Фильтр протоколов",cp_balancer:"Balancer (авто лучший)",cp_balname:"Имя balancer",add_source:"📍 Блок исходного саба",source_desc:"Собственные коды этого саба из панели (авто)",source_exists:"Блок исходного саба уже есть",rename_opt:"Переименовать",pn_title:"Интегрированные панели (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Обновить статус",pn_main:"Главная",pn_sync:"🔁 Синхронизировать",pn_main_badge:"ГЛАВНАЯ",pn_auto:"авто · .env",pn_name_ph:"Имя панели",pn_url:"URL панели",pn_user:"Логин",pn_pass:"Пароль",pn_token:"API токен",pn_token_ph:"3x-ui → Настройки → Безопасность → API токен",pn_users:"польз.",pn_online:"панелей онлайн",pn_sub:"Добавьте панели Marzban/3x-ui. Главная определяется АВТОМАТИЧЕСКИ (⭐)."},
- tm:{fb_lbl:"Fallback",fb_t:"Ätiýaçlyk sub: esasy bloklansa ýa-da kodlary işlemese ulanylýar",fb_ph:"Ätiýaçlyk sub URL",default:"adaty",hwid_ph:"boş = iberilmeýär",hwid_rand:"Tötänleýin HWID",g_ping_ms:"Iň köp gijikme (ms, 0 = çäksiz)",g_ping_ms_h:"Ping barlagy açyk slotlarda bu bahadan ýokary kodlar alynmaýar.",ms_slot_t:"Bu slot üçin ms çägi (boş = global)",pn_own:"öz",pn_own_long:"Paneliň öz",pn_macros_long:"Macros goşdy",pn_rm_q:"«{name}» panel aýrylsynmy?\n\n• Macros-yň bu panelde açan {n} ulanyjysy POZULAR.\n• Paneliň öz {o} ulanyjysyna degilmez.",pn_rm_keep_q:"Panel elýeterli däl. Ulanyjylary pozman diňe panel aýrylsynmy?",pn_rm_doing:"Ulanyjylar pozulýar...",pn_rm_done:"Panel aýryldy · {n} ulanyjy pozuldy",add_pslot:"🔗 Panel Bloklary",panel_slot_desc:"Abonäniň bu paneldäki kodlary (awto)",panel_slot_none:"Işjeň goşmaça 3x-ui panel ýok",panel_slot_exists:"Ähli paneller eýýäm bar",nav_dash:"← Panel",nav_stats:"📊 Statistika",nav_logs:"🔥 Loglar",sort_set:"⚙️ Sazlamalar",page_title:"Mazmun & Tertip",page_sub:"Daşarky çeşmeler, protokol tertibi we çykyşy dolandyryň.",engine:"Tertip Hereketlendirijisi",engine_sub:"Node'laryň müşderä haýsy tertipde beriljegini kesgitleýär.",t_sort:"Tertibi Işjeňleşdir",t_sort_d:"Ýapykka node'lar çeşmedäki tertipde berilýär.",t_ren:"Awto Atlandyr",t_ren_d:"Baýdak + ýurt ady bilen täzeden atlandyrýar.",t_cdn:"CDN Belligi",t_cdn_d:"VLESS WS IP Google/CloudFront/Fastly bolsa '4G/WiFi' yzyna ýazýar.",prot_order:"Protokol Tertibi",vless_order:"VLESS Kiçi Tertip",vmess_order:"VMess Kiçi Tertip",reset:"Dikelt",chip_hint:"💡 Süýräp ýa-da ◀ ▶ bilen tertiple. Üstüne basyp tertipden aýryp bolýar.",ext_sub_title:"Daşarky Sub Çeşmeleri",ext_sub_sub:"Daşarky sublary awto çekip süzýär we esasy çykyşa goşýar.",ext_int:"Awto Çekiş Aralygy (Min)",g_ping_to:"Ping Wagty (Sek)",pos_top:"Üst",pos_bot:"Aşak",ping:"Ping Barlag",add_slot:"+ Täze Çeşme",force_upd:"⟳ Häzir Çek",manual_title:"Manual Linkler",manual_sub:"Her çykyşa goşulýan hemişelik node'lar.",g_pos:"Ýeri",pos_top_f:"Üstde",pos_bot_f:"Aşakda",format_btn:"🪄 Awto Atlandyr",g_ext:"Linkler (her setire bir)",sec_title:"Howpsuzlyk & Hatlar",allowed_p:"Rugsatly Paneller (otur bilen — boş = hemmesi)",allowed_p_h:"Diňe şu hostlary öz içine alýan URL'lere proxy edilýär.",err_msg:"Umumy Ýalňyşlyk Haty",err_404:"Çeşme 404 Haty",save_btn:"💾 Hemmesini Ýatda Sakla",note:"Bellik",test:"Test",fetch:"Çek",fetched:"Tamam!",fetch_err:"Tapylmady.",need_url:"Ilki URL giriziň!",testing:"Test edilýär...",filtering:"Süzülýär (ping ýapyk)...",fetching:"Çekilýär we geçirilýär...",added:"Goşuldy we ýatda saklandy!",valid:"Sagdyn",conn_err:"Baglanyşyk kesildi.",formatted:"Formatlandy! ✓",updating:"Täzelenýär...",prev:"Öňünden gör",add_local:"+ Local Çeşme",local_ph:"Node kodlary (her setire bir)...",loading_prev:"Öňizleme ýüklenýär...",prev_empty:"Laýyk node tapylmady.",prev_head:"Görünjek node",rename_off:"rename ýapyk",final_prev:"👁 Final Öňizleme (ähli çeşmeler + tertip)",slot_sort:"Bu çeşmäniň tertibi",slot_sort_clear:"↩ Global tertibe dön",slot_sort_hint:"Boş = global tertip",slot_sort_cleared:"Global tertibe dönüldi",custom:"ÖZEL",t_vps:"VPS Cloud Belligi",t_vps_d:"WS/xHTTP däl node IP şu cloud'lara degişli bolsa adyna ýazýar.",cfg_title:"Konfigurasiýa (JSON)",cfg_sub:"Ähli sazlamalary bir JSON bilen eksport/import et.",cfg_export:"⬇ Eksport (ýükle)",cfg_import_t:"⬆ Import",cfg_do_import:"Import et we ulan",cfg_exported:"Eksport edildi ✓",cfg_imported:"Import edildi",cfg_bad_json:"Nädogry JSON!",lbl_as:"Ýazyljak tekst:",cp_title:"Müşderi Profilleri (App Formatlary)",cp_sub:"Saýlanan programma sub-y seniň formatyňda alýar.",cp_on:"Açyk",cp_add:"+ Täze Profil",cp_fmt:"Format",cp_proto:"Protokol filtri",cp_balancer:"Balancer (awto iň gowy)",cp_balname:"Balancer ady",add_source:"📍 Çeşme Sub Bloky",source_desc:"Bu abonäniň çeşme paneldäki öz kodlary (awto)",source_exists:"Eýýäm Çeşme Sub bloky bar",rename_opt:"Ady üýtget",pn_title:"Birleşen Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Ýagdaýy täzele",pn_main:"Esasy",pn_sync:"🔁 Sinhronla",pn_main_badge:"ESASY PANEL",pn_auto:"awto · .env",pn_name_ph:"Panel ady",pn_url:"Panel URL",pn_user:"Ulanyjy",pn_pass:"Açar sözi",pn_token:"API Token",pn_token_ph:"3x-ui → Sazlamalar → Howpsuzlyk → API Token",pn_users:"ulanyjy",pn_online:"panel onlaýn",pn_sub:"Marzban/3x-ui panellerini goş. Esasy panel AWTOMATIK kesgitlenýär (⭐)."}
+ tr:{cfg_paste_ph:"Dışa aktarılan JSON'u buraya yapıştır...",cp_other:"Diğer / Genel",del_t:"Sil",drag_t:"Sürükle",err:"Hata",failed:"başarısız",first_n:"ilk",fmt_b64:"Düz liste (base64)",fmt_jl:"JSON (link dizisi)",fmt_plain:"Düz liste (metin)",fmt_ss:"Sadece Shadowsocks (Outline)",js_title:"JSON Aboneliği (Xray / v2rayN / Happ)",js_sub:"Xray JSON aboneliği: yönlendirilecek tam client config'leri. Destekleyen uygulamalar düz linkler yerine JSON alır. (v2rayNG ≥1.8.18, v2rayN ≥6.40, Happ ≥1.63.1)",js_apps:"JSON alan uygulamalar (User-Agent, virgülle)",js_apps_h:"Boş = hiçbiri. Eşleşmeyen uygulamalar düz link almaya devam eder.",js_direct:"Direct siteler (VPN'siz, kullanıcının kendi interneti)",js_dom:"Domenler (her satıra bir)",js_ip:"IP-ler (her satıra bir)",js_ads:"Reklamları engelle",js_bal:"Otomatik config (balancer)",js_bal_on:"Otomatik config ekle — tüm serverleri içerir, uygulama en hızlıya geçer",js_bal_ext:"Harici configler de balancer'a girsin",js_bal_name:"Ad",js_bal_strat:"Nasıl seçer",js_least:"En düşük ping",js_rand:"Rastgele",js_bal_pos:"Yeri",js_first:"Birinci",js_last:"Sonuncu",js_bal_int:"Kontrol aralığı",js_bal_url:"Kontrol URL",lang_reload_q:"Dil tamamen değişsin diye sayfa yenilenecek. Kaydedilmemiş değişiklikler kaybolur. Devam?",name_ph:"İsim",note_ph:"Not",other_lbl:"Diğer",pin_t:"Sabitle (hep açık)",pn_host_over:"Adres (opsiyonel)",pn_host_ph:"boş = paneldeki adres",pn_interval:"Otomatik senkron (saniye, 0 = kapalı)",pn_interval_h:"Ana paneldeki kullanıcılar ikincil panellerde açılır; limit/süre ana panelden gelir; trafik tüm panellerin toplamıdır. Hiçbir kullanıcı silinmez.",pn_need_tok:"Önizleme için URL ve API Token gerekli",pn_ovr_h:"Port/adres değişikliği sadece müşteriye giden config'lerde yapılır — paneldeki inbound'lara dokunulmaz. Boş = değişmez.",pn_port_all:"Tüm portları değiştir",pn_port_keep:"aynı",pn_prev:"Önizleme",pn_prev_changed:"değişen",pn_prev_codes:"kod",pn_prev_none:"Panelde gösterilecek kod bulunamadı (kullanıcısı olan bir inbound gerekli).",pn_prev_sample:"örnek kullanıcı",rep_att:"inbound bağlanan",rep_dis:"kapatılan",rep_en:"açılan",rep_mac:"Macros'un eklediği (toplam)",rep_new:"Bu senkronda eklenen",rep_own:"Panelin kendi kullanıcıları",rep_rst:"trafik sıfırlanan",rep_shared:"Zaten vardı (eşleşti)",rep_this:"bu senkronda",rep_total:"Panelde toplam",rep_upd:"limit/süre güncellenen",retry_in:"tekrar {s}s sonra",slot_ms_t:"Bu slot için ms limiti (boş = global)",src_badge:"📍 KAYNAK SUB",src_errs:"kaynak hata",st_err:"⚠ HATA",state:"durum",sync_done:"Senkron tamam ✓",sync_users:"{n} kullanıcı senkronize edildi ({p} panel)",syncing:"senkronize ediliyor...",ur_add:"+ Kural Ekle",ur_fetch:"Macros buradan çeker",ur_from_ph:"kaynak: fin.domain.ru:8000",ur_to_ph:"hedef: fin.domain.ru",ur_help:"Kaynak iki biçimde yazılabilir: <b>adres:port</b> (ör. <code>fin.domain.ru:8000</code> → <code>fin.domain.ru</code>; şema ve yol aynı kalır) ya da <b>tam önek</b> (ör. <code>https://fin.domain.ru:8000/sub/</code> → <code>https://yeni.domain.ru/s/</code>; yol da değişir). İlk eşleşen kural uygulanır.",ur_link:"Müşteri linki",ur_same:"değişmedi",ur_sub:"Müşteriye verilen link aynı kalır; Macros kaynağı burada yazdığın gerçek adresten çeker. Ör: link <code>finland.domain.ru:8000</code> diyor ama panel artık <code>:443</code>'te çalışıyor.",ur_test:"⚡ Test Et",ur_test_ph:"Test: müşteri linki veya sub URL",ur_title:"Domain / URL Şeması",fb_lbl:"Fallback",fb_t:"Yedek sub: ana sub engellenirse ya da içindeki kodların hiçbiri çalışmazsa bu kullanılır",fb_ph:"Yedek sub URL (ana engellenirse / kodları ölürse)",default:"varsayılan",hwid_ph:"boş = gönderilmez",hwid_rand:"Rastgele HWID üret",g_ping_ms:"Maks. Gecikme (ms, 0 = limitsiz)",g_ping_ms_h:"Ping testi açık slotlarda bu değerin üstündeki kodlar alınmaz.",ms_slot_t:"Bu slot için ms limiti (boş = global)",pn_own:"kendi",pn_own_long:"Panelin kendi",pn_macros_long:"Macros ekledi",pn_rm_q:"«{name}» paneli kaldırılsın mı?\n\n• Macros’un bu panelde açtığı {n} kullanıcı SİLİNECEK.\n• Panelin kendi {o} kullanıcısına dokunulmayacak.",pn_rm_keep_q:"Panele bağlanılamadı. Kullanıcıları silmeden sadece panel kaldırılsın mı?",pn_rm_doing:"Kullanıcılar siliniyor...",pn_rm_done:"Panel kaldırıldı · {n} macros kullanıcısı silindi",add_pslot:"🔗 Panel Blokları",panel_slot_desc:"Abonenin bu entegre paneldeki kodları (otomatik)",panel_slot_none:"Ana olmayan aktif 3x-ui paneli yok",panel_slot_exists:"Tüm paneller zaten slotta",nav_dash:"← Panel",nav_stats:"📊 İstatistik",nav_logs:"🔥 Loglar",sort_set:"⚙️ Ayarlar",page_title:"İçerik & Sıralama Ayarları",page_sub:"Harici kaynaklar, protokol sıralaması ve çıktı davranışını buradan yönetin.",engine:"Sıralama Motoru",engine_sub:"Node'ların müşteriye hangi sırayla sunulacağını belirler.",t_sort:"Sıralamayı Aktif Et",t_sort_d:"Kapalıyken node'lar kaynaktaki sırayla sunulur.",t_ren:"Otomatik Adlandır",t_ren_d:"Bayrak + ülke adıyla node'ları yeniden adlandırır.",t_cdn:"CDN Etiketi",t_cdn_d:"VLESS WS IP'si Google/CloudFront/Fastly ise '4G/WiFi' arkasına yazar.",prot_order:"Protokol Sırası",vless_order:"VLESS Alt Sırası",vmess_order:"VMess Alt Sırası",reset:"Sıfırla",chip_hint:"💡 Sürükleyerek ya da ◀ ▶ ile sırala. Üstüne tıklayıp bir protokolü sıralama dışı (en sona) bırakabilirsin.",ext_sub_title:"Harici Sub Kaynakları",ext_sub_sub:"Dış abonelik linklerini otomatik çekip filtreler ve ana çıktıya ekler.",ext_int:"Otomatik Çekme Aralığı (Dakika)",g_ping_to:"Ping Zaman Aşımı (Sn)",pos_top:"Üst",pos_bot:"Alt",ping:"Ping Testi",add_slot:"+ Yeni Kaynak",force_upd:"⟳ Şimdi Çek (Tüm Kaynakları Aktar)",manual_title:"Manuel Ek Linkler",manual_sub:"Her istekte çıktıya elle eklenen sabit node'lar.",g_pos:"Konum",pos_top_f:"Üstte",pos_bot_f:"Altta",format_btn:"🪄 Otomatik Adlandır",g_ext:"Linkler (her satıra bir tane)",sec_title:"Güvenlik & Mesajlar",allowed_p:"İzinli Paneller (virgülle ayır — boşsa tüm panellere izin)",allowed_p_h:"Sadece bu adresleri içeren sub URL'lerine proxy yapılır.",err_msg:"Genel Hata Mesajı",err_404:"Kaynak 404 Mesajı",save_btn:"💾 Tüm Ayarları Kaydet",note:"Not",test:"Test",fetch:"Çek",fetched:"Tamamlandı!",fetch_err:"Bulunamadı.",need_url:"Önce URL girin!",testing:"Test ediliyor, lütfen bekleyin...",filtering:"Filtreleniyor (Ping kapalı)...",fetching:"Veriler çekiliyor ve aktarılıyor...",added:"Sisteme eklendi ve kaydedildi!",valid:"Sağlam",conn_err:"Bağlantı koptu veya zaman aşımı.",formatted:"Formatlandı! ✓",updating:"Güncelleniyor...",prev:"Önizle",add_local:"+ Local Kaynak",local_ph:"Node kodları (her satıra bir tane)...",loading_prev:"Önizleme yükleniyor...",prev_empty:"Uygun node bulunamadı.",prev_head:"Görünecek node",rename_off:"rename kapalı",final_prev:"👁 Final Önizleme (Tüm kaynaklar birleşik + sıralı)",slot_sort:"Bu kaynağın sıralaması",slot_sort_clear:"↩ Global sıraya dön",slot_sort_hint:"Boş = global sıra kullanılır",slot_sort_cleared:"Global sıraya dönüldü",custom:"ÖZEL SIRA",t_vps:"VPS Cloud Etiketi",t_vps_d:"WS/xHTTP dışı node IP'si bu cloud'lara aitse ismine yazar.",cfg_title:"Yapılandırma (JSON)",cfg_sub:"Tüm panel ayarlarını tek JSON olarak dışa/içe aktar.",cfg_export:"⬇ Dışa Aktar (indir)",cfg_import_t:"⬆ İçe Aktar",cfg_do_import:"İçe Aktar ve Uygula",cfg_exported:"Dışa aktarıldı ✓",cfg_imported:"İçe aktarıldı",cfg_bad_json:"Geçersiz JSON!",lbl_as:"Yazılacak metin:",cp_title:"İstemci Profilleri (App Formatları)",cp_sub:"Seçtiğin uygulama sub'ı çekerken senin yazdığın formatta (ör. JSON) alsın.",cp_on:"Aktif",cp_add:"+ Yeni Profil",cp_fmt:"Format",cp_proto:"Protokol filtresi",cp_balancer:"Balancer (otomatik en iyi)",cp_balname:"Balancer ismi",add_source:"📍 Kaynak Sub Bloğu",source_desc:"Bu abonenin kaynak paneldeki kendi kodları (otomatik)",source_exists:"Zaten bir Kaynak Sub bloğu var",rename_opt:"İsmi değiştir",pn_title:"Entegre Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Durumları Yenile",pn_main:"Ana",pn_sync:"🔁 Senkronize Et (trafik topla)",pn_main_badge:"ANA PANEL",pn_auto:"otomatik · .env",pn_name_ph:"Panel adı",pn_url:"Panel URL",pn_user:"Kullanıcı",pn_pass:"Şifre",pn_token:"API Token",pn_token_ph:"3x-ui → Ayarlar → Güvenlik → API Token",pn_users:"kullanıcı",pn_online:"panel çevrimiçi",pn_sub:"Birden fazla Marzban/3x-ui paneli ekle. Ana panel OTOMATİK: müşteri sub linklerinin geldiği panel (⭐). Diğerleri trafik toplamaya katılır."},
+ en:{cfg_paste_ph:"Paste the exported JSON here...",cp_other:"Other / Generic",del_t:"Delete",drag_t:"Drag",err:"Error",failed:"failed",first_n:"first",fmt_b64:"Plain list (base64)",fmt_jl:"JSON (link array)",fmt_plain:"Plain list (text)",fmt_ss:"Shadowsocks only (Outline)",js_title:"JSON Subscription (Xray / v2rayN / Happ)",js_sub:"Xray JSON subscription: full client configs with routing. Supported apps get JSON instead of plain links. (v2rayNG ≥1.8.18, v2rayN ≥6.40, Happ ≥1.63.1)",js_apps:"Apps that get JSON (User-Agent, comma-separated)",js_apps_h:"Empty = none. Other apps keep getting plain links.",js_direct:"Direct sites (no VPN, user's own internet)",js_dom:"Domains (one per line)",js_ip:"IPs (one per line)",js_ads:"Block ads",js_bal:"Auto config (balancer)",js_bal_on:"Add auto config — includes all servers, the app switches to the fastest",js_bal_ext:"Include external configs in the balancer",js_bal_name:"Name",js_bal_strat:"Strategy",js_least:"Lowest ping",js_rand:"Random",js_bal_pos:"Position",js_first:"First",js_last:"Last",js_bal_int:"Check interval",js_bal_url:"Check URL",lang_reload_q:"The page will reload to fully switch the language. Unsaved changes will be lost. Continue?",name_ph:"Name",note_ph:"Note",other_lbl:"Other",pin_t:"Pin (always open)",pn_host_over:"Address (optional)",pn_host_ph:"empty = panel's address",pn_interval:"Auto sync (seconds, 0 = off)",pn_interval_h:"Main panel users are created on secondary panels; limit/expiry come from the main panel; traffic is the sum of all panels. No user is ever deleted.",pn_need_tok:"URL and API token are required for preview",pn_ovr_h:"Port/address changes apply only to configs sent to customers — the panel's inbounds are not touched. Empty = unchanged.",pn_port_all:"Change all ports to",pn_port_keep:"keep",pn_prev:"Preview",pn_prev_changed:"changed",pn_prev_codes:"nodes",pn_prev_none:"No nodes to show (an inbound with at least one client is needed).",pn_prev_sample:"sample user",rep_att:"inbounds attached",rep_dis:"disabled",rep_en:"enabled",rep_mac:"Added by Macros (total)",rep_new:"Added in this sync",rep_own:"Panel's own users",rep_rst:"traffic reset",rep_shared:"Already existed (matched)",rep_this:"this sync",rep_total:"Total on panel",rep_upd:"limit/expiry updated",retry_in:"retry in {s}s",slot_ms_t:"ms limit for this slot (empty = global)",src_badge:"📍 SOURCE SUB",src_errs:"source errors",st_err:"⚠ ERROR",state:"status",sync_done:"Sync done ✓",sync_users:"{n} users synced ({p} panels)",syncing:"syncing...",ur_add:"+ Add Rule",ur_fetch:"Macros fetches from",ur_from_ph:"from: fin.domain.ru:8000",ur_to_ph:"to: fin.domain.ru",ur_help:"The source can be written two ways: <b>host:port</b> (e.g. <code>fin.domain.ru:8000</code> → <code>fin.domain.ru</code>; scheme and path stay) or a <b>full prefix</b> (e.g. <code>https://fin.domain.ru:8000/sub/</code> → <code>https://new.domain.ru/s/</code>; the path changes too). The first matching rule wins.",ur_link:"Customer link",ur_same:"unchanged",ur_sub:"The link given to customers stays the same; Macros fetches the source from the real address you set here. E.g. the link says <code>finland.domain.ru:8000</code> but the panel now runs on <code>:443</code>.",ur_test:"⚡ Test",ur_test_ph:"Test: customer link or sub URL",ur_title:"Domain / URL Scheme",fb_lbl:"Fallback",fb_t:"Backup sub: used if the main sub is blocked or none of its nodes work",fb_ph:"Backup sub URL (if main is blocked / dead)",default:"default",hwid_ph:"empty = not sent",hwid_rand:"Generate random HWID",g_ping_ms:"Max Latency (ms, 0 = no limit)",g_ping_ms_h:"In slots with ping test on, nodes above this are dropped.",ms_slot_t:"ms limit for this slot (empty = global)",pn_own:"own",pn_own_long:"Panel own",pn_macros_long:"Added by Macros",pn_rm_q:"Remove panel «{name}»?\n\n• {n} users created by Macros on this panel will be DELETED.\n• The panel’s own {o} users stay untouched.",pn_rm_keep_q:"Panel unreachable. Remove only the panel without deleting users?",pn_rm_doing:"Deleting users...",pn_rm_done:"Panel removed · {n} macros users deleted",add_pslot:"🔗 Panel Blocks",panel_slot_desc:"This subscriber's codes on this integrated panel (automatic)",panel_slot_none:"No active secondary 3x-ui panel",panel_slot_exists:"All panels already have a slot",nav_dash:"← Dashboard",nav_stats:"📊 Statistics",nav_logs:"🔥 Logs",sort_set:"⚙️ Settings",page_title:"Content & Sorting Settings",page_sub:"Manage external sources, protocol order and output behavior here.",engine:"Sorting Engine",engine_sub:"Controls the order nodes are served to the client.",t_sort:"Enable Sorting",t_sort_d:"When off, nodes are served in source order.",t_ren:"Auto Rename",t_ren_d:"Renames nodes with flag + country name.",t_cdn:"CDN Label",t_cdn_d:"If VLESS WS IP is Google/CloudFront/Fastly, appends it after '4G/WiFi'.",prot_order:"Protocol Order",vless_order:"VLESS Sub-order",vmess_order:"VMess Sub-order",reset:"Reset",chip_hint:"💡 Drag or use ◀ ▶ to reorder. Click a chip to drop a protocol out of sorting (to the end).",ext_sub_title:"External Sub Sources",ext_sub_sub:"Auto-fetches, filters external subs and appends to main output.",ext_int:"Auto Fetch Interval (Mins)",g_ping_to:"Ping Timeout (Sec)",pos_top:"Top",pos_bot:"Bottom",ping:"Ping Test",add_slot:"+ Add Source",force_upd:"⟳ Fetch Now (Push All Sources)",manual_title:"Manual Links",manual_sub:"Static nodes appended to every request's output.",g_pos:"Position",pos_top_f:"Top",pos_bot_f:"Bottom",format_btn:"🪄 Auto Rename",g_ext:"Links (one per line)",sec_title:"Security & Messages",allowed_p:"Allowed Panels (comma separated — empty = allow all)",allowed_p_h:"Only sub URLs containing these hosts will be proxied.",err_msg:"Generic Error Message",err_404:"Source 404 Message",save_btn:"💾 Save All Settings",note:"Note",test:"Test",fetch:"Fetch",fetched:"Done!",fetch_err:"Not found.",need_url:"Enter a URL first!",testing:"Testing, please wait...",filtering:"Filtering (ping off)...",fetching:"Fetching and importing...",added:"Imported and saved!",valid:"Valid",conn_err:"Connection lost or timed out.",formatted:"Formatted! ✓",updating:"Updating...",prev:"Preview",add_local:"+ Local Source",local_ph:"Node codes (one per line)...",loading_prev:"Loading preview...",prev_empty:"No matching nodes.",prev_head:"Nodes shown",rename_off:"rename off",final_prev:"👁 Final Preview (all sources merged + sorted)",slot_sort:"This source's sorting",slot_sort_clear:"↩ Use global order",slot_sort_hint:"Empty = global order used",slot_sort_cleared:"Reverted to global order",custom:"CUSTOM",t_vps:"VPS Cloud Label",t_vps_d:"If a non-WS/xHTTP node IP belongs to these clouds, appends it to the name.",cfg_title:"Configuration (JSON)",cfg_sub:"Export/import all panel settings as a single JSON.",cfg_export:"⬇ Export (download)",cfg_import_t:"⬆ Import",cfg_do_import:"Import & Apply",cfg_exported:"Exported ✓",cfg_imported:"Imported",cfg_bad_json:"Invalid JSON!",lbl_as:"Label text:",cp_title:"Client Profiles (App Formats)",cp_sub:"Selected apps receive the sub in the format you define when they fetch it.",cp_on:"On",cp_add:"+ New Profile",cp_fmt:"Format",cp_proto:"Protocol filter",cp_balancer:"Balancer (auto best)",cp_balname:"Balancer name",add_source:"📍 Source Sub Block",source_desc:"This sub's own codes from the source panel (automatic)",source_exists:"A Source Sub block already exists",rename_opt:"Rename",pn_title:"Integrated Panels (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Refresh status",pn_main:"Main",pn_sync:"🔁 Sync now (collect traffic)",pn_main_badge:"MAIN PANEL",pn_auto:"automatic · .env",pn_name_ph:"Panel name",pn_url:"Panel URL",pn_user:"Username",pn_pass:"Password",pn_token:"API Token",pn_token_ph:"3x-ui → Settings → Security → API Token",pn_users:"users",pn_online:"panels online",pn_sub:"Add multiple Marzban/3x-ui panels. Main panel is AUTOMATIC: the panel your customers' sub links come from (⭐). Others add to traffic totals."},
+ ru:{cfg_paste_ph:"Вставьте сюда экспортированный JSON...",cp_other:"Другое / Общее",del_t:"Удалить",drag_t:"Перетащить",err:"Ошибка",failed:"не удалось",first_n:"первые",fmt_b64:"Обычный список (base64)",fmt_jl:"JSON (массив ссылок)",fmt_plain:"Обычный список (текст)",fmt_ss:"Только Shadowsocks (Outline)",js_title:"JSON-подписка (Xray / v2rayN / Happ)",js_sub:"Xray JSON-подписка: полные клиентские конфиги с маршрутизацией. Поддерживаемые приложения получают JSON вместо обычных ссылок. (v2rayNG ≥1.8.18, v2rayN ≥6.40, Happ ≥1.63.1)",js_apps:"Приложения, получающие JSON (User-Agent, через запятую)",js_apps_h:"Пусто = никакие. Остальные приложения получают обычные ссылки.",js_direct:"Прямые сайты (без VPN, через свой интернет)",js_dom:"Домены (по одному в строке)",js_ip:"IP-адреса (по одному в строке)",js_ads:"Блокировать рекламу",js_bal:"Автоконфиг (балансировщик)",js_bal_on:"Добавить автоконфиг — все серверы, приложение выбирает самый быстрый",js_bal_ext:"Включать внешние конфиги в балансировщик",js_bal_name:"Название",js_bal_strat:"Как выбирать",js_least:"Минимальный пинг",js_rand:"Случайно",js_bal_pos:"Позиция",js_first:"Первым",js_last:"Последним",js_bal_int:"Интервал проверки",js_bal_url:"URL проверки",lang_reload_q:"Страница перезагрузится, чтобы полностью сменить язык. Несохранённые изменения пропадут. Продолжить?",name_ph:"Название",note_ph:"Заметка",other_lbl:"Другое",pin_t:"Закрепить (всегда открыто)",pn_host_over:"Адрес (необязательно)",pn_host_ph:"пусто = адрес панели",pn_interval:"Автосинхронизация (сек, 0 = выкл)",pn_interval_h:"Пользователи главной панели создаются на дополнительных; лимит/срок берутся с главной; трафик суммируется по всем панелям. Пользователи никогда не удаляются.",pn_need_tok:"Для предпросмотра нужны URL и API-токен",pn_ovr_h:"Порт/адрес меняются только в конфигах для клиентов — inbound'ы на панели не трогаются. Пусто = без изменений.",pn_port_all:"Заменить все порты на",pn_port_keep:"как есть",pn_prev:"Предпросмотр",pn_prev_changed:"изменено",pn_prev_codes:"узлов",pn_prev_none:"Нет узлов для показа (нужен inbound хотя бы с одним клиентом).",pn_prev_sample:"пример пользователя",rep_att:"привязано к inbound",rep_dis:"отключено",rep_en:"включено",rep_mac:"Добавлено Macros (всего)",rep_new:"Добавлено в этой синхронизации",rep_own:"Собственные пользователи панели",rep_rst:"трафик сброшен",rep_shared:"Уже были (совпали)",rep_this:"в этой синхронизации",rep_total:"Всего на панели",rep_upd:"обновлён лимит/срок",retry_in:"повтор через {s} с",slot_ms_t:"Лимит мс для этого слота (пусто = общий)",src_badge:"📍 ИСХОДНЫЙ САБ",src_errs:"ошибок источников",st_err:"⚠ ОШИБКА",state:"статус",sync_done:"Синхронизация завершена ✓",sync_users:"Синхронизировано пользователей: {n} (панелей: {p})",syncing:"синхронизация...",ur_add:"+ Добавить правило",ur_fetch:"Macros загружает с",ur_from_ph:"откуда: fin.domain.ru:8000",ur_to_ph:"куда: fin.domain.ru",ur_help:"Источник можно указать двумя способами: <b>адрес:порт</b> (напр. <code>fin.domain.ru:8000</code> → <code>fin.domain.ru</code>; схема и путь не меняются) или <b>полный префикс</b> (напр. <code>https://fin.domain.ru:8000/sub/</code> → <code>https://new.domain.ru/s/</code>; меняется и путь). Применяется первое совпавшее правило.",ur_link:"Ссылка клиента",ur_same:"без изменений",ur_sub:"Ссылка у клиента остаётся прежней; Macros загружает источник с реального адреса, указанного здесь. Напр.: в ссылке <code>finland.domain.ru:8000</code>, а панель теперь работает на <code>:443</code>.",ur_test:"⚡ Проверить",ur_test_ph:"Проверка: ссылка клиента или URL саба",ur_title:"Схема домена / URL",fb_lbl:"Резерв",fb_t:"Резервный саб: если основной заблокирован или ни один узел не работает",fb_ph:"URL резервного саба",default:"по умолч.",hwid_ph:"пусто = не отправлять",hwid_rand:"Случайный HWID",g_ping_ms:"Макс. задержка (мс, 0 = без лимита)",g_ping_ms_h:"В слотах с пинг-тестом узлы выше лимита не берутся.",ms_slot_t:"Лимит мс для слота (пусто = глобальный)",pn_own:"свои",pn_own_long:"Свои",pn_macros_long:"Добавил Macros",pn_rm_q:"Удалить панель «{name}»?\n\n• {n} пользователей, созданных Macros, будут УДАЛЕНЫ.\n• Собственные {o} пользователей панели не трогаются.",pn_rm_keep_q:"Панель недоступна. Удалить только панель, не удаляя пользователей?",pn_rm_doing:"Удаление пользователей...",pn_rm_done:"Панель удалена · удалено {n}",add_pslot:"🔗 Блоки панелей",panel_slot_desc:"Коды абонента на этой панели (авто)",panel_slot_none:"Нет активных доп. панелей 3x-ui",panel_slot_exists:"Все панели уже добавлены",nav_dash:"← Панель",nav_stats:"📊 Статистика",nav_logs:"🔥 Логи",sort_set:"⚙️ Настройки",page_title:"Контент и сортировка",page_sub:"Управляйте внешними источниками, порядком протоколов и выводом.",engine:"Движок сортировки",engine_sub:"Определяет порядок выдачи узлов клиенту.",t_sort:"Включить сортировку",t_sort_d:"Если выкл — узлы в исходном порядке.",t_ren:"Авто-переименование",t_ren_d:"Переименовывает узлы: флаг + страна.",t_cdn:"CDN метка",t_cdn_d:"Если IP VLESS WS — Google/CloudFront/Fastly, добавит после '4G/WiFi'.",prot_order:"Порядок протоколов",vless_order:"Под-порядок VLESS",vmess_order:"Под-порядок VMess",reset:"Сброс",chip_hint:"💡 Перетащите или ◀ ▶ для порядка. Клик — исключить протокол (в конец).",ext_sub_title:"Внешние источники",ext_sub_sub:"Авто-загрузка, фильтр внешних сабов и добавление в вывод.",ext_int:"Интервал загрузки (мин)",g_ping_to:"Тайм-аут пинга (сек)",pos_top:"Верх",pos_bot:"Низ",ping:"Пинг-тест",add_slot:"+ Источник",force_upd:"⟳ Загрузить сейчас",manual_title:"Ручные ссылки",manual_sub:"Статичные узлы в каждом выводе.",g_pos:"Позиция",pos_top_f:"Сверху",pos_bot_f:"Снизу",format_btn:"🪄 Авто-имя",g_ext:"Ссылки (по одной в строке)",sec_title:"Безопасность и сообщения",allowed_p:"Разрешённые панели (через запятую — пусто = все)",allowed_p_h:"Проксируются только URL с этими хостами.",err_msg:"Сообщение об ошибке",err_404:"Сообщение 404",save_btn:"💾 Сохранить всё",note:"Заметка",test:"Тест",fetch:"Загрузить",fetched:"Готово!",fetch_err:"Не найдено.",need_url:"Сначала URL!",testing:"Тест, подождите...",filtering:"Фильтрация (пинг выкл)...",fetching:"Загрузка и импорт...",added:"Импортировано и сохранено!",valid:"Рабочих",conn_err:"Соединение потеряно.",formatted:"Готово! ✓",updating:"Обновление...",prev:"Превью",add_local:"+ Локальный",local_ph:"Коды узлов (по одному в строке)...",loading_prev:"Загрузка превью...",prev_empty:"Нет подходящих узлов.",prev_head:"Узлов",rename_off:"переим. выкл",final_prev:"👁 Финал превью (все источники + сортировка)",slot_sort:"Сортировка источника",slot_sort_clear:"↩ Глобальный порядок",slot_sort_hint:"Пусто = глобальный порядок",slot_sort_cleared:"Возврат к глобальному",custom:"СВОЙ",t_vps:"VPS Cloud метка",t_vps_d:"Если IP узла (не WS/xHTTP) принадлежит этим облакам — добавит к имени.",cfg_title:"Конфигурация (JSON)",cfg_sub:"Экспорт/импорт всех настроек одним JSON.",cfg_export:"⬇ Экспорт (скачать)",cfg_import_t:"⬆ Импорт",cfg_do_import:"Импорт и применить",cfg_exported:"Экспортировано ✓",cfg_imported:"Импортировано",cfg_bad_json:"Неверный JSON!",lbl_as:"Текст метки:",cp_title:"Профили клиентов (форматы)",cp_sub:"Выбранные приложения получают саб в заданном вами формате.",cp_on:"Вкл",cp_add:"+ Профиль",cp_fmt:"Формат",cp_proto:"Фильтр протоколов",cp_balancer:"Balancer (авто лучший)",cp_balname:"Имя balancer",add_source:"📍 Блок исходного саба",source_desc:"Собственные коды этого саба из панели (авто)",source_exists:"Блок исходного саба уже есть",rename_opt:"Переименовать",pn_title:"Интегрированные панели (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Обновить статус",pn_main:"Главная",pn_sync:"🔁 Синхронизировать",pn_main_badge:"ГЛАВНАЯ",pn_auto:"авто · .env",pn_name_ph:"Имя панели",pn_url:"URL панели",pn_user:"Логин",pn_pass:"Пароль",pn_token:"API токен",pn_token_ph:"3x-ui → Настройки → Безопасность → API токен",pn_users:"польз.",pn_online:"панелей онлайн",pn_sub:"Добавьте панели Marzban/3x-ui. Главная определяется АВТОМАТИЧЕСКИ (⭐)."},
+ tm:{cfg_paste_ph:"Eksport edilen JSON-y şu ýere goýuň...",cp_other:"Beýlekiler / Umumy",del_t:"Poz",drag_t:"Süýre",err:"Ýalňyşlyk",failed:"şowsuz",first_n:"ilkinji",fmt_b64:"Ýönekeý sanaw (base64)",fmt_jl:"JSON (link sanawy)",fmt_plain:"Ýönekeý sanaw (tekst)",fmt_ss:"Diňe Shadowsocks (Outline)",js_title:"JSON abuna (Xray / v2rayN / Happ)",js_sub:"Xray JSON abuna: ugrukdyryşly doly client config-ler. Goldaýan programmalar ýönekeý linkleriň ýerine JSON alýar. (v2rayNG ≥1.8.18, v2rayN ≥6.40, Happ ≥1.63.1)",js_apps:"JSON alýan programmalar (User-Agent, otur bilen)",js_apps_h:"Boş = hiç biri. Beýleki programmalar ýönekeý link alýar.",js_direct:"Göni saýtlar (VPN-siz, öz interneti)",js_dom:"Domenler (her setirde bir)",js_ip:"IP-ler (her setirde bir)",js_ads:"Mahabaty blokla",js_bal:"Awtomatik config (balancer)",js_bal_on:"Awtomatik config goş — ähli serwerler, programma iň çaltysyna geçýär",js_bal_ext:"Daşky config-ler hem balancer-e girsin",js_bal_name:"Ady",js_bal_strat:"Nähili saýlaýar",js_least:"Iň pes ping",js_rand:"Tötänleýin",js_bal_pos:"Ýeri",js_first:"Birinji",js_last:"Iň soňky",js_bal_int:"Barlag aralygy",js_bal_url:"Barlag URL",lang_reload_q:"Dil doly çalyşmagy üçin sahypa täzeden ýüklener. Ýatda saklanmadyk üýtgeşmeler ýiter. Dowam?",name_ph:"Ady",note_ph:"Bellik",other_lbl:"Beýleki",pin_t:"Berkit (hemişe açyk)",pn_host_over:"Salgy (hökmany däl)",pn_host_ph:"boş = paneldäki salgy",pn_interval:"Awtomatik sinhron (sekunt, 0 = öçük)",pn_interval_h:"Esasy paneldäki ulanyjylar goşmaça panellerde açylýar; çäk/möhlet esasy panelden; trafik ähli panelleriň jemi. Hiç bir ulanyjy pozulmaýar.",pn_need_tok:"Öňünden görmek üçin URL we API Token gerek",pn_ovr_h:"Port/salgy diňe müşderä gidýän config-lerde üýtgeýär — paneldäki inbound-lara degilmeýär. Boş = üýtgemeýär.",pn_port_all:"Ähli portlary çalyş",pn_port_keep:"şol bir",pn_prev:"Öňünden gör",pn_prev_changed:"üýtgeýän",pn_prev_codes:"kod",pn_prev_none:"Görkezmäge kod ýok (iň az bir ulanyjyly inbound gerek).",pn_prev_sample:"mysal ulanyjy",rep_att:"inbound baglanan",rep_dis:"öçürilen",rep_en:"açylan",rep_mac:"Macros goşan (jemi)",rep_new:"Bu sinhronda goşulan",rep_own:"Paneliň öz ulanyjylary",rep_rst:"trafik nollanan",rep_shared:"Eýýäm bardy (gabat geldi)",rep_this:"bu sinhronda",rep_total:"Panelde jemi",rep_upd:"çäk/möhlet täzelenen",retry_in:"{s} s soň gaýtadan",slot_ms_t:"Bu slot üçin ms çägi (boş = umumy)",src_badge:"📍 ÇEŞME SUB",src_errs:"çeşme ýalňyşlygy",st_err:"⚠ ÝALŇYŞ",state:"ýagdaý",sync_done:"Sinhron tamam ✓",sync_users:"{n} ulanyjy sinhronlandy ({p} panel)",syncing:"sinhronlanýar...",ur_add:"+ Düzgün goş",ur_fetch:"Macros şu ýerden alýar",ur_from_ph:"nireden: fin.domain.ru:8000",ur_to_ph:"nirä: fin.domain.ru",ur_help:"Çeşme iki görnüşde ýazylyp bilner: <b>salgy:port</b> (mysal <code>fin.domain.ru:8000</code> → <code>fin.domain.ru</code>; shema we ýol üýtgemeýär) ýa-da <b>doly başlangyç</b> (mysal <code>https://fin.domain.ru:8000/sub/</code> → <code>https://new.domain.ru/s/</code>; ýol hem üýtgeýär). Ilkinji gabat gelen düzgün ulanylýar.",ur_link:"Müşderi linki",ur_same:"üýtgemedi",ur_sub:"Müşderä berlen link üýtgemeýär; Macros çeşmäni şu ýerde ýazan hakyky salgyňyzdan alýar. Mysal: linkde <code>finland.domain.ru:8000</code>, emma panel indi <code>:443</code>-de işleýär.",ur_test:"⚡ Synag",ur_test_ph:"Synag: müşderi linki ýa-da sub URL",ur_title:"Domen / URL shemasy",fb_lbl:"Fallback",fb_t:"Ätiýaçlyk sub: esasy bloklansa ýa-da kodlary işlemese ulanylýar",fb_ph:"Ätiýaçlyk sub URL",default:"adaty",hwid_ph:"boş = iberilmeýär",hwid_rand:"Tötänleýin HWID",g_ping_ms:"Iň köp gijikme (ms, 0 = çäksiz)",g_ping_ms_h:"Ping barlagy açyk slotlarda bu bahadan ýokary kodlar alynmaýar.",ms_slot_t:"Bu slot üçin ms çägi (boş = global)",pn_own:"öz",pn_own_long:"Paneliň öz",pn_macros_long:"Macros goşdy",pn_rm_q:"«{name}» panel aýrylsynmy?\n\n• Macros-yň bu panelde açan {n} ulanyjysy POZULAR.\n• Paneliň öz {o} ulanyjysyna degilmez.",pn_rm_keep_q:"Panel elýeterli däl. Ulanyjylary pozman diňe panel aýrylsynmy?",pn_rm_doing:"Ulanyjylar pozulýar...",pn_rm_done:"Panel aýryldy · {n} ulanyjy pozuldy",add_pslot:"🔗 Panel Bloklary",panel_slot_desc:"Abonäniň bu paneldäki kodlary (awto)",panel_slot_none:"Işjeň goşmaça 3x-ui panel ýok",panel_slot_exists:"Ähli paneller eýýäm bar",nav_dash:"← Panel",nav_stats:"📊 Statistika",nav_logs:"🔥 Loglar",sort_set:"⚙️ Sazlamalar",page_title:"Mazmun & Tertip",page_sub:"Daşarky çeşmeler, protokol tertibi we çykyşy dolandyryň.",engine:"Tertip Hereketlendirijisi",engine_sub:"Node'laryň müşderä haýsy tertipde beriljegini kesgitleýär.",t_sort:"Tertibi Işjeňleşdir",t_sort_d:"Ýapykka node'lar çeşmedäki tertipde berilýär.",t_ren:"Awto Atlandyr",t_ren_d:"Baýdak + ýurt ady bilen täzeden atlandyrýar.",t_cdn:"CDN Belligi",t_cdn_d:"VLESS WS IP Google/CloudFront/Fastly bolsa '4G/WiFi' yzyna ýazýar.",prot_order:"Protokol Tertibi",vless_order:"VLESS Kiçi Tertip",vmess_order:"VMess Kiçi Tertip",reset:"Dikelt",chip_hint:"💡 Süýräp ýa-da ◀ ▶ bilen tertiple. Üstüne basyp tertipden aýryp bolýar.",ext_sub_title:"Daşarky Sub Çeşmeleri",ext_sub_sub:"Daşarky sublary awto çekip süzýär we esasy çykyşa goşýar.",ext_int:"Awto Çekiş Aralygy (Min)",g_ping_to:"Ping Wagty (Sek)",pos_top:"Üst",pos_bot:"Aşak",ping:"Ping Barlag",add_slot:"+ Täze Çeşme",force_upd:"⟳ Häzir Çek",manual_title:"Manual Linkler",manual_sub:"Her çykyşa goşulýan hemişelik node'lar.",g_pos:"Ýeri",pos_top_f:"Üstde",pos_bot_f:"Aşakda",format_btn:"🪄 Awto Atlandyr",g_ext:"Linkler (her setire bir)",sec_title:"Howpsuzlyk & Hatlar",allowed_p:"Rugsatly Paneller (otur bilen — boş = hemmesi)",allowed_p_h:"Diňe şu hostlary öz içine alýan URL'lere proxy edilýär.",err_msg:"Umumy Ýalňyşlyk Haty",err_404:"Çeşme 404 Haty",save_btn:"💾 Hemmesini Ýatda Sakla",note:"Bellik",test:"Test",fetch:"Çek",fetched:"Tamam!",fetch_err:"Tapylmady.",need_url:"Ilki URL giriziň!",testing:"Test edilýär...",filtering:"Süzülýär (ping ýapyk)...",fetching:"Çekilýär we geçirilýär...",added:"Goşuldy we ýatda saklandy!",valid:"Sagdyn",conn_err:"Baglanyşyk kesildi.",formatted:"Formatlandy! ✓",updating:"Täzelenýär...",prev:"Öňünden gör",add_local:"+ Local Çeşme",local_ph:"Node kodlary (her setire bir)...",loading_prev:"Öňizleme ýüklenýär...",prev_empty:"Laýyk node tapylmady.",prev_head:"Görünjek node",rename_off:"rename ýapyk",final_prev:"👁 Final Öňizleme (ähli çeşmeler + tertip)",slot_sort:"Bu çeşmäniň tertibi",slot_sort_clear:"↩ Global tertibe dön",slot_sort_hint:"Boş = global tertip",slot_sort_cleared:"Global tertibe dönüldi",custom:"ÖZEL",t_vps:"VPS Cloud Belligi",t_vps_d:"WS/xHTTP däl node IP şu cloud'lara degişli bolsa adyna ýazýar.",cfg_title:"Konfigurasiýa (JSON)",cfg_sub:"Ähli sazlamalary bir JSON bilen eksport/import et.",cfg_export:"⬇ Eksport (ýükle)",cfg_import_t:"⬆ Import",cfg_do_import:"Import et we ulan",cfg_exported:"Eksport edildi ✓",cfg_imported:"Import edildi",cfg_bad_json:"Nädogry JSON!",lbl_as:"Ýazyljak tekst:",cp_title:"Müşderi Profilleri (App Formatlary)",cp_sub:"Saýlanan programma sub-y seniň formatyňda alýar.",cp_on:"Açyk",cp_add:"+ Täze Profil",cp_fmt:"Format",cp_proto:"Protokol filtri",cp_balancer:"Balancer (awto iň gowy)",cp_balname:"Balancer ady",add_source:"📍 Çeşme Sub Bloky",source_desc:"Bu abonäniň çeşme paneldäki öz kodlary (awto)",source_exists:"Eýýäm Çeşme Sub bloky bar",rename_opt:"Ady üýtget",pn_title:"Birleşen Paneller (Marzban + 3x-ui)",pn_add_mz:"+ Marzban",pn_add_x:"+ 3x-ui",pn_status:"🔄 Ýagdaýy täzele",pn_main:"Esasy",pn_sync:"🔁 Sinhronla",pn_main_badge:"ESASY PANEL",pn_auto:"awto · .env",pn_name_ph:"Panel ady",pn_url:"Panel URL",pn_user:"Ulanyjy",pn_pass:"Açar sözi",pn_token:"API Token",pn_token_ph:"3x-ui → Sazlamalar → Howpsuzlyk → API Token",pn_users:"ulanyjy",pn_online:"panel onlaýn",pn_sub:"Marzban/3x-ui panellerini goş. Esasy panel AWTOMATIK kesgitlenýär (⭐)."}
 };
 function L(){return dict[localStorage.getItem('lang')||'tr']||dict.tr;}
 function T(k){return L()[k]||k;}
@@ -522,8 +551,14 @@ function applyLang(){
   });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{if(d[el.dataset.i18nTitle])el.title=d[el.dataset.i18nTitle];});
 }
+let FORM_DIRTY=false;
+function pickLang(l){
+  if(l===(localStorage.getItem('lang')||'tr'))return;
+  setLang(l);
+  if(!FORM_DIRTY||confirm(T('lang_reload_q')))location.reload();
+}
 function setLang(l){
-  localStorage.setItem('lang',l);
+  localStorage.setItem('lang',l); document.cookie='lang='+l+';path=/;max-age=31536000;samesite=lax'; document.documentElement.lang=l; document.title=({tr:'Ayarlar',en:'Settings',ru:'Настройки',tm:'Sazlamalar'}[l]||'Ayarlar')+' · Macros v3';
   document.querySelectorAll('.lang-bar span').forEach(e=>e.style.color='var(--text-muted)');
   const a=document.getElementById('l-'+l); if(a)a.style.color='var(--accent)';
   applyLang();
@@ -546,7 +581,7 @@ const CP_SAVED={{ client_profiles|tojson }};
 const CP_PANELS={{ integrated_panels|tojson }};
 const PING_MAX_MS={{ (ping_max_ms or '0')|int }};
 const MAIN_HOST={{ (main_host or '')|tojson }};
-const LABELS={ss:"Shadowsocks",vless:"VLESS",vmess:"VMess",trojan:"Trojan",hysteria2:"Hysteria2",hy2:"HY2",tuic:"TUIC",reality:"Reality",grpc:"gRPC",xhttp:"xHTTP",ws:"WS",tcp:"TCP",other:"Diğer"};
+const LABELS={get other(){return T('other_lbl');},ss:"Shadowsocks",vless:"VLESS",vmess:"VMess",trojan:"Trojan",hysteria2:"Hysteria2",hy2:"HY2",tuic:"TUIC",reality:"Reality",grpc:"gRPC",xhttp:"xHTTP",ws:"WS",tcp:"TCP"};
 function parseOrder(target){
   const raw=(document.getElementById('in_'+target).value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const valid=raw.filter(v=>ALL[target].includes(v));
@@ -699,7 +734,7 @@ function sortPanelHTML(){
 }
 function slotHTML(){
   return `<div class="slot-top">
-      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown(this)">⠿</span>
       <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
       <input type="text" class="ext_url" placeholder="https://...">
       <input type="text" class="ext_note" placeholder="${T('note')}">
@@ -734,14 +769,14 @@ async function loadSlotStatus(){
       let b=row.querySelector('.fb-badge');if(b)b.remove();
       if(!st||st.used==='main')return;
       b=document.createElement('span');b.className='fb-badge '+(st.used==='fallback'?'fb':'fail');
-      b.textContent=st.used==='fallback'?'↪ FALLBACK':'⚠ HATA';b.title=st.err||'';
+      b.textContent=st.used==='fallback'?'↪ FALLBACK':T('st_err');b.title=st.err||'';
       row.querySelector('.slot-count').after(b);
     });
   }catch(e){}
 }
 function localSlotHTML(){
   return `<div class="slot-top">
-      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown(this)">⠿</span>
       <span class="badge-local">LOCAL</span>
       <span class="slot-count"></span><span class="slot-badge-custom" data-i18n="custom">ÖZEL SIRA</span>
       <input type="text" class="ext_note" placeholder="${T('note')}" style="flex:1">
@@ -760,9 +795,9 @@ function addLocalSlot(){
   d.querySelector('.ext_local').focus();
 }
 function sourceSlotHTML(pname){
-  const badge=pname?`<span class="badge-local pbadge">🔗 ${escapeHtml(pname)}</span>`:`<span class="badge-local" style="background:var(--accent)">📍 KAYNAK SUB</span>`;
+  const badge=pname?`<span class="badge-local pbadge">🔗 ${escapeHtml(pname)}</span>`:`<span class="badge-local" style="background:var(--accent)" data-i18n="src_badge">📍 KAYNAK SUB</span>`;
   return `<div class="slot-top">
-      <span class="slot-grip" title="Sürükle" onmousedown="gripDown(this)">⠿</span>
+      <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown(this)">⠿</span>
       ${badge}
       <span style="flex:1;color:var(--text-muted);font-size:12px">${T(pname?'panel_slot_desc':'source_desc')}</span>
       <select class="ext_pos"><option value="top">${T('pos_top')}</option><option value="bottom" selected>${T('pos_bot')}</option></select>
@@ -880,8 +915,8 @@ async function previewFinal(){
     if(j.ok){
       if(!j.total){resEl(box,T('prev_empty'),'err');}
       else{
-        const extra=j.total>j.names.length?` (ilk ${j.names.length})`:'';
-        const errTxt=j.errors?` · ⚠ ${j.errors} kaynak hata`:'';
+        const extra=j.total>j.names.length?` (${T('first_n')} ${j.names.length})`:'';
+        const errTxt=j.errors?` · ⚠ ${j.errors} ${T('src_errs')}`:'';
         const list=j.names.map((n,i)=>`<div><span style="color:var(--text-muted)">${i+1}.</span> ${escapeHtml(n)}</div>`).join('');
         resEl(box,`<div style="margin-bottom:6px">👁 ${T('prev_head')}: <b>${j.total}</b>${extra}${errTxt}</div><div class="prev-list">${list}</div>`,'ok');
       }
@@ -953,15 +988,18 @@ function prepareForm(e){
   e.target.appendChild(hp);
   const pp=document.createElement('input');pp.type='hidden';pp.name='panels_json';pp.value=JSON.stringify(collectPanels());
   e.target.appendChild(pp);
+  const ur=document.createElement('input');ur.type='hidden';ur.name='url_rewrites_json';ur.value=JSON.stringify(collectUrlRules());
+  e.target.appendChild(ur);
+  FORM_DIRTY=false;
 }
 const CP_APPS={
   happ:{label:"Happ",ua:"happ",format:"json",bal:false},
   outline:{label:"Outline",ua:"outline",format:"ss_only",bal:false},
   v2box:{label:"v2box / NekoBox",ua:"v2box,v2raytun,v2rayng,nekobox,nekoray",format:"raw_b64",bal:false},
   streisand:{label:"Streisand",ua:"streisand",format:"raw_b64",bal:false},
-  diger:{label:"Diğer / Genel",ua:"",format:"json",bal:false}
+  diger:{get label(){return T('cp_other');},ua:"",format:"json",bal:false}
 };
-const CP_FMTS={json:"JSON (Xray / v2rayN / Happ)",json_links:"JSON (link dizisi)",raw_b64:"Düz liste (base64)",raw_plain:"Düz liste (metin)",ss_only:"Sadece Shadowsocks (Outline)"};
+const CP_FMTS={json:"JSON (Xray / v2rayN / Happ)",get json_links(){return T('fmt_jl');},get raw_b64(){return T('fmt_b64');},get raw_plain(){return T('fmt_plain');},get ss_only(){return T('fmt_ss');}};
 const CP_PROTOS=["ss","vless","vmess","trojan","hysteria2"];
 function cprofHTML(d){
   d=d||{};
@@ -972,12 +1010,12 @@ function cprofHTML(d){
   const fmtOpts=Object.entries(CP_FMTS).map(([k,v])=>`<option value="${k}" ${k===fmt?'selected':''}>${v}</option>`).join('');
   const pchk=CP_PROTOS.map(p=>`<label class="pchk"><input type="checkbox" class="cp_pr" value="${p}" ${protos.includes(p)?'checked':''}> ${p.toUpperCase()}</label>`).join('');
   return `<div class="slot-top">
-      <span class="slot-grip" title="Sürükle" onmousedown="gripDown2(this)">⠿</span>
+      <span class="slot-grip" title="Sürükle" data-i18n-title="drag_t" onmousedown="gripDown2(this)">⠿</span>
       <select class="cp_app" onchange="applyPreset(this)" title="Uygulama">${appOpts}</select>
-      <input type="text" class="cp_name" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="İsim" style="width:130px">
+      <input type="text" class="cp_name" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="${T('name_ph')}" style="width:130px">
       <input type="text" class="cp_ua" value="${(d.ua||'').replace(/"/g,'&quot;')}" placeholder="UA: happ,outline" style="flex:1;min-width:140px">
       <label class="pchk"><input type="checkbox" class="cp_en" ${d.enabled!==false?'checked':''}> ${T('cp_on')}</label>
-      <button type="button" class="btn bd icon-btn" onclick="this.closest('.cprof').remove()" title="Sil">✕</button>
+      <button type="button" class="btn bd icon-btn" onclick="this.closest('.cprof').remove()" title="Sil" data-i18n-title="del_t">✕</button>
     </div>
     <div class="cp-row2">
       <label class="cp-mini">${T('cp_fmt')}</label>
@@ -1037,6 +1075,73 @@ function collectProfiles(){
 }
 /* ---------- Entegre Paneller (modern kartlar, ana panel OTOMATIK) ---------- */
 function _esc(v){return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+/* ---------- 3x-ui panel onizleme + port/adres degistirme (sadece cikan config'ler; panele dokunulmaz) ---------- */
+function _pmap(card){try{return JSON.parse((card.querySelector('.pn_port_map')||{value:'{}'}).value||'{}')||{};}catch(e){return {};}}
+async function previewPanel(btn){
+  const card=btn.closest('.pcard'); const d=panelData(card);
+  if(!d.url||!d.token){res(card,'⚠ '+T('pn_need_tok'),'err');return;}
+  if(card.dataset.pkey)d.pkey=card.dataset.pkey;
+  const o=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳';
+  try{
+    const r=await fetch('/panel/api/panels/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const j=await r.json();
+    if(!j.ok){res(card,'⚠ '+j.msg,'err');}
+    else{card._prev=j;card.dataset.previewed='1';pcPorts(card);pcRender(card);}
+  }catch(e){res(card,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
+function pcPorts(card){
+  const j=card._prev; if(!j)return; const pm=_pmap(card);
+  card.querySelector('.pc-ports').innerHTML=(j.ports||[]).map(x=>`<label class="pc-port"><span class="inb" title="${escapeHtml(x.inbound||'')}">${escapeHtml(x.inbound||'?')}</span><b>:${x.port}</b><span>→</span><input type="number" min="1" max="65535" data-port="${x.port}" value="${pm[x.port]||''}" placeholder="${T('pn_port_keep')}" oninput="pcPortSet(this)"></label>`).join('');
+}
+function pcPortSet(inp){
+  const card=inp.closest('.pcard'); const pm={};
+  card.querySelectorAll('.pc-ports input[data-port]').forEach(i=>{const v=parseInt(i.value);if(v>0&&v<65536)pm[i.dataset.port]=v;});
+  card.querySelector('.pn_port_map').value=JSON.stringify(pm); FORM_DIRTY=true; pcRender(card);
+}
+function pcRender(el){
+  const card=el.closest?el.closest('.pcard'):el; const j=card._prev; if(!j)return;
+  const pa=parseInt((card.querySelector('.pn_port_all')||{value:''}).value)||0, ho=((card.querySelector('.pn_host_over')||{value:''}).value||'').trim(), pm=_pmap(card);
+  let changed=0;
+  const rows=(j.rows||[]).map(x=>{
+    const np=pm[x.port]||pa||x.port, nh=ho||x.host, ch=(np!=x.port||nh!=x.host); if(ch)changed++;
+    return `<div class="pr"><span class="nm" title="${escapeHtml(x.name)}">${escapeHtml(x.name)}</span><span style="color:var(--text-muted)">${escapeHtml(x.proto)}${x.inbound?' · '+escapeHtml(x.inbound):''}</span><span>${escapeHtml(x.host)}:${x.port}${ch?` → <span class="chg">${escapeHtml(nh)}:${np}</span>`:''}</span></div>`;
+  }).join('');
+  const head=`👁 <b>${(j.rows||[]).length}</b> ${T('pn_prev_codes')} · ${T('pn_prev_changed')}: <b>${changed}</b>`+(j.sample&&j.sample.length?` · <span style="color:var(--text-muted)">${T('pn_prev_sample')}: ${escapeHtml(j.sample.join(', '))}</span>`:'');
+  card.querySelector('.pc-prev').innerHTML=`<div style="margin-bottom:6px">${head}</div>`+(rows||`<div>${T('pn_prev_none')}</div>`);
+}
+
+/* ---------- Domain / URL semasi ---------- */
+const UR_SAVED={{ url_rewrites|tojson }};
+function urRow(d){
+  d=d||{}; const r=document.createElement('div'); r.className='ur-row';
+  r.innerHTML=`<label class="tog" title="${T('cp_on')}"><input type="checkbox" class="ur_on" ${d.on!==false?'checked':''}></label>
+    <input type="text" class="ur_from" value="${_esc(d.from||'')}" placeholder="${T('ur_from_ph')}">
+    <span class="ur-arrow">→</span>
+    <input type="text" class="ur_to" value="${_esc(d.to||'')}" placeholder="${T('ur_to_ph')}">
+    <input type="text" class="ur_note" value="${_esc(d.note||'')}" placeholder="${T('note_ph')}">
+    <button type="button" class="btn bd icon-btn" onclick="this.closest('.ur-row').remove();FORM_DIRTY=true" title="${T('del_t')}">✕</button>`;
+  document.getElementById('ur-container').appendChild(r); return r;
+}
+function initUrlRules(){try{(Array.isArray(UR_SAVED)?UR_SAVED:[]).forEach(urRow);}catch(e){}}
+function collectUrlRules(){
+  return [...document.querySelectorAll('#ur-container .ur-row')].map(r=>({on:r.querySelector('.ur_on').checked,from:r.querySelector('.ur_from').value.trim(),to:r.querySelector('.ur_to').value.trim(),note:r.querySelector('.ur_note').value.trim()})).filter(x=>x.from);
+}
+async function testUrlRules(btn){
+  const url=document.getElementById('urTestUrl').value.trim(), box=document.getElementById('urTestRes');
+  if(!url){toast(T('need_url'),'#f87171');return;}
+  const o=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳';
+  try{
+    const r=await fetch('/panel/api/url-rules/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,rules:collectUrlRules()})});
+    const j=await r.json();
+    if(!j.ok){resEl(box,'⚠ '+j.msg,'err');}
+    else{
+      const st=j.status>=200&&j.status<300&&j.codes>0;
+      resEl(box,`<div>${T('ur_link')}: <code>${escapeHtml(j.from)}</code></div><div>${T('ur_fetch')}: <code>${escapeHtml(j.to)}</code> ${j.changed?'✏️':'('+T('ur_same')+')'}</div><div>${st?'✅':'⚠'} HTTP ${j.status||'—'} · ${j.codes} ${T('pn_prev_codes')}${j.err?' · '+escapeHtml(j.err):''}</div>`,st?'ok':'err');
+    }
+  }catch(e){resEl(box,T('conn_err'),'err');}
+  btn.disabled=false;btn.innerHTML=o;
+}
 function _hostOf(u){try{return new URL(u).hostname.toLowerCase();}catch(e){return '';}}
 function panelHTML(d){
   d=d||{}; const t=d.type||"marzban"; const isMz=t==='marzban';
@@ -1047,7 +1152,7 @@ function panelHTML(d){
         <span class="pc-name-ro">${_esc(d.name||'Ana Panel')}</span>
         <span class="pc-main">⭐ ${T('pn_main_badge')}</span>
         <span class="pc-auto">${T('pn_auto')}</span>
-        <span class="pc-dot" title="durum"></span><span class="pc-count"></span>
+        <span class="pc-dot" title="${T('state')}"></span><span class="pc-count"></span>
         <span style="flex:1"></span>
         <button type="button" class="btn bsky icon-btn" onclick="testPanel(this)" title="${T('test')}">⚡</button>
       </div>
@@ -1059,7 +1164,7 @@ function panelHTML(d){
       <input type="hidden" class="pn_type" value="${t}">
       <input type="text" class="pn_name pc-name" value="${_esc(d.name)}" placeholder="${T('pn_name_ph')}">
       ${isMain?`<span class="pc-main">⭐ ${T('pn_main_badge')}</span>`:''}
-      <span class="pc-dot" title="durum"></span><span class="pc-count"></span>
+      <span class="pc-dot" title="${T('state')}"></span><span class="pc-count"></span>
       <span style="flex:1"></span>
       <label class="tog" title="${T('cp_on')}"><input type="checkbox" class="pn_en" ${d.enabled!==false?'checked':''}></label>
       <button type="button" class="btn bsky icon-btn" onclick="testPanel(this)" title="${T('test')}">⚡</button>
@@ -1074,6 +1179,17 @@ function panelHTML(d){
       <div class="fld pc-tok"><label>${T('pn_token')}</label><input type="text" class="pn_token" value="${_esc(d.token)}" placeholder="${T('pn_token_ph')}"></div>
       <input type="hidden" class="pn_user" value="${_esc(d.user)}"><input type="hidden" class="pn_pass" value="${_esc(d.pass)}">`}
     </div>
+    ${isMz?'':`<div class="pc-ovr">
+      <div class="pc-ovr-row">
+        <div class="fld"><label>${T('pn_port_all')}</label><input type="number" class="pn_port_all" min="1" max="65535" value="${_esc(d.port_all||'')}" placeholder="${T('pn_port_keep')}" oninput="pcRender(this)"></div>
+        <div class="fld"><label>${T('pn_host_over')}</label><input type="text" class="pn_host_over" value="${_esc(d.host_over||'')}" placeholder="${T('pn_host_ph')}" oninput="pcRender(this)"></div>
+        <button type="button" class="btn bsky" onclick="previewPanel(this)">👁 ${T('pn_prev')}</button>
+      </div>
+      <input type="hidden" class="pn_port_map" value="${_esc(JSON.stringify(d.port_map||{}))}">
+      <div class="pc-ports"></div>
+      <div class="pc-prev"></div>
+      <div class="hint" style="margin-top:6px">${T('pn_ovr_h')}</div>
+    </div>`}
     <div class="slot-res"></div>`;
 }
 function addPanel(type,data){
@@ -1115,7 +1231,9 @@ function panelData(row){
   const q=c=>row.querySelector(c);
   return {type:q('.pn_type').value, name:q('.pn_name').value.trim(), url:q('.pn_url').value.trim(),
     user:(q('.pn_user')||{value:''}).value.trim(), pass:(q('.pn_pass')||{value:''}).value,
-    token:(q('.pn_token')||{value:''}).value.trim(), enabled:q('.pn_en').checked};
+    token:(q('.pn_token')||{value:''}).value.trim(), enabled:q('.pn_en').checked,
+    port_all:(q('.pn_port_all')||{value:''}).value.trim(), host_over:(q('.pn_host_over')||{value:''}).value.trim(),
+    port_map:_pmap(row)};
 }
 function collectPanels(){
   return [...document.querySelectorAll('#panels-container .pcard:not(.auto)')].map(r=>panelData(r)).filter(p=>p.url);
@@ -1134,6 +1252,7 @@ async function testPanel(btn,silent){
     const r=await fetch('/panel/api/panels/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
     const j=await r.json();
     setPanelStatus(card,j.ok,j.users,j.msg,j);
+    if(!silent&&j.ok&&d.type==='3xui'&&d.token&&!card.dataset.previewed){const pb=card.querySelector('.pc-ovr .btn');if(pb)previewPanel(pb);}
     if(!silent)res(card,(j.ok?'✅ ':'⚠ ')+j.msg+(j.ok?` · ${j.users} ${T('pn_users')}`+(j.macros!=null?` (🏠 ${T('pn_own_long')}: ${j.own} · ➕ ${T('pn_macros_long')}: ${j.macros})`:''):''),j.ok?'ok':'err');
   }catch(e){setPanelStatus(card,false,0,'');if(!silent)res(card,T('conn_err'),'err');}
   btn.disabled=false;btn.innerHTML=o;
@@ -1147,37 +1266,37 @@ async function refreshPanels(){
 }
 async function syncNow(btn){
   const box=document.getElementById('panels-status'); const o=btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳ ...';
-  box.innerHTML='⏳ senkronize ediliyor...';
+  box.innerHTML='⏳ '+T('syncing');
   try{
     const r=await fetch('/panel/api/panels/sync',{method:'POST'}); const j=await r.json();
     if(j.ok){
-      box.innerHTML=`✅ ${j.users} kullanıcı senkronize edildi (${j.panels} panel)`+(j.failures&&j.failures.length?` · ⚠ başarısız: ${j.failures.join(', ')}`:'');
+      box.innerHTML=`✅ ${T('sync_users').replace('{n}',j.users).replace('{p}',j.panels)}`+(j.failures&&j.failures.length?` · ⚠ ${T('failed')}: ${j.failures.join(', ')}`:'');
       const rep=document.getElementById('panels-report'); let h='';
       for(const [nm,r] of Object.entries(j.mirror||{})){
         const mb=r.macros_before||0, cr=r.created||0;
         h+=`<div class="rep-card"><b>${escapeHtml(nm)}</b>
           <div class="rep-stats">
-            <span>🏠 Panelin kendi kullanıcıları<b>${r.own!=null?r.own:'-'}</b></span>
-            <span>🔗 Zaten vardı (eşleşti)<b>${r.shared||0}</b></span>
-            <span>➕ Macros'un eklediği (toplam)<b>${mb+cr}</b></span>
-            <span class="${cr?'hl':''}">✨ Bu senkronda eklenen<b>${cr}</b></span>
-            <span>📦 Panelde toplam<b>${(r.own||0)+mb+cr}</b></span>
+            <span>🏠 ${T('rep_own')}<b>${r.own!=null?r.own:'-'}</b></span>
+            <span>🔗 ${T('rep_shared')}<b>${r.shared||0}</b></span>
+            <span>➕ ${T('rep_mac')}<b>${mb+cr}</b></span>
+            <span class="${cr?'hl':''}">✨ ${T('rep_new')}<b>${cr}</b></span>
+            <span>📦 ${T('rep_total')}<b>${(r.own||0)+mb+cr}</b></span>
           </div>
-          <div class="rep-sub">bu senkronda: inbound bağlanan ${r.attached||0} · limit/süre güncellenen ${r.updated||0} · açılan ${r.enabled||0} · kapatılan ${r.disabled||0} · trafik sıfırlanan ${r.reset||0}</div></div>`;
-        (r.skipped||[]).forEach(x=>h+=`<div style="color:#f87171">↳ ${escapeHtml(x.email)}: ${escapeHtml(x.reason||'')}${x.retry_in_s?` (tekrar ${x.retry_in_s}s sonra)`:''}</div>`);
+          <div class="rep-sub">${T('rep_this')}: ${T('rep_att')} ${r.attached||0} · ${T('rep_upd')} ${r.updated||0} · ${T('rep_en')} ${r.enabled||0} · ${T('rep_dis')} ${r.disabled||0} · ${T('rep_rst')} ${r.reset||0}</div></div>`;
+        (r.skipped||[]).forEach(x=>h+=`<div style="color:#f87171">↳ ${escapeHtml(x.email)}: ${escapeHtml(x.reason||'')}${x.retry_in_s?` (${T('retry_in').replace('{s}',x.retry_in_s)})`:''}</div>`);
         (r.errors||[]).forEach(e=>h+=`<div style="color:#fbbf24">⚠ ${escapeHtml(e)}</div>`);
       }
       rep.innerHTML=h;
       refreshPanels();
-      toast('Senkron tamam ✓','#4ade80');
-    }else{ box.innerHTML='⚠ '+(j.msg||'hata'); toast('⚠ '+(j.msg||'hata'),'#f87171'); }
+      toast(T('sync_done'),'#4ade80');
+    }else{ box.innerHTML='⚠ '+(j.msg||T('err')); toast('⚠ '+(j.msg||T('err')),'#f87171'); }
   }catch(e){ box.innerHTML=T('conn_err'); }
   btn.disabled=false; btn.innerHTML=o;
 }
 async function exportConfig(){
   try{
     const r=await fetch('/panel/api/config/export');const j=await r.json();
-    if(!j.ok){toast('Hata','#f87171');return;}
+    if(!j.ok){toast(T('err'),'#f87171');return;}
     const blob=new Blob([JSON.stringify(j,null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download='macros-config-'+new Date().toISOString().slice(0,10)+'.json';
@@ -1213,6 +1332,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{(Array.isArray(CP_PANELS)?CP_PANELS:[]).forEach(p=>addPanel(p.type,p));}catch(e){}
   try{if(document.querySelector('#panels-container .pcard'))refreshPanels();}catch(e){}
   initCollapsibles();
+  initUrlRules();
+  const fm=document.querySelector('form'); if(fm){fm.addEventListener('input',()=>{FORM_DIRTY=true;});fm.addEventListener('change',()=>{FORM_DIRTY=true;});}
 });
 function initCollapsibles(){
   document.querySelectorAll('.main > .box').forEach(box=>{
@@ -1222,9 +1343,10 @@ function initCollapsibles(){
     while(n){const nx=n.nextSibling; body.appendChild(n); n=nx;}
     box.appendChild(body);
     title.insertAdjacentHTML('afterbegin','<span class="box-chevron">▾</span> ');
-    title.insertAdjacentHTML('beforeend','<span class="box-pin" title="Sabitle (hep açık)">📌</span>');
-    const key='boxc_'+(title.textContent.trim().slice(0,24));
-    const pkey='boxp_'+(title.textContent.trim().slice(0,24));
+    title.insertAdjacentHTML('beforeend','<span class="box-pin" title="'+T('pin_t')+'" data-i18n-title="pin_t">📌</span>');
+    // durum anahtari dilden bagimsiz (baslik cevrilse de acik/kapali/sabit durumu korunur)
+    const ik=(title.querySelector('[data-i18n]')||{dataset:{}}).dataset.i18n||title.textContent.trim().slice(0,24);
+    const key='boxc_'+ik, pkey='boxp_'+ik;
     let collapsed=true, pinned=false;
     try{pinned=localStorage.getItem(pkey)==='1';}catch(e){}
     try{const v=localStorage.getItem(key); if(v!==null)collapsed=(v==='1');}catch(e){}

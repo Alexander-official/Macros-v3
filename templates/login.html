@@ -26,7 +26,7 @@ button:hover{background:#b91c1c}
   </div>
   <div class="title">⚡ <span>Macros</span> <small style="font-size:11px;color:#64748b">v3</small></div>
   <div class="sub" data-i18n="panel_login">Panel Girişi</div>
-  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% if error %}<div class="err" data-i18n="bad_login">{{ error }}</div>{% endif %}
   <form method="post">
     <label data-i18n="username">Kullanıcı Adı</label>
     <input type="text" name="username" autofocus>
@@ -38,13 +38,13 @@ button:hover{background:#b91c1c}
 </div>
 <script>
 const dict = {
-  tr: { title: "Giriş", panel_login: "Panel Girişi", username: "Kullanıcı Adı", password: "Şifre", login_btn: "Giriş" },
-  en: { title: "Login", panel_login: "Panel Login", username: "Username", password: "Password", login_btn: "Login" },
-  ru: { title: "Вход", panel_login: "Вход в панель", username: "Имя пользователя", password: "Пароль", login_btn: "Войти" },
-  tm: { title: "Giriş", panel_login: "Panel Girişi", username: "Ulanyjy ady", password: "Açar sözi", login_btn: "Gir" }
+  tr: { title: "Giriş", panel_login: "Panel Girişi", username: "Kullanıcı Adı", password: "Şifre", login_btn: "Giriş", bad_login: "Hatalı giriş" },
+  en: { title: "Login", panel_login: "Panel Login", username: "Username", password: "Password", login_btn: "Login", bad_login: "Wrong username or password" },
+  ru: { title: "Вход", panel_login: "Вход в панель", username: "Имя пользователя", password: "Пароль", login_btn: "Войти", bad_login: "Неверный логин или пароль" },
+  tm: { title: "Giriş", panel_login: "Panel Girişi", username: "Ulanyjy ady", password: "Açar sözi", login_btn: "Gir", bad_login: "Nädogry giriş" }
 };
 function setLang(lang) {
-  localStorage.setItem('lang', lang);
+  localStorage.setItem('lang', lang); document.cookie='lang='+lang+';path=/;max-age=31536000;samesite=lax'; document.documentElement.lang=lang;
   document.querySelectorAll('.lang-bar span').forEach(el => el.classList.remove('active'));
   let act = document.getElementById('l-'+lang); if(act) act.classList.add('active');
   document.querySelectorAll('[data-i18n]').forEach(el => {

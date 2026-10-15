@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.1.0"
+APP_VERSION = "3.2.0"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -630,7 +630,129 @@ async def _secondary_links_by_panel(username):
             _sublinks_cache[ck] = (now, links); out += links
         except Exception:
             if hit: out += hit[1]
-    return res
+    pmap = {_pkey(p): p for p in _effective_panels()}
+    return {pk: _apply_panel_overrides(pmap.get(pk) or {}, links) for pk, links in res.items()}
+
+# ---- Config port/host degistirme (sadece cikan linklerde; panele DOKUNULMAZ) ----
+def _link_hostport(line):
+    """(host, port) — vmess json 'add/port', digerleri URI authority. Bulunamazsa (None, None)."""
+    try:
+        if line.startswith("vmess://"):
+            d = json.loads(base64.b64decode(line[8:].strip() + "==").decode("utf-8"))
+            return (str(d.get("add") or ""), int(d.get("port") or 0) or None)
+        u = urllib.parse.urlsplit(line.split("#", 1)[0])
+        if u.scheme == "ss" and "@" not in u.netloc:
+            raw = base64.urlsafe_b64decode(u.netloc + "=" * (-len(u.netloc) % 4)).decode("utf-8", "ignore")
+            hp = raw.rpartition("@")[2]
+            h, _, p = hp.rpartition(":")
+            return (h.strip("[]"), int(p) if p.isdigit() else None)
+        return (u.hostname or "", u.port)
+    except Exception:
+        return (None, None)
+
+def _link_rewrite(line, port=None, host=None):
+    """Linkin port ve/veya adresini degistirir; isim, uuid, parametreler aynen kalir.
+    Adres degisirse ve TLS'te sni yoksa eski adres sni olarak eklenir (sertifika bozulmasin)."""
+    if not port and not host: return line
+    try:
+        if line.startswith("vmess://"):
+            d = json.loads(base64.b64decode(line[8:].strip() + "==").decode("utf-8"))
+            if host and host != d.get("add"):
+                if (d.get("tls") or "") == "tls" and not d.get("sni"): d["sni"] = d.get("add", "")
+                if d.get("net") in ("ws", "httpupgrade", "xhttp", "splithttp", "h2", "http") and not d.get("host"): d["host"] = d.get("add", "")
+                d["add"] = host
+            if port: d["port"] = str(port) if isinstance(d.get("port"), str) else int(port)
+            return "vmess://" + base64.b64encode(json.dumps(d, ensure_ascii=False, separators=(",", ":")).encode()).decode()
+        body, frag = (line.split("#", 1) + [""])[:2] if "#" in line else (line, None)
+        scheme, rest = body.split("://", 1)
+        cut = len(rest)
+        for ch in "/?":
+            i = rest.find(ch)
+            if i != -1: cut = min(cut, i)
+        auth, tail = rest[:cut], rest[cut:]
+        legacy_ss = scheme == "ss" and "@" not in auth
+        if legacy_ss:
+            raw = base64.urlsafe_b64decode(auth + "=" * (-len(auth) % 4)).decode("utf-8")
+            ui, _, hp = raw.rpartition("@")
+        else:
+            ui, at, hp = auth.rpartition("@")
+        if hp.startswith("["):
+            h, _, p = hp[1:].partition("]"); p = p.lstrip(":")
+        else:
+            h, _, p = hp.rpartition(":")
+            if not h: h, p = p, ""
+        old_h = h
+        if host: h = host
+        if port: p = str(port)
+        hfmt = f"[{h}]" if ":" in h else h
+        hp2 = f"{hfmt}:{p}" if p else hfmt
+        if host and host != old_h and not legacy_ss:  # adres degisti: TLS adi / Host basligi eski adreste kalsin
+            q = urllib.parse.parse_qs(tail.split("?", 1)[1] if "?" in tail else "", keep_blank_values=True)
+            sec = q.get("security", [""])[0]
+            add = []
+            if (sec == "tls" or (scheme in ("trojan", "hysteria2", "hy2", "tuic") and sec in ("", "tls"))) \
+                    and not q.get("sni") and not q.get("peer"):
+                add.append("sni=" + urllib.parse.quote(old_h))
+            if q.get("type", [""])[0] in ("ws", "httpupgrade", "xhttp", "splithttp", "h2", "http") and not q.get("host"):
+                add.append("host=" + urllib.parse.quote(old_h))
+            if add: tail = tail + ("&" if "?" in tail else "?") + "&".join(add)
+        if legacy_ss:
+            auth2 = base64.urlsafe_b64encode(f"{ui}@{hp2}".encode()).decode().rstrip("=")
+        else:
+            auth2 = f"{ui}@{hp2}" if ui else hp2
+        out = f"{scheme}://{auth2}{tail}"
+        return out + ("#" + frag if frag is not None else "")
+    except Exception:
+        return line
+
+def _panel_overrides(p):
+    """Panel kartindaki port/adres ayarlari -> (port_all, {eski_port: yeni_port}, host)."""
+    try: pa = int(p.get("port_all") or 0)
+    except Exception: pa = 0
+    pm = {}
+    for k, v in (p.get("port_map") or {}).items():
+        try:
+            if int(v) > 0 and int(k) > 0: pm[int(k)] = int(v)
+        except Exception: pass
+    return (pa if 0 < pa < 65536 else 0), pm, (p.get("host_over") or "").strip()
+
+def _apply_panel_overrides(p, links):
+    pa, pm, ho = _panel_overrides(p)
+    if not (pa or pm or ho): return list(links)
+    out = []
+    for l in links:
+        _, port = _link_hostport(l)
+        np = pm.get(port) or pa or None
+        if np == port: np = None
+        out.append(_link_rewrite(l, np, ho or None))
+    return out
+
+# ---- Domain / URL semasi: musteri linkindeki kaynak adres -> gercekte cekilecek adres ----
+# Ör: link https://fin.domain.ru:8000/sub/XXX ama panel artik :443'te -> kural "fin.domain.ru:8000" => "fin.domain.ru"
+# Musteriye verilen link DEGISMEZ; sadece macros'un kaynagi cektigi adres degisir.
+def _url_rules():
+    try: r = json.loads(get_global("url_rewrites", "[]") or "[]")
+    except Exception: r = []
+    return [x for x in r if isinstance(x, dict) and (x.get("from") or "").strip() and x.get("on", True) is not False]
+
+def _rewrite_upstream(url, rules=None):
+    if not url: return url
+    for r in (_url_rules() if rules is None else rules):
+        f, t = (r.get("from") or "").strip(), (r.get("to") or "").strip()
+        if not f: continue
+        if "://" in f:  # tam onek: https://a.com:8000/sub/  ->  https://b.com/s/
+            if url.startswith(f): return t + url[len(f):]
+            continue
+        try:  # sadece adres[:port]: a.com:8000 -> a.com  (sema ve yol aynen kalir)
+            u = urllib.parse.urlsplit(url)
+            hp = (u.hostname or "") + (f":{u.port}" if u.port else "")
+            fl = f.lower().rstrip("/")
+            if hp.lower() == fl or (":" not in fl and (u.hostname or "").lower() == fl and not u.port):
+                nt = t.split("://", 1)[-1].rstrip("/") if t else hp
+                if "://" in t: return urllib.parse.urlunsplit((t.split("://")[0], nt, u.path, u.query, u.fragment))
+                return urllib.parse.urlunsplit((u.scheme, nt, u.path, u.query, u.fragment))
+        except Exception: pass
+    return url
 
 def _panel_user_total(username):
     """Bir kullanicinin tum panellerdeki toplam trafigi (yoksa None)."""
@@ -1347,7 +1469,7 @@ async def _build_json_sub(url, extra_links):
     mz = []
     try:
         async with httpx.AsyncClient(timeout=15, verify=False) as cl:
-            r = await cl.get(url, headers={"User-Agent": "Happ/3.24.1"})
+            r = await cl.get(_rewrite_upstream(url), headers={"User-Agent": "Happ/3.24.1"})
             data = r.json()
             if isinstance(data, list): mz = data
     except: mz = []
@@ -2000,6 +2122,7 @@ async def sub_proxy_path(request: Request, path: str):
 @app.get("/macros")
 async def sub_proxy(request: Request, url: str = None):
     if not url: raise HTTPException(400, "url eksik")
+    src_url = _rewrite_upstream(url)  # domain/URL semasi: musteri linki ayni kalir, kaynak gercek adresten cekilir
     ua, ip = request.headers.get("User-Agent",""), get_ip(request)
     hw, is_real_hwid = extract_device_id(request, ua, ip)
     app_name, device_model = extract_app_name(ua), extract_device_model(request, ua)
@@ -2019,7 +2142,7 @@ async def sub_proxy(request: Request, url: str = None):
     else:
         try:
             async with httpx.AsyncClient(timeout=10, verify=False) as cl:
-                r = await cl.get(url, headers={"User-Agent": _UPSTREAM_UA}); friendly_name = extract_filename(r.headers)
+                r = await cl.get(src_url, headers={"User-Agent": _UPSTREAM_UA}); friendly_name = extract_filename(r.headers)
                 if not friendly_name and (pt := r.headers.get("profile-title","")).startswith("base64:"):
                     try: friendly_name = base64.b64decode(pt[7:]).decode().strip()
                     except: pass
@@ -2069,7 +2192,7 @@ async def sub_proxy(request: Request, url: str = None):
             add_log(sub_id,"DEVICE_LIMIT_EXCEEDED", f"Limit:{sub['device_limit']} HW:{hw}",hardware_id=hw,ip=ip,ua=ua)
             try:
                 async with httpx.AsyncClient(timeout=10, verify=False) as cl:
-                    blocked_content, was_b64 = decode_sub_content((await cl.get(url, headers={"User-Agent": _UPSTREAM_UA})).content)
+                    blocked_content, was_b64 = decode_sub_content((await cl.get(src_url, headers={"User-Agent": _UPSTREAM_UA})).content)
                     b_msg = sub["blocked_device_metadata"] or get_global("blocked_device_metadata", "")
                     if not b_msg: b_msg = "# 🛑 LIMIT EXCEEDED - Cihaz Limiti Asildi"
                     final_block = (b_msg + "\n" + strip_proxies(blocked_content)).strip()
@@ -2088,7 +2211,7 @@ async def sub_proxy(request: Request, url: str = None):
             add_log(sub_id,"DEVICE_BLOCKED",f"HW:{hw}",hardware_id=hw,ip=ip,ua=ua)
             try:
                 async with httpx.AsyncClient(timeout=10, verify=False) as cl:
-                    blocked_content, was_b64 = decode_sub_content((await cl.get(url, headers={"User-Agent": _UPSTREAM_UA})).content)
+                    blocked_content, was_b64 = decode_sub_content((await cl.get(src_url, headers={"User-Agent": _UPSTREAM_UA})).content)
                     b_msg = sub["blocked_device_metadata"] or get_global("blocked_device_metadata", "")
                     if not b_msg: b_msg = "# 🛑 DEVICE BLOCKED - Cihaziniz Engellendi"
                     final_block = (b_msg + "\n" + strip_proxies(blocked_content)).strip()
@@ -2103,7 +2226,7 @@ async def sub_proxy(request: Request, url: str = None):
 
     try:
         async with httpx.AsyncClient(timeout=15, verify=False) as client:
-            resp = await client.get(url, headers={"User-Agent": _UPSTREAM_UA})
+            resp = await client.get(src_url, headers={"User-Agent": _UPSTREAM_UA})
             if resp.status_code == 404:
                 add_log(sub_id,"SOURCE_404","Kaynak 404",hardware_id=hw,ip=ip,ua=ua)
                 return PlainTextResponse(get_global("source_404_message", "Kaynak bulunamadi."), status_code=200)
@@ -2541,6 +2664,180 @@ async def panels_test(request: Request):
         except Exception: pass
     return out
 
+# ---- Sunucu mesajlarinin cevirisi (panel dili cerezden: lang=tr|en|ru|tm) ----
+# API yanitlarindaki msg/errors/... metinleri secili dile cevrilir; Turkce kaynak metinler anahtar olarak kalir.
+_I18N_SRV = [  # (tr, en, ru, tm) — uzun ifadeler once
+    ("Panele bağlanılamadı", "Could not connect to the panel", "Не удалось подключиться к панели", "Panele birigip bolmady"),
+    ("kullanıcılar silinemez. 'Kullanıcıları bırak' ile yine de kaldırabilirsin.", "users can't be deleted. You can still remove it with 'Keep users'.", "пользователей удалить нельзя. Можно всё равно удалить панель, оставив пользователей.", "ulanyjylar pozulyp bilmeýär. 'Ulanyjylary galdyr' bilen aýryp bilersiňiz."),
+    ("kullanıcı silindi ama", "users deleted but", "пользователей удалено, но", "ulanyjy pozuldy, emma"),
+    ("hata var — panel kaldırılmadı, tekrar dene.", "errors — panel was not removed, try again.", "ошибок — панель не удалена, повторите.", "ýalňyşlyk bar — panel aýrylmady, gaýtadan synanyşyň."),
+    ("Panel bulunamadı (kaydedilmemiş olabilir)", "Panel not found (maybe not saved yet)", "Панель не найдена (возможно, не сохранена)", "Panel tapylmady (ýatda saklanmadyk bolmagy mümkin)"),
+    ("Ana panel kaldırılamaz", "The main panel can't be removed", "Главную панель удалить нельзя", "Esasy panel aýrylyp bilinmeýär"),
+    ("Senkron zaten çalışıyor, birazdan tekrar dene", "Sync is already running, try again shortly", "Синхронизация уже идёт, повторите позже", "Sinhronizasiýa eýýäm işleýär, birazdan gaýtalaň"),
+    ("Hiçbir panele bağlanılamadı — veri korundu", "Could not connect to any panel — data kept", "Не удалось подключиться ни к одной панели — данные сохранены", "Hiç bir panele birigip bolmady — maglumat saklandy"),
+    ("Lütfen URL girin veya local içerik yapıştırın.", "Enter a URL or paste local content.", "Введите URL или вставьте локальные данные.", "URL giriziň ýa-da local mazmun goýuň."),
+    ("URL veya local içerik gerekli", "URL or local content required", "Нужен URL или локальные данные", "URL ýa-da local mazmun gerek"),
+    ("URL ve API Token gerekli", "URL and API token required", "Нужны URL и API-токен", "URL we API Token gerek"),
+    ("URL gerekli", "URL required", "Нужен URL", "URL gerek"),
+    ("Önizleme şimdilik sadece 3x-ui için", "Preview is available for 3x-ui only", "Предпросмотр доступен только для 3x-ui", "Öňünden görkeziş diňe 3x-ui üçin"),
+    ("Bağlantı hatası", "Connection error", "Ошибка подключения", "Baglanyşyk ýalňyşlygy"),
+    ("Geçersiz JSON", "Invalid JSON", "Неверный JSON", "Nädogry JSON"),
+    ("JSON içinde 'settings' nesnesi bulunamadı.", "No 'settings' object in the JSON.", "В JSON нет объекта 'settings'.", "JSON-da 'settings' tapylmady."),
+    ("Test edilecek uyumlu proxy bulunamadı.", "No compatible proxies to test.", "Нет подходящих прокси для теста.", "Synag üçin laýyk proksi ýok."),
+    ("🟢 Xray Motoru Aktif", "🟢 Xray engine active", "🟢 Движок Xray активен", "🟢 Xray işjeň"),
+    ("🔴 Xray Bulunamadı!", "🔴 Xray not found!", "🔴 Xray не найден!", "🔴 Xray tapylmady!"),
+    ("⚙️ Ping Kapalı!", "⚙️ Ping off!", "⚙️ Пинг выключен!", "⚙️ Ping öçük!"),
+    ("Filtreden Geçen ve Alınan", "Passed filter & taken", "Прошли фильтр и взяты", "Süzgüçden geçen we alnan"),
+    ("Filtrelenen", "Filtered", "Отфильтровано", "Süzülen"),
+    ("Alınacak", "Will be used", "Будут взяты", "Alnar"),
+    ("Ölü", "Dead", "Мёртвые", "Işlemeýän"),
+    ("ms üstü (alınmaz)", "ms+ (skipped)", "мс+ (не берутся)", "ms-den ýokary (alynmaýar)"),
+    ("ort.", "avg", "сред.", "orta"),
+    ("ANA SUB AÇILMADI → FALLBACK", "MAIN SUB FAILED → FALLBACK", "ОСНОВНОЙ САБ НЕ ОТКРЫЛСЯ → РЕЗЕРВ", "ESASY SUB AÇYLMADY → FALLBACK"),
+    ("Ana sub'da çalışan yok → fallback devreye girer", "Nothing works in main sub → fallback will be used", "В основном сабе ничего не работает → включится резерв", "Esasy subda işleýän ýok → fallback ulanylar"),
+    ("kod)", "nodes)", "узлов)", "kod)"),
+    ("Fallback da açılmadı", "Fallback failed too", "Резерв тоже не открылся", "Fallback hem açylmady"),
+    ("Bağlandı", "Connected", "Подключено", "Birikdi"),
+    ("Giriş/erişim başarısız", "Login/access failed", "Ошибка входа/доступа", "Giriş/elýeterlilik şowsuz"),
+    ("Erişim başarısız (3x-ui — token/giriş kontrol et)", "Access failed (3x-ui — check token/login)", "Нет доступа (3x-ui — проверьте токен/логин)", "Elýeterlilik şowsuz (3x-ui — tokeni barlaň)"),
+    ("Bilinmeyen panel türü", "Unknown panel type", "Неизвестный тип панели", "Näbelli panel görnüşi"),
+    ("Devre dışı", "Disabled", "Отключено", "Öçürilen"),
+    ("Hata:", "Error:", "Ошибка:", "Ýalňyşlyk:"),
+    ("yazma için 3x-ui API Token gerekli", "3x-ui API token required for writing", "для записи нужен API-токен 3x-ui", "ýazmak üçin 3x-ui API Token gerek"),
+    ("inbound bulunamadı", "no inbounds found", "inbound не найдены", "inbound tapylmady"),
+    ("partisi başarısız", "batch failed", "пакет не прошёл", "topary şowsuz"),
+    ("tek tek deneniyor", "retrying one by one", "пробуем по одному", "birme-bir synanyşylýar"),
+    ("bulkDel başarısız", "bulkDel failed", "bulkDel не удался", "bulkDel şowsuz"),
+    ("3x-ui client listesi okunamadı", "Couldn't read 3x-ui client list", "Не удалось прочитать список клиентов 3x-ui", "3x-ui müşderi sanawy okalmady"),
+    ("📍 [Kaynak Sub — abonenin kendi kodları]", "📍 [Source sub — subscriber's own nodes]", "📍 [Исходный саб — собственные узлы абонента]", "📍 [Çeşme sub — abonentiň öz kodlary]"),
+    ("— abonenin bu paneldeki kodları]", "— subscriber's nodes on this panel]", "— узлы абонента на этой панели]", "— abonentiň bu paneldäki kodlary]"),
+    ("sub boş / kod yok", "sub is empty / no nodes", "саб пуст / нет узлов", "sub boş / kod ýok"),
+    # log ayrintilari
+    ("İzinsiz panel isteği", "Unauthorized panel request", "Запрос к неразрешённой панели", "Rugsatsyz panel haýyşy"),
+    ("Blokeli sub", "Blocked sub", "Заблокированный саб", "Bloklanan sub"),
+    ("Süresi doldu.", "Expired.", "Срок истёк.", "Möhleti gutardy."),
+    ("Kota aşıldı!", "Quota exceeded!", "Квота превышена!", "Kwota geçildi!"),
+    ("Harcanan:", "Used:", "Израсходовано:", "Harçlanan:"),
+    ("Kota:", "Quota:", "Квота:", "Kwota:"),
+    ("Kaynak 404", "Source 404", "Источник 404", "Çeşme 404"),
+    ("İsim:", "Name:", "Имя:", "Ady:"),
+    ("Yeni URL aktif", "New URL active", "Новый URL активен", "Täze URL işjeň"),
+    ("ayar içe aktarıldı", "settings imported", "настроек импортировано", "sazlama import edildi"),
+    ("Ayarlar güncellendi", "Settings updated", "Настройки обновлены", "Sazlamalar täzelendi"),
+    ("Giris:", "Login:", "Вход:", "Giriş:"),
+    ("panel kaldırıldı, macros kullanıcısı silindi", "panel removed, macros users deleted", "панель удалена, удалено пользователей macros", "panel aýryldy, macros ulanyjysy pozuldy"),
+    ("(kullanıcılar bırakıldı)", "(users kept)", "(пользователи оставлены)", "(ulanyjylar galdyryldy)"),
+    ("silindi, hata", "deleted, errors", "удалено, ошибки", "pozuldy, ýalňyşlyk"),
+    ("Manuel senkron", "Manual sync", "Ручная синхронизация", "El bilen sinhronizasiýa"),
+    ("Ana panel kullanıcı sayısı anormal", "Main panel user count looks abnormal", "Подозрительное число пользователей главной панели", "Esasy panel ulanyjy sany adaty däl"),
+    ("kapatma atlandı", "disabling skipped", "отключение пропущено", "öçürmek geçildi"),
+    ("Başarısız", "Failed", "Не удалось", "Şowsuz"),
+]
+_I18N_IDX = {"en": 1, "ru": 2, "tm": 3}
+_I18N_KEYS = {"msg", "error", "errors", "names", "reason", "err", "detail"}
+
+def _tr_text(t, lang):
+    i = _I18N_IDX.get(lang)
+    if not i or not isinstance(t, str): return t
+    for row in _I18N_SRV:
+        if row[0] in t: t = t.replace(row[0], row[i])
+    return t
+
+def _tr_obj(o, lang, on=False):
+    if isinstance(o, dict): return {k: _tr_obj(v, lang, on or k in _I18N_KEYS) for k, v in o.items()}
+    if isinstance(o, list): return [_tr_obj(v, lang, on) for v in o]
+    if isinstance(o, str) and on: return _tr_text(o, lang)
+    return o
+
+@app.middleware("http")
+async def _i18n_api(request: Request, call_next):
+    resp = await call_next(request)
+    lang = request.cookies.get("lang", "tr")
+    if lang not in _I18N_IDX or not request.url.path.startswith("/panel/api/") \
+            or "application/json" not in (resp.headers.get("content-type") or ""):
+        return resp
+    body = b"".join([c async for c in resp.body_iterator])
+    try: data = _tr_obj(json.loads(body), lang)
+    except Exception: return Response(body, status_code=resp.status_code, media_type="application/json")
+    hdr = {k: v for k, v in resp.headers.items() if k.lower() not in ("content-length", "content-type")}
+    return Response(json.dumps(data, ensure_ascii=False), status_code=resp.status_code, media_type="application/json", headers=hdr)
+
+@app.post("/panel/api/panels/preview")
+async def panels_preview(request: Request):
+    """Eklenen/kayitli 3x-ui panelindeki kodlarin onizlemesi + port/adres degisikligi sonrasi hali.
+    Sadece OKUR (inbounds/list, clients/list, subLinks) — panelde hicbir sey degistirilmez."""
+    if not authed(request): raise HTTPException(401)
+    d = await request.json()
+    url = (d.get("url") or "").strip().rstrip("/")
+    tok = (d.get("token") or "").strip()
+    if not tok and d.get("pkey"):
+        _, _, sp = _saved_panel_by_pkey(d["pkey"])
+        tok = (sp or {}).get("token", "")
+    if (d.get("type") or "3xui") != "3xui": return {"ok": False, "msg": "Önizleme şimdilik sadece 3x-ui için"}
+    if not url or not tok: return {"ok": False, "msg": "URL ve API Token gerekli"}
+    p = {"url": url, "token": tok}
+    try:
+        async with _XuiConn(p) as conn:
+            ib = await conn.call("GET", "/panel/api/inbounds/list")
+            if not ib.get("success"): return {"ok": False, "msg": f"Panele bağlanılamadı: {str(ib.get('msg') or '')[:80]}"}
+            inbounds = []
+            for x in ib.get("obj") or []:
+                try: ss = json.loads(x.get("streamSettings") or "{}")
+                except Exception: ss = {}
+                inbounds.append({"id": x.get("id"), "remark": x.get("remark") or "", "protocol": x.get("protocol") or "",
+                                 "port": x.get("port"), "enable": x.get("enable", True),
+                                 "net": ss.get("network") or "", "sec": ss.get("security") or ""})
+            cl = await _xui_clients(conn) or []
+            # Ornek kullanici: once macros'un actigi (tum inbound'larda), yoksa her inbound'u kapsayan birkac kullanici
+            pick, covered = [], set()
+            mac = [c for c in cl if c.get("group") == "macros" and c.get("subId") and c.get("subId") == _macros_subid(c.get("email") or "")]
+            for c in mac[:1] + [c for c in cl if c.get("subId")]:
+                ids = set(c.get("inboundIds") or [])
+                if c in pick or (pick and ids and ids <= covered): continue
+                pick.append(c); covered |= ids
+                if len(pick) >= 4 or covered >= {i["id"] for i in inbounds}: break
+            links, seen = [], set()
+            for c in pick:
+                j = await conn.call("GET", f"/panel/api/clients/subLinks/{urllib.parse.quote(c['subId'], safe='')}")
+                for l in (j.get("obj") or []) if j.get("success") else []:
+                    if isinstance(l, str) and "://" in l:
+                        k = l.split("#", 1)[0].split("@")[-1]
+                        if k not in seen: seen.add(k); links.append(l)
+    except Exception as e:
+        return {"ok": False, "msg": f"Panele bağlanılamadı: {str(e)[:80]}"}
+    newl = _apply_panel_overrides(d, links)
+    port_inb = {}
+    for i in inbounds: port_inb.setdefault(i["port"], []).append(i["remark"] or f"#{i['id']}")
+    rows = []
+    for a, b in zip(links, newl):
+        h1, p1 = _link_hostport(a); h2, p2 = _link_hostport(b)
+        rows.append({"name": _display_name(a), "proto": a.split("://", 1)[0], "host": h1, "port": p1,
+                     "new_host": h2, "new_port": p2, "inbound": ", ".join(port_inb.get(p1, [])), "link": b})
+    ports = sorted({r["port"] for r in rows if r["port"]})
+    return {"ok": True, "inbounds": inbounds, "rows": rows, "ports": [{"port": x, "inbound": ", ".join(port_inb.get(x, []))} for x in ports],
+            "sample": [c.get("email") for c in pick], "clients": len(cl)}
+
+@app.post("/panel/api/url-rules/test")
+async def url_rules_test(request: Request):
+    """Domain/URL semasi testi: verilen musteri linkinin kaynagi hangi adresten cekilecek + o adres calisiyor mu."""
+    if not authed(request): raise HTTPException(401)
+    d = await request.json()
+    url = (d.get("url") or "").strip()
+    if "?url=" in url: url = urllib.parse.unquote(url.split("?url=", 1)[1])
+    rules = d.get("rules")
+    rules = [x for x in rules if isinstance(x, dict) and x.get("on", True) is not False] if isinstance(rules, list) else None
+    if not url: return {"ok": False, "msg": "URL gerekli"}
+    to = _rewrite_upstream(url, rules)
+    out = {"ok": True, "from": url, "to": to, "changed": to != url}
+    try:
+        async with httpx.AsyncClient(timeout=12, verify=False, follow_redirects=True) as cl:
+            r = await cl.get(to, headers={"User-Agent": _UPSTREAM_UA})
+        content, _ = decode_sub_content(r.content)
+        out.update(status=r.status_code, codes=sum(1 for l in content.split("\n") if "://" in l))
+    except Exception as e:
+        out.update(status=0, err=str(e)[:80], codes=0)
+    return out
+
 @app.post("/panel/api/panels/sync")
 async def panels_sync(request: Request):
     if not authed(request): raise HTTPException(401)
@@ -2682,7 +2979,9 @@ async def logs_page(request: Request):
     with db_session() as con:
         sys_logs = con.execute("SELECT l.*, s.name as sub_name FROM logs l LEFT JOIN subs s ON s.id=l.sub_id ORDER BY l.ts DESC LIMIT 300").fetchall()
         panel_logs = con.execute("SELECT * FROM panel_logs ORDER BY ts DESC LIMIT 100").fetchall()
-    return templates.TemplateResponse(request=request, name="logs.html", context={"sys_logs": [dict(x) for x in sys_logs], "panel_logs": [dict(x) for x in panel_logs]})
+    lg = request.cookies.get("lang", "tr")
+    tr = lambda rows: [dict(dict(x), detail=_tr_text(x["detail"] or "", lg)) for x in rows]
+    return templates.TemplateResponse(request=request, name="logs.html", context={"sys_logs": tr(sys_logs), "panel_logs": tr(panel_logs)})
 
 @app.get("/panel/stats", response_class=HTMLResponse)
 async def stats_page(request: Request):
@@ -2750,7 +3049,7 @@ async def check_sub(request: Request):
     d = await request.json(); url, sub_id, username, userinfo = d.get("url",""), d.get("id"), "", ""
     try:
         async with httpx.AsyncClient(timeout=10, verify=False) as client:
-            resp = await client.get(url, headers={"User-Agent":"clash/check"})
+            resp = await client.get(_rewrite_upstream(url), headers={"User-Agent":"clash/check"})
             status, pt = f"OK {resp.status_code}", resp.headers.get("profile-title","")
             if pt.startswith("base64:"):
                 try: pt = base64.b64decode(pt[7:]).decode().strip()
@@ -2884,6 +3183,7 @@ async def sort_settings_get(request: Request):
         integrated_panels=[dict(({k: v for k, v in p.items() if k != "pass"} if p.get("auto") else p), pkey=_pkey(p)) for p in _effective_panels()],
         panel_sync_seconds=get_global("panel_sync_seconds", "30"),
         main_host=_main_panel_host(),
+        url_rewrites=json.loads(get_global("url_rewrites", "[]") or "[]"),
         ext_subs=ext_subs
     ))
 
@@ -2947,6 +3247,15 @@ async def sort_settings_post(request: Request):
             v = int(form.get("panel_sync_seconds") or 0)
             set_global("panel_sync_seconds", str(0 if v <= 0 else max(10, v)))
         except ValueError: pass
+    uj = form.get("url_rewrites_json")
+    if uj is not None:
+        try:
+            parsed = json.loads(uj)
+            if isinstance(parsed, list):
+                set_global("url_rewrites", json.dumps([{"from": str(x.get("from", "")).strip(), "to": str(x.get("to", "")).strip(),
+                    "note": str(x.get("note", ""))[:80], "on": x.get("on", True) is not False}
+                    for x in parsed if isinstance(x, dict) and str(x.get("from", "")).strip()]))
+        except Exception: pass
     pj = form.get("panels_json")
     if pj is not None:
         try:

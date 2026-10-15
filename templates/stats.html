@@ -72,7 +72,7 @@ function applyLang(){
   });
 }
 function setLang(l){
-  localStorage.setItem('lang',l);
+  localStorage.setItem('lang',l); document.cookie='lang='+l+';path=/;max-age=31536000;samesite=lax'; document.documentElement.lang=l; document.title=({tr:'İstatistik',en:'Statistics',ru:'Статистика',tm:'Statistika'}[l]||'İstatistik')+' · Macros v3';
   document.querySelectorAll('.lang-bar span').forEach(e=>e.classList.remove('active'));
   let act=document.getElementById('l-'+l); if(act)act.classList.add('active');
   applyLang();

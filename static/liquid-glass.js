@@ -109,34 +109,51 @@
   }
 
   /* ---------- 💧 Ayar paneli ---------- */
+  // Panel metinleri sayfa diliyle (localStorage 'lang') gelir: tr / en / ru / tm
+  const LGT = {
+    tr: { blur:'Bulanıklık', refract:'Kırılma', band:'Kenar kalınlığı', radius:'Köşe yuvarlaklığı', tint:'Opaklık', spec:'Parlama', sat:'Renk doygunluğu', bright:'Parlaklık', speed:'Hareket hızı',
+          gear:'Liquid Glass ayarları', glass:'Cam', refr:'Kenar kırılması', nosup:' (bu tarayıcı desteklemiyor)', anim:'Arka plan hareketli', pal:'Renk paleti', own:'Özel renkler', light:'Işık', base:'Zemin', accent:'Vurgu', reset:'↺ Varsayılana dön',
+          Aurora:'Aurora', Okyanus:'Okyanus', 'Gün Batımı':'Gün Batımı', Orman:'Orman', Mor:'Mor', Grafit:'Grafit' },
+    en: { blur:'Blur', refract:'Refraction', band:'Edge width', radius:'Corner radius', tint:'Opacity', spec:'Highlight', sat:'Saturation', bright:'Brightness', speed:'Motion speed',
+          gear:'Liquid Glass settings', glass:'Glass', refr:'Edge refraction', nosup:' (not supported in this browser)', anim:'Animated background', pal:'Color palette', own:'Custom colors', light:'Light', base:'Base', accent:'Accent', reset:'↺ Reset to default',
+          Aurora:'Aurora', Okyanus:'Ocean', 'Gün Batımı':'Sunset', Orman:'Forest', Mor:'Purple', Grafit:'Graphite' },
+    ru: { blur:'Размытие', refract:'Преломление', band:'Ширина края', radius:'Скругление углов', tint:'Непрозрачность', spec:'Блик', sat:'Насыщенность', bright:'Яркость', speed:'Скорость движения',
+          gear:'Настройки Liquid Glass', glass:'Стекло', refr:'Преломление краёв', nosup:' (не поддерживается этим браузером)', anim:'Анимированный фон', pal:'Палитра', own:'Свои цвета', light:'Свет', base:'Фон', accent:'Акцент', reset:'↺ Сбросить',
+          Aurora:'Аврора', Okyanus:'Океан', 'Gün Batımı':'Закат', Orman:'Лес', Mor:'Фиолетовый', Grafit:'Графит' },
+    tm: { blur:'Bulançaklyk', refract:'Döwülme', band:'Gyra galyňlygy', radius:'Burç tegelekligi', tint:'Aýdyňsyzlyk', spec:'Ýalpyldy', sat:'Reňk doýgunlygy', bright:'Ýagtylyk', speed:'Hereket tizligi',
+          gear:'Liquid Glass sazlamalary', glass:'Aýna', refr:'Gyra döwülmesi', nosup:' (bu brauzer goldamaýar)', anim:'Hereketli fon', pal:'Reňk palitrasy', own:'Öz reňkleri', light:'Yşyk', base:'Fon', accent:'Nygtaw', reset:'↺ Başlangyja gaýt',
+          Aurora:'Aurora', Okyanus:'Umman', 'Gün Batımı':'Gün ýaşyşy', Orman:'Tokaý', Mor:'Gyrmyzy', Grafit:'Grafit' }
+  };
+  const lang = () => { try { return localStorage.getItem('lang') || 'tr'; } catch (e) { return 'tr'; } };
+  const t = k => (LGT[lang()] || LGT.tr)[k] || LGT.tr[k] || k;
   const SLIDERS = [
-    ['blur', 'Bulanıklık', 0, 40, 'px'], ['refract', 'Kırılma', 0, 120, ''], ['band', 'Kenar kalınlığı', 6, 60, 'px'],
-    ['radius', 'Köşe yuvarlaklığı', 0, 40, 'px'], ['tint', 'Opaklık', 0, 40, '%'], ['spec', 'Parlama', 0, 100, '%'],
-    ['sat', 'Renk doygunluğu', 100, 300, '%'], ['bright', 'Parlaklık', 70, 140, '%'], ['speed', 'Hareket hızı', 1, 40, '']
-  ];
+    ['blur', 0, 40, 'px'], ['refract', 0, 120, ''], ['band', 6, 60, 'px'],
+    ['radius', 0, 40, 'px'], ['tint', 0, 40, '%'], ['spec', 0, 100, '%'],
+    ['sat', 100, 300, '%'], ['bright', 70, 140, '%'], ['speed', 1, 40, '']
+  ].map(([k, mn, mx, u]) => [k, k, mn, mx, u]);
   function gear(){
     document.querySelectorAll('.theme-selector').forEach(ts => {
       if (ts.querySelector('.lg-gear')) return;
-      const g = document.createElement('span'); g.className = 'lg-gear'; g.title = 'Liquid Glass ayarları'; g.textContent = '💧';
+      const g = document.createElement('span'); g.className = 'lg-gear'; g.title = t('gear'); g.textContent = '💧';
       g.addEventListener('click', e => { e.stopPropagation(); togglePanel(); });
       ts.appendChild(g);
     });
   }
   function buildPanel(){
-    panel = document.createElement('div'); panel.className = 'lg-panel'; panel.hidden = true;
+    panel = document.createElement('div'); panel.className = 'lg-panel'; panel.hidden = true; panel.dataset.lang = lang();
     let h = '<h4>💧 Liquid Glass <span data-x>✕</span></h4>';
-    h += '<div class="lg-sec">Cam</div>';
+    h += `<div class="lg-sec">${t('glass')}</div>`;
     SLIDERS.forEach(([k, l, mn, mx, u]) => {
-      h += `<div class="lg-row"><label>${l}</label><input type="range" min="${mn}" max="${mx}" data-k="${k}" value="${cfg[k]}"><output data-o="${k}">${cfg[k]}${u}</output></div>`;
+      h += `<div class="lg-row"><label>${t(l)}</label><input type="range" min="${mn}" max="${mx}" data-k="${k}" value="${cfg[k]}"><output data-o="${k}">${cfg[k]}${u}</output></div>`;
     });
-    h += `<label class="lg-chk"><input type="checkbox" data-c="refractOn" ${cfg.refractOn ? 'checked' : ''}> Kenar kırılması${isChromium ? '' : ' (bu tarayıcı desteklemiyor)'}</label>`;
-    h += `<label class="lg-chk"><input type="checkbox" data-c="anim" ${cfg.anim ? 'checked' : ''}> Arka plan hareketli</label>`;
-    h += '<div class="lg-sec">Renk paleti</div><div class="lg-presets">';
-    Object.entries(PRESETS).forEach(([n, p]) => { h += `<button type="button" data-p="${n}" style="background:linear-gradient(135deg,${p.c1},${p.c2},${p.c3})">${n}</button>`; });
-    h += '</div><div class="lg-sec">Özel renkler</div><div class="lg-colors">';
-    ['c1','c2','c3','c4'].forEach(k => { h += `<input type="color" data-col="${k}" value="${cfg[k]}" title="Işık ${k.slice(1)}">`; });
-    h += `<input type="color" data-col="base" value="${cfg.base}" title="Zemin"><input type="color" data-col="accent" value="${cfg.accent}" title="Vurgu"></div>`;
-    h += '<button type="button" class="lg-reset">↺ Varsayılana dön</button>';
+    h += `<label class="lg-chk"><input type="checkbox" data-c="refractOn" ${cfg.refractOn ? 'checked' : ''}> ${t('refr')}${isChromium ? '' : t('nosup')}</label>`;
+    h += `<label class="lg-chk"><input type="checkbox" data-c="anim" ${cfg.anim ? 'checked' : ''}> ${t('anim')}</label>`;
+    h += `<div class="lg-sec">${t('pal')}</div><div class="lg-presets">`;
+    Object.entries(PRESETS).forEach(([n, p]) => { h += `<button type="button" data-p="${n}" style="background:linear-gradient(135deg,${p.c1},${p.c2},${p.c3})">${t(n)}</button>`; });
+    h += `</div><div class="lg-sec">${t('own')}</div><div class="lg-colors">`;
+    ['c1','c2','c3','c4'].forEach(k => { h += `<input type="color" data-col="${k}" value="${cfg[k]}" title="${t('light')} ${k.slice(1)}">`; });
+    h += `<input type="color" data-col="base" value="${cfg.base}" title="${t('base')}"><input type="color" data-col="accent" value="${cfg.accent}" title="${t('accent')}"></div>`;
+    h += `<button type="button" class="lg-reset">${t('reset')}</button>`;
     panel.innerHTML = h;
     document.body.appendChild(panel);
     const units = Object.fromEntries(SLIDERS.map(s => [s[0], s[4]]));
@@ -167,7 +184,10 @@
     panel.querySelectorAll('[data-col]').forEach(i => { i.value = cfg[i.dataset.col]; });
     panel.querySelectorAll('[data-c]').forEach(i => { i.checked = !!cfg[i.dataset.c]; });
   }
-  function togglePanel(){ if (!panel) buildPanel(); panel.hidden = !panel.hidden; }
+  function togglePanel(){
+    if (panel && panel.dataset.lang !== lang()){ panel.remove(); panel = null; }  // dil degistiyse yeniden ciz
+    if (!panel) buildPanel(); panel.hidden = !panel.hidden;
+  }
 
   function enable(){
     if (on) return; on = true; scene(); applyVars(); gear();

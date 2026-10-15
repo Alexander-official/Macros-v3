@@ -16,8 +16,8 @@ a{color:#38bdf8;text-decoration:none}
 </style><link rel="stylesheet" href="/static/mobile.css?v=1">
 </head><body>
 <div class="lang-bar">
-    <span onclick="setLang('tr')" id="l-tr">TR</span><span onclick="setLang('en')" id="l-en">EN</span>
-    <span onclick="setLang('ru')" id="l-ru">RU</span><span onclick="setLang('tm')" id="l-tm">TM</span>
+    <span onclick="setLang('tr');location.reload()" id="l-tr">TR</span><span onclick="setLang('en');location.reload()" id="l-en">EN</span>
+    <span onclick="setLang('ru');location.reload()" id="l-ru">RU</span><span onclick="setLang('tm');location.reload()" id="l-tm">TM</span>
 </div>
 <p><a href="/panel/dashboard" data-i18n="back_dash">← Panele Dön</a></p>
 
@@ -55,7 +55,7 @@ function applyLang(){
   });
 }
 function setLang(l){
-  localStorage.setItem('lang',l);
+  localStorage.setItem('lang',l); document.cookie='lang='+l+';path=/;max-age=31536000;samesite=lax'; document.documentElement.lang=l; document.title=({tr:'Loglar',en:'Logs',ru:'Логи',tm:'Loglar'}[l]||'Loglar')+' · Macros v3';
   document.querySelectorAll('.lang-bar span').forEach(e=>e.classList.remove('active'));
   let act=document.getElementById('l-'+l); if(act)act.classList.add('active');
   applyLang();
