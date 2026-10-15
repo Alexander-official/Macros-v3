@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.2"
+APP_VERSION = "3.4.3"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -622,32 +622,43 @@ async def _secondary_links(username):
     for links in (await _secondary_links_by_panel(username)).values(): out += links
     return out
 
+_panel_down = {}  # pkey -> bu zamana kadar atla (cevap vermeyen panel her musteri istegini bekletmesin)
+
+async def _sec_links_one(p, pk, sid):
+    """Tek panelden kullanicinin linkleri: en fazla 4 sn; olmazsa son bilinen linkler (yoksa bos)."""
+    ck, now = (pk, sid), time.time()
+    hit = _sublinks_cache.get(ck)
+    if hit and now - hit[0] < 30: return hit[1]
+    if _panel_down.get(pk, 0) > now: return hit[1] if hit else []
+    async def fetch():
+        async with _XuiConn(p) as conn:
+            return await conn.call("GET", f"/panel/api/clients/subLinks/{urllib.parse.quote(sid, safe='')}")
+    try:
+        j = await asyncio.wait_for(fetch(), 4)
+        links = [l for l in (j.get("obj") or []) if isinstance(l, str) and "://" in l] if j.get("success") else []
+        _sublinks_cache[ck] = (time.time(), links); _panel_down.pop(pk, None)
+        return links
+    except Exception:
+        _panel_down[pk] = time.time() + 60
+        return hit[1] if hit else []
+
 async def _secondary_links_by_panel(username):
-    """Ikincil 3x-ui panellerdeki config linkleri, panel anahtarina (pkey) gore. 30 sn cache."""
+    """Ikincil 3x-ui panellerdeki config linkleri, panel anahtarina (pkey) gore. Paneller PARALEL sorgulanir;
+    30 sn cache, panel basina en fazla 4 sn, cevap vermeyen panel 60 sn atlanir (son bilinen linkler kullanilir)."""
     if not username: return {}
-    res = {}
+    jobs = []
     for p in _effective_panels():
         if not p.get("enabled", True) or p.get("is_main") or p.get("type") != "3xui" or p.get("merge", True) is False or not p.get("token"):
             continue
         pk = _pkey(p)
-        out = res.setdefault(pk, [])
         try:
             with db_session() as con:
                 r = con.execute("SELECT sub_id FROM panel_links WHERE pkey=? AND username=?", (pk, username)).fetchone()
             sid = r["sub_id"] if r else None
         except Exception: sid = None
-        if not sid: continue
-        ck, now = (pk, sid), time.time()
-        hit = _sublinks_cache.get(ck)
-        if hit and now - hit[0] < 30:
-            out += hit[1]; continue
-        try:
-            async with _XuiConn(p) as conn:
-                j = await conn.call("GET", f"/panel/api/clients/subLinks/{urllib.parse.quote(sid, safe='')}")
-            links = [l for l in (j.get("obj") or []) if isinstance(l, str) and "://" in l] if j.get("success") else []
-            _sublinks_cache[ck] = (now, links); out += links
-        except Exception:
-            if hit: out += hit[1]
+        jobs.append((pk, p, sid))
+    outs = await asyncio.gather(*[_sec_links_one(p, pk, sid) if sid else asyncio.sleep(0, result=[]) for pk, p, sid in jobs])
+    res = {pk: links for (pk, _, _), links in zip(jobs, outs)}
     pmap = {_pkey(p): p for p in _effective_panels()}
     return {pk: _apply_panel_overrides(pmap.get(pk) or {}, links) for pk, links in res.items()}
 
