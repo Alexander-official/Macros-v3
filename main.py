@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.1"
+APP_VERSION = "3.4.2"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -266,8 +266,25 @@ async def _xui_users(url, token=None, user=None, pwd=None):
         try: await cl.aclose()
         except: pass
 
+async def _reach(url, timeout=6):
+    """Panele TCP ile hizli erisim kontrolu: (True, "") ya da (False, okunur sebep)."""
+    try:
+        u = urllib.parse.urlsplit(url); host = u.hostname or ""
+        port = u.port or (443 if u.scheme == "https" else 80)
+    except Exception: return False, "Geçersiz URL"
+    try:
+        _, w = await asyncio.wait_for(asyncio.open_connection(host, port), timeout)
+        w.close()
+        return True, ""
+    except asyncio.TimeoutError:
+        return False, f"Bu sunucudan panele ulaşılamıyor ({host}:{port} zaman aşımı) — panel kapalı ya da güvenlik duvarı bu sunucunun IP'sini engelliyor"
+    except OSError as e:
+        return False, f"Bu sunucudan panele ulaşılamıyor ({host}:{port}: {getattr(e, 'strerror', None) or e})"
+
 async def _panel_test(ptype, url, user, pwd, token=""):
     """Baglanti testi: (ok, mesaj, kullanici_sayisi)."""
+    ok, why = await _reach(url)
+    if not ok: return False, why, 0
     try:
         if ptype == "marzban":
             us = await _marzban_users(url, user, pwd)
@@ -2693,6 +2710,8 @@ _I18N_SRV = [  # (tr, en, ru, tm) — uzun ifadeler once
     ("URL gerekli", "URL required", "Нужен URL", "URL gerek"),
     ("Önizleme şimdilik sadece 3x-ui için", "Preview is available for 3x-ui only", "Предпросмотр доступен только для 3x-ui", "Öňünden görkeziş diňe 3x-ui üçin"),
     ("Bağlantı hatası", "Connection error", "Ошибка подключения", "Baglanyşyk ýalňyşlygy"),
+    ("Bu sunucudan panele ulaşılamıyor", "This server can't reach the panel", "Этот сервер не может подключиться к панели", "Bu serwerden panele birigip bolmaýar"),
+    ("zaman aşımı) — panel kapalı ya da güvenlik duvarı bu sunucunun IP'sini engelliyor", "timed out) — the panel is down or its firewall blocks this server's IP", "тайм-аут) — панель выключена или её файрвол блокирует IP этого сервера", "wagt geçdi) — panel öçük ýa-da onuň firewall-y bu serweriň IP-sini bloklaýar"),
     ("Geçersiz JSON", "Invalid JSON", "Неверный JSON", "Nädogry JSON"),
     ("JSON içinde 'settings' nesnesi bulunamadı.", "No 'settings' object in the JSON.", "В JSON нет объекта 'settings'.", "JSON-da 'settings' tapylmady."),
     ("Test edilecek uyumlu proxy bulunamadı.", "No compatible proxies to test.", "Нет подходящих прокси для теста.", "Synag üçin laýyk proksi ýok."),
@@ -2788,6 +2807,8 @@ async def panels_preview(request: Request):
     if (d.get("type") or "3xui") != "3xui": return {"ok": False, "msg": "Önizleme şimdilik sadece 3x-ui için"}
     if not url or not tok: return {"ok": False, "msg": "URL ve API Token gerekli"}
     p = {"url": url, "token": tok}
+    ok, why = await _reach(url)
+    if not ok: return {"ok": False, "msg": why}
     try:
         async with _XuiConn(p) as conn:
             ib = await conn.call("GET", "/panel/api/inbounds/list")
