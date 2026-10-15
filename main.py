@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.0"
+APP_VERSION = "3.4.1"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -3291,6 +3291,20 @@ async def sort_settings_post(request: Request):
     # guncel sayfa 'form_version' hidden alanini gonderir; yoksa kaydi yoksay.
     if not form.get("form_version"):
         return RedirectResponse("/panel/sort-settings", status_code=303)
+    # Sayfada DEGISTIRILMEMIS liste bolumleri uzerine yazilmaz: sayfa acildigindaki hali (<alan>_orig) ile
+    # gonderilen ayniysa o alan atlanir. Boylece eski bir sekmeden yapilan kayit, sonradan eklenen
+    # URL kurallarini / yollari / panelleri / slotlari silmez.
+    def _same(k):
+        o = form.get(k + "_orig")
+        if o is None or form.get(k) is None: return False
+        try: return json.loads(o) == json.loads(form.get(k))
+        except Exception: return False
+    _skip = {k for k in ("ext_json", "panels_json", "url_rewrites_json", "sub_aliases_json", "link_profiles_json") if _same(k)}
+    class _Form:  # atlanan alanlar "gonderilmemis" (None) gorunur; digerleri aynen
+        def __init__(self, f): self.f = f
+        def get(self, k, d=None): return None if k in _skip else self.f.get(k, d)
+        def getlist(self, k): return self.f.getlist(k)
+    form = _Form(form)
 
     set_global("enable_sort", "1" if form.get("enable_sort") else "0")
     set_global("auto_rename_enabled", "1" if form.get("auto_rename_enabled") else "0")

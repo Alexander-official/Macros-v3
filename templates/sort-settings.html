@@ -1038,10 +1038,15 @@ async function formatManualLinks(){
     const d=await r.json();if(d.ok){ta.value=d.formatted;toast(T('formatted'),'#4ade80');}
   }catch(e){toast(T('conn_err'),'#f87171');}
 }
+// Sayfa acildigindaki degerler: kayitta degismeyen bolumler sunucuda UZERINE YAZILMAZ
+// (eski acik kalmis bir sekme kaydedilince baska yerden eklenen kurallar/paneller silinmesin).
+let FORM_ORIG=null;
+function collectExt(){const ext=[];document.querySelectorAll('#slots-container .slot').forEach(row=>{const d=slotData(row);if(d.url||d.local.trim()||d.source||d.panel)ext.push(d);});return ext;}
+function formSnapshot(){return {ext_json:collectExt(),panels_json:collectPanels(),url_rewrites_json:collectUrlRules(),sub_aliases_json:collectAliases(),link_profiles_json:collectProfiles2()};}
 function prepareForm(e){
   ['sort_order','vless_sort','vmess_sort'].forEach(syncHidden);
-  const ext=[];
-  document.querySelectorAll('#slots-container .slot').forEach(row=>{const d=slotData(row);if(d.url||d.local.trim()||d.source||d.panel)ext.push(d);});
+  const ext=collectExt();
+  if(FORM_ORIG)Object.entries(FORM_ORIG).forEach(([k,v])=>{const o=document.createElement('input');o.type='hidden';o.name=k+'_orig';o.value=v;e.target.appendChild(o);});
   const h=document.createElement('input');h.type='hidden';h.name='ext_json';h.value=JSON.stringify(ext);
   e.target.appendChild(h);
   const hp=document.createElement('input');hp.type='hidden';hp.name='client_profiles_json';hp.value=JSON.stringify(collectProfiles());
@@ -1467,6 +1472,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{if(document.querySelector('#panels-container .pcard'))refreshPanels();}catch(e){}
   initCollapsibles();
   initUrlRules(); initLinks();
+  setTimeout(()=>{try{const sn=formSnapshot();FORM_ORIG={};Object.keys(sn).forEach(k=>FORM_ORIG[k]=JSON.stringify(sn[k]));}catch(e){}},0);
   const fm=document.querySelector('form'); if(fm){fm.addEventListener('input',()=>{FORM_DIRTY=true;});fm.addEventListener('change',()=>{FORM_DIRTY=true;});}
 });
 function initCollapsibles(){
