@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.5"
+APP_VERSION = "3.5.0"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -745,15 +745,46 @@ def _panel_overrides(p):
         except Exception: pass
     return (pa if 0 < pa < 65536 else 0), pm, (p.get("host_over") or "").strip()
 
-def _apply_panel_overrides(p, links):
+def _apply_panel_overrides(p, links, clones=True):
     pa, pm, ho = _panel_overrides(p)
-    if not (pa or pm or ho): return list(links)
-    out = []
-    for l in links:
-        _, port = _link_hostport(l)
-        np = pm.get(port) or pa or None
-        if np == port: np = None
-        out.append(_link_rewrite(l, np, ho or None))
+    if not (pa or pm or ho): out = list(links)
+    else:
+        out = []
+        for l in links:
+            _, port = _link_hostport(l)
+            np = pm.get(port) or pa or None
+            if np == port: np = None
+            out.append(_link_rewrite(l, np, ho or None))
+    return _apply_panel_clones(p, out) if clones else out
+
+# ---- Kod klonlama ("sahte lokasyon"): panelin her kodu, verilen isimlerle cogaltilir ----
+# Ayni sunucu/uuid; sadece isim farkli. Ör: 3 kod + 2 klon satiri ("🇩🇪 Germany", "🇳🇱 Netherlands") = 9 kod.
+def _link_set_name(line, name):
+    try:
+        if line.startswith("vmess://"):
+            d = json.loads(base64.b64decode(line[8:].strip() + "==").decode("utf-8"))
+            d["ps"] = name
+            return "vmess://" + base64.b64encode(json.dumps(d, ensure_ascii=False, separators=(",", ":")).encode()).decode()
+        return line.split("#", 1)[0] + "#" + urllib.parse.quote(name, safe="")
+    except Exception:
+        return line
+
+def _panel_clones(p):
+    c = p.get("clones") or []
+    if isinstance(c, str): c = c.split("\n")
+    return [str(x).strip()[:80] for x in c if str(x).strip()][:30]
+
+def _clone_name(tpl, orig, i, multi):
+    if "{name}" in tpl or "{n}" in tpl: return tpl.replace("{name}", orig).replace("{n}", str(i))
+    return f"{tpl} {i}" if multi else tpl
+
+def _apply_panel_clones(p, links):
+    tpls = _panel_clones(p)
+    if not tpls or not links: return list(links)
+    out, multi = list(links), len(links) > 1
+    for t in tpls:
+        for i, l in enumerate(links, 1):
+            out.append(_link_set_name(l, _clone_name(t, _display_name(l), i, multi)))
     return out
 
 # ---- Domain / URL semasi: musteri linkindeki kaynak adres -> gercekte cekilecek adres ----
@@ -2849,7 +2880,7 @@ async def panels_preview(request: Request):
                         if k not in seen: seen.add(k); links.append(l)
     except Exception as e:
         return {"ok": False, "msg": f"Panele bağlanılamadı: {str(e)[:80]}"}
-    newl = _apply_panel_overrides(d, links)
+    newl = _apply_panel_overrides(d, links, clones=False)
     port_inb = {}
     for i in inbounds: port_inb.setdefault(i["port"], []).append(i["remark"] or f"#{i['id']}")
     rows = []
