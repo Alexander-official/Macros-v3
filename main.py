@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.4"
+APP_VERSION = "3.4.5"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -3006,10 +3006,14 @@ async def panels_remove(request: Request):
     if p is None: return {"ok": False, "msg": "Panel bulunamadı (kaydedilmemiş olabilir)"}
     if pkey == _pkey({"url": MARZBAN_URL or ""}) and MARZBAN_URL: return {"ok": False, "msg": "Ana panel kaldırılamaz"}
     owned, total = [], 0
-    if p.get("type") == "3xui" and p.get("token"):
-        try: owned, total = await _macros_owned_clients(p)
+    # "Kullanicilari birak" secildiyse panele hic baglanilmaz (VPS'i silinmis panel de aninda kaldirilir)
+    if p.get("type") == "3xui" and p.get("token") and not keep_users:
+        reach, why = await _reach(p.get("url", ""))
+        if not reach:
+            return {"ok": False, "msg": f"Panele bağlanılamadı: {why} — kullanıcılar silinemez. 'Kullanıcıları bırak' ile yine de kaldırabilirsin."}
+        try: owned, total = await asyncio.wait_for(_macros_owned_clients(p), 12)
         except Exception as e:
-            if not keep_users: return {"ok": False, "msg": f"Panele bağlanılamadı: {e} — kullanıcılar silinemez. 'Kullanıcıları bırak' ile yine de kaldırabilirsin."}
+            return {"ok": False, "msg": f"Panele bağlanılamadı: {str(e) or type(e).__name__} — kullanıcılar silinemez. 'Kullanıcıları bırak' ile yine de kaldırabilirsin."}
     if dry:
         return {"ok": True, "dry": True, "owned": len(owned), "others": max(0, total - len(owned)), "name": p.get("name") or pkey}
     deleted, errors = 0, []
@@ -3034,7 +3038,7 @@ async def panels_remove(request: Request):
         if isinstance(sd, list) and any(x.get("panel") == pkey for x in sd):
             set_global("external_subs_data", json.dumps([x for x in sd if x.get("panel") != pkey]))
         with DB_LOCK, db_session() as con:
-            con.execute("DELETE FROM panel_links WHERE pkey=?", (pkey,))
+            con.execute("DELETE FROM panel_links WHERE pkey=?", (pkey,)); con.commit()
         for k in [k for k in _sublinks_cache if k[0] == pkey]: _sublinks_cache.pop(k, None)
     add_panel_log("PANEL_REMOVE", f"{p.get('name') or pkey}: panel kaldırıldı, macros kullanıcısı silindi: {deleted}" + (" (kullanıcılar bırakıldı)" if keep_users else ""), get_ip(request))
     return {"ok": True, "deleted": deleted, "name": p.get("name") or pkey}
