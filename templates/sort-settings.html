@@ -1475,8 +1475,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{try{const sn=formSnapshot();FORM_ORIG={};Object.keys(sn).forEach(k=>FORM_ORIG[k]=JSON.stringify(sn[k]));}catch(e){}},0);
   const fm=document.querySelector('form'); if(fm){fm.addEventListener('input',()=>{FORM_DIRTY=true;});fm.addEventListener('change',()=>{FORM_DIRTY=true;});}
 });
+// Sadece kod duzeniyle ilgili kutular acilir/kapanir; digerleri hep acik, duz kutu olarak kalir.
+const COLLAPSIBLE=['engine','ext_sub_title','manual_title'];
 function initCollapsibles(){
-  const boxes=[...document.querySelectorAll('.main > .box')];
+  const boxes=[...document.querySelectorAll('.main > .box')].filter(b=>{const k=b.querySelector('.box-title [data-i18n]');return k&&COLLAPSIBLE.includes(k.dataset.i18n);});
   boxes.forEach(box=>{
     const title=box.querySelector('.box-title'); if(!title || box.querySelector('.box-body'))return;
     // Baslik + aciklama ust satirda (kapaliyken de gorunur); geri kalan icerik animasyonlu govdeye
@@ -1506,15 +1508,6 @@ function initCollapsibles(){
     });
     head.addEventListener('click',()=>{ if(!box.classList.contains('pinned'))setBox(box,!box.classList.contains('collapsed')); });
   });
-  // Tumunu ac / kapat
-  if(boxes.length&&!document.querySelector('.box-tools')){
-    const t=document.createElement('div'); t.className='box-tools';
-    t.innerHTML=`<button type="button" class="btn bghost" data-i18n="exp_all">${T('exp_all')}</button><button type="button" class="btn bghost" data-i18n="col_all">${T('col_all')}</button>`;
-    boxes[0].parentNode.insertBefore(t,boxes[0]);
-    const [a,b]=t.querySelectorAll('button');
-    a.onclick=()=>boxes.forEach(x=>setBox(x,false));
-    b.onclick=()=>boxes.forEach(x=>{if(!x.classList.contains('pinned'))setBox(x,true);});
-  }
 }
 function setBox(box,collapsed,instant){
   const body=box.querySelector('.box-body'); if(!body)return;

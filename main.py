@@ -21,7 +21,7 @@ _UPSTREAM_UA = "v2rayNG/1.8.19"
 # Kimlik bilgileri .env'den okunur (koda gömülü tutulmaz). Eksikse Marzban senkronu
 # sessizce devre disi kalir; abonelik (sub) linkleri bundan etkilenmez.
 APP_NAME = "Macros"
-APP_VERSION = "3.4.3"
+APP_VERSION = "3.4.4"
 AUTHOR_TG = "alexvpns"   # Telegram: @alexvpns
 MARZBAN_URL = os.environ.get("MARZBAN_URL", "").rstrip("/")
 MARZBAN_USER = os.environ.get("MARZBAN_USER", "")
@@ -2457,7 +2457,7 @@ async def sub_proxy(request: Request, url: str = None):
             update_traffic(sub_id,len(final_content.encode()))
             return Response(final_content, media_type="text/plain; charset=utf-8", headers=out_headers)
     except Exception as e:
-        add_log(sub_id,"FETCH_ERROR",str(e)[:200],hardware_id=hw,ip=ip,ua=ua)
+        add_log(sub_id,"FETCH_ERROR",(str(e) or type(e).__name__)[:200],hardware_id=hw,ip=ip,ua=ua)
         return PlainTextResponse(get_global("proxy_error_message", "Sunucu gecici olarak kullanilamiyor."), status_code=200)
 
 @app.post("/panel/api/format-links")
